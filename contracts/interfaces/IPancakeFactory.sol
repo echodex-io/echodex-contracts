@@ -16,17 +16,23 @@ interface IPancakeFactory {
 
     function createPair(address tokenA, address tokenB) external returns (address pair);
 
+    function echoDexCreatePair(address tokenA, address tokenB, uint256 _percentRefund) external returns (address pair);
+
     function setFeeTo(address) external;
 
     function setFeeToSetter(address) external;
 
     function INIT_CODE_PAIR_HASH() external view returns (bytes32);
 
-    function calcFee(uint, address, address) external view returns(uint);
+    function calcFee(uint, address, address, address) external view returns(uint, uint);
 
     function tokenFee() external view returns (address);
 
     function receiveFee() external view returns (address);
+
+    function percentFee() external view returns(uint);
+
+    function percentFeeCaseSubTokenOut() external view returns(uint);
 
     function setTokenFee(address) external;
 
@@ -34,4 +40,11 @@ interface IPancakeFactory {
 
     function setReceiveFee(address) external;
 
+    function percentRefund(address tokenA, address tokenB) external view returns (uint);
+
+    function setPercentRefundPair(address, address, uint) external;
+
+    function setPercentFee(uint) external;
+
+    function setPercentFeeCaseSubTokenOut(uint) external;
 }

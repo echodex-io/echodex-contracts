@@ -93,7 +93,6 @@ interface IPancakePair {
         uint256 amount0Out,
         uint256 amount1Out,
         address to,
-        bool payWithTokenFee,
         bytes calldata data
     ) external;
 

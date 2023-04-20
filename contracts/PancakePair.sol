@@ -32,6 +32,17 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         uint balance0;
         uint balance1;
         bool isSubTokenOut;
+        uint amount0In;
+        uint amount1In;
+    }
+
+    struct SwapVarTemp {
+        address token0;
+        address token1;
+        uint amount0Out;
+        uint amount1Out;
+        address to;
+        bytes data;
     }
 
     uint private unlocked = 1;
@@ -114,14 +125,17 @@ contract PancakePair is IPancakePair, PancakeERC20 {
     }
 
     // pay fee
-    function _payFee(uint fee, address to, bool payWithTokenFee) private returns (bool isSubTokenOut) {
+    function _payFee(uint fee, uint feeRefund, address to, bool payWithTokenFee) private returns (bool isSubTokenOut) {
         isSubTokenOut = false;
         address tokenFee = IPancakeFactory(factory).tokenFee();
         address receiveFee = IPancakeFactory(factory).receiveFee();
         uint balanceTokenFeeInPair = IERC20(tokenFee).balanceOf(address(this));
         if (balanceTokenFeeInPair > 0) { //pay with token in pool
-            require(balanceTokenFeeInPair >= fee, 'UniswapV2: INSUFFICIENT_FEE');
+            require(balanceTokenFeeInPair >= (fee + feeRefund), 'UniswapV2: INSUFFICIENT_FEE');
             _safeTransfer(tokenFee, receiveFee, fee);
+            if (feeRefund > 0) {
+                _safeTransfer(tokenFee, to, feeRefund);
+            }
         } else { 
             if (!payWithTokenFee) {
                 isSubTokenOut = true;
@@ -186,36 +200,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
     }
 
     // this low-level function should be called from a contract which performs important safety checks
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock {
-        require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
-        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
-
-        uint balance0;
-        uint balance1;
-        { // scope for _token{0,1}, avoids stack too deep errors
-        address _token0 = token0;
-        address _token1 = token1;
-        require(to != _token0 && to != _token1, 'UniswapV2: INVALID_TO');
-        if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
-        if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
-        if (data.length > 0) IPancakeCallee(to).pancakeCall(msg.sender, amount0Out, amount1Out, data);
-        balance0 = IERC20(_token0).balanceOf(address(this));
-        balance1 = IERC20(_token1).balanceOf(address(this));
-        }
-        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
-        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
-        require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
-        { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        uint balance0Adjusted = (balance0.mul(10000).sub(amount0In.mul(25)));
-        uint balance1Adjusted = (balance1.mul(10000).sub(amount1In.mul(25)));
-        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(10000**2), 'Pancake: K');
-        }
-        _update(balance0, balance1, _reserve0, _reserve1);
-        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
-    }
-
-    function echoDexSwap(uint amount0Out, uint amount1Out, address to, bool payWithTokenFee, bytes calldata data) external lock {
+    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = false
         require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
@@ -223,45 +208,49 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         SwapState memory state = SwapState({
             balance0: 0,
             balance1: 0,
-            isSubTokenOut: false
+            isSubTokenOut: false,
+            amount0In: 0,
+            amount1In: 0
         });
         { // scope for _token{0,1}, avoids stack too deep errors
-        address _token0 = token0;
-        address _token1 = token1;
-        require(to != _token0 && to != _token1, 'UniswapV2: INVALID_TO');
-       
+        SwapVarTemp memory stateTemp = SwapVarTemp({
+            token0: token0,
+            token1: token1,
+            amount0Out: amount0Out,
+            amount1Out: amount1Out,
+            to: to,
+            data: data
+        });
+
+        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'UniswapV2: INVALID_TO');
+
+        uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
+        address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
+        address tokenIn = stateTemp.amount0Out > 0 ? stateTemp.token1 : stateTemp.token0;
+
         //fee 
-        uint fee = IPancakeFactory(factory).calcFee(amount0Out > 0 ? amount0Out : amount1Out, amount0Out > 0 ? _token0 : _token1, factory);
-        state.isSubTokenOut = _payFee(fee, to, payWithTokenFee); // fee 0.3% amountOut
-        if (amount0Out > 0) {
-            if (state.isSubTokenOut) {
-                amount0Out = amount0Out - amount0Out.mul(3) / 1000;
-                _safeTransfer(_token0, to, amount0Out);
-            } else {
-                _safeTransfer(_token0, to, amount0Out);
-            }
-        }
-        if (amount1Out > 0) {
-            if (state.isSubTokenOut) {
-                amount1Out = amount1Out - amount1Out.mul(3) / 1000;
-                _safeTransfer(_token1, to, amount1Out);
-            } else {
-                _safeTransfer(_token1, to, amount1Out);
-            }
-        } 
+        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, tokenIn, factory);
+        state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, false); 
 
-        if (data.length > 0) IPancakeCallee(to).pancakeCall(msg.sender, amount0Out, amount1Out, data);
-        state.balance0 = IERC20(_token0).balanceOf(address(this));
-        state.balance1 = IERC20(_token1).balanceOf(address(this));
+        if (state.isSubTokenOut) {
+            amountOut = amountOut - amountOut * IPancakeFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
+            _safeTransfer(tokenOut, stateTemp.to, amountOut);
+        } else {
+            _safeTransfer(tokenOut, stateTemp.to, amountOut);
         }
 
-        uint amount0In = state.balance0 > _reserve0 - amount0Out ? state.balance0 - (_reserve0 - amount0Out) : 0;
-        uint amount1In = state.balance1 > _reserve1 - amount1Out ? state.balance1 - (_reserve1 - amount1Out) : 0;
-        require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
+        if (stateTemp.data.length > 0) IPancakeCallee(stateTemp.to).pancakeCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
+        state.balance0 = IERC20(stateTemp.token0).balanceOf(address(this));
+        state.balance1 = IERC20(stateTemp.token1).balanceOf(address(this));
+        }
+
+        state.amount0In = state.balance0 > _reserve0 - amount0Out ? state.balance0 - (_reserve0 - amount0Out) : 0;
+        state.amount1In = state.balance1 > _reserve1 - amount1Out ? state.balance1 - (_reserve1 - amount1Out) : 0;
+        require(state.amount0In > 0 || state.amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
         if (state.isSubTokenOut) {
-            uint balance0Adjusted = state.balance0.mul(1000).sub(amount0In.mul(3));
-            uint balance1Adjusted = state.balance1.mul(1000).sub(amount1In.mul(3));
+            uint balance0Adjusted = state.balance0.mul(1000).sub(state.amount0In.mul(3));
+            uint balance1Adjusted = state.balance1.mul(1000).sub(state.amount1In.mul(3));
             require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
         } else {
             require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
@@ -272,7 +261,71 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         // 1 -> 9.9009901 // 9.87128713 tru fee
         // 101 * 990.09901
         _update(state.balance0, state.balance1, _reserve0, _reserve1);
-        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
+    }
+
+    function echoDexSwap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = true
+        require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
+
+        SwapState memory state = SwapState({
+            balance0: 0,
+            balance1: 0,
+            isSubTokenOut: false,
+            amount0In: 0,
+            amount1In: 0
+        });
+        { // scope for _token{0,1}, avoids stack too deep errors
+        SwapVarTemp memory stateTemp = SwapVarTemp({
+            token0: token0,
+            token1: token1,
+            amount0Out: amount0Out,
+            amount1Out: amount1Out,
+            to: to,
+            data: data
+        });
+
+        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'UniswapV2: INVALID_TO');
+
+        uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
+        address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
+        address tokenIn = stateTemp.amount0Out > 0 ? stateTemp.token1 : stateTemp.token0;
+
+        //fee 
+        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, tokenIn, factory);
+        state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, true); 
+
+        if (state.isSubTokenOut) {
+            amountOut = amountOut - amountOut * IPancakeFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
+            _safeTransfer(tokenOut, stateTemp.to, amountOut);
+        } else {
+            _safeTransfer(tokenOut, stateTemp.to, amountOut);
+        }
+
+        if (stateTemp.data.length > 0) IPancakeCallee(stateTemp.to).pancakeCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
+        state.balance0 = IERC20(stateTemp.token0).balanceOf(address(this));
+        state.balance1 = IERC20(stateTemp.token1).balanceOf(address(this));
+        }
+
+        state.amount0In = state.balance0 > _reserve0 - amount0Out ? state.balance0 - (_reserve0 - amount0Out) : 0;
+        state.amount1In = state.balance1 > _reserve1 - amount1Out ? state.balance1 - (_reserve1 - amount1Out) : 0;
+        require(state.amount0In > 0 || state.amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
+        { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
+        if (state.isSubTokenOut) {
+            uint balance0Adjusted = state.balance0.mul(1000).sub(state.amount0In.mul(3));
+            uint balance1Adjusted = state.balance1.mul(1000).sub(state.amount1In.mul(3));
+            require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+        } else {
+            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+        }
+        }
+      
+        // 100 * 1000
+        // 1 -> 9.9009901 // 9.87128713 tru fee
+        // 101 * 990.09901
+        _update(state.balance0, state.balance1, _reserve0, _reserve1);
+        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
     }
 
     // force balances to match reserves
