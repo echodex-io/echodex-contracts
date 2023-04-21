@@ -38,7 +38,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
 
 
         // Deploy Factory
-        pancakeFactory = await PancakeFactory.new(alice, bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
+        pancakeFactory = await PancakeFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
 
         console.log(await pancakeFactory.INIT_CODE_PAIR_HASH())
 

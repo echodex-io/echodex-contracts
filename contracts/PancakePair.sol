@@ -103,27 +103,6 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         emit Sync(reserve0, reserve1);
     }
 
-    // if fee is on, mint liquidity equivalent to 8/25 of the growth in sqrt(k)
-    function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
-        address feeTo = IPancakeFactory(factory).feeTo();
-        feeOn = feeTo != address(0);
-        uint _kLast = kLast; // gas savings
-        if (feeOn) {
-            if (_kLast != 0) {
-                uint rootK = Math.sqrt(uint(_reserve0).mul(_reserve1));
-                uint rootKLast = Math.sqrt(_kLast);
-                if (rootK > rootKLast) {
-                    uint numerator = totalSupply.mul(rootK.sub(rootKLast)).mul(8);
-                    uint denominator = rootK.mul(17).add(rootKLast.mul(8));
-                    uint liquidity = numerator / denominator;
-                    if (liquidity > 0) _mint(feeTo, liquidity);
-                }
-            }
-        } else if (_kLast != 0) {
-            kLast = 0;
-        }
-    }
-
     // pay fee
     function _payFee(uint fee, uint feeRefund, address to, bool payWithTokenFee) private returns (bool isSubTokenOut) {
         isSubTokenOut = false;
@@ -158,7 +137,6 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         uint amount0 = balance0.sub(_reserve0);
         uint amount1 = balance1.sub(_reserve1);
 
-        bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         if (_totalSupply == 0) {
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
@@ -170,7 +148,6 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         _mint(to, liquidity);
 
         _update(balance0, balance1, _reserve0, _reserve1);
-        if (feeOn) kLast = uint(reserve0).mul(reserve1); // reserve0 and reserve1 are up-to-date
         emit Mint(msg.sender, amount0, amount1);
     }
 
@@ -183,7 +160,6 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         uint balance1 = IERC20(_token1).balanceOf(address(this));
         uint liquidity = balanceOf[address(this)];
 
-        bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         amount0 = liquidity.mul(balance0) / _totalSupply; // using balances ensures pro-rata distribution
         amount1 = liquidity.mul(balance1) / _totalSupply; // using balances ensures pro-rata distribution
@@ -195,7 +171,6 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         balance1 = IERC20(_token1).balanceOf(address(this));
 
         _update(balance0, balance1, _reserve0, _reserve1);
-        if (feeOn) kLast = uint(reserve0).mul(reserve1); // reserve0 and reserve1 are up-to-date
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
@@ -226,10 +201,9 @@ contract PancakePair is IPancakePair, PancakeERC20 {
 
         uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
         address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
-        address tokenIn = stateTemp.amount0Out > 0 ? stateTemp.token1 : stateTemp.token0;
 
         //fee 
-        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, tokenIn, factory);
+        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
         state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, false); 
 
         if (state.isSubTokenOut) {
@@ -264,7 +238,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
     }
 
-    function echoDexSwap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = true
+    function swapPayWithTokenFee(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = true
         require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
@@ -290,10 +264,9 @@ contract PancakePair is IPancakePair, PancakeERC20 {
 
         uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
         address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
-        address tokenIn = stateTemp.amount0Out > 0 ? stateTemp.token1 : stateTemp.token0;
 
         //fee 
-        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, tokenIn, factory);
+        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
         state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, true); 
 
         if (state.isSubTokenOut) {

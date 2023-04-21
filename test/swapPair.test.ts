@@ -33,7 +33,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         tokenMEDIALFEE = await MockERC20.new("Token MEDIALFEE", "MEDIALFEE", parseEther("10000000"), { from: alice });
 
         // Deploy Factory
-        pancakeFactory = await PancakeFactory.new(alice, bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
+        pancakeFactory = await PancakeFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
 
         console.log(await pancakeFactory.INIT_CODE_PAIR_HASH())
 
@@ -42,11 +42,6 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
 
         // Deploy Router
         pancakeRouter = await PancakeRouter.new(pancakeFactory.address, wrappedBNB.address, { from: alice });
-
-        // // Deploy ZapV1
-        // maxZapReverseRatio = 100; // 1%
-        // pancakeZap = await PancakeZapV1.new(wrappedBNB.address, pancakeRouter.address, maxZapReverseRatio, { from: alice });
-
 
         // Create 3 LP tokens
 
@@ -232,7 +227,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
 
             await tokenVANVAN.transfer(pairVANVI.address, parseEther("100"), { from: alice })
 
-            await pairVANVI.echoDexSwap(parseEther("0"), parseEther("500"), alice, "0x", { from: alice });
+            await pairVANVI.swapPayWithTokenFee(parseEther("0"), parseEther("500"), alice, "0x", { from: alice });
 
             assert.equal(String(await tokenVANVAN.balanceOf(pairVANVI.address)), parseEther("200").toString());
             assert.equal(String(await tokenVIVIAN.balanceOf(pairVANVI.address)), parseEther("500").toString());
