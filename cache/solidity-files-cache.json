@@ -142,8 +142,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeFactory.sol": {
-      "lastModificationDate": 1681976245075,
-      "contentHash": "849b5411b65556ebcebaab706c97d165",
+      "lastModificationDate": 1682073087066,
+      "contentHash": "7881e6ab987842eb91a5db78d4e769f9",
       "sourceName": "contracts/interfaces/IPancakeFactory.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -174,41 +174,6 @@
       ],
       "artifacts": [
         "IPancakeFactory"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakePair.sol": {
-      "lastModificationDate": 1681984928646,
-      "contentHash": "e95fa03c10e5d1b1422cddd8df0f57e3",
-      "sourceName": "contracts/interfaces/IPancakePair.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 99999
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.5.0"
-      ],
-      "artifacts": [
-        "IPancakePair"
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeERC20.sol": {
@@ -246,9 +211,44 @@
         "IPancakeERC20"
       ]
     },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakePair.sol": {
+      "lastModificationDate": 1682072353329,
+      "contentHash": "e95fa03c10e5d1b1422cddd8df0f57e3",
+      "sourceName": "contracts/interfaces/IPancakePair.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 99999
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IPancakePair"
+      ]
+    },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeRouter02.sol": {
-      "lastModificationDate": 1681985042687,
-      "contentHash": "32dd2b48f6336135100b28985bfcd7d5",
+      "lastModificationDate": 1682072966998,
+      "contentHash": "eb6076926bab48ed03dfe663b22e32ce",
       "sourceName": "contracts/interfaces/IPancakeRouter02.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -284,7 +284,7 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeRouter01.sol": {
-      "lastModificationDate": 1681813659982,
+      "lastModificationDate": 1682072078378,
       "contentHash": "465d14141a693d24ff1032b71f7d1f3a",
       "sourceName": "contracts/interfaces/IPancakeRouter01.sol",
       "solcConfig": {
@@ -464,41 +464,6 @@
         "Context"
       ]
     },
-    "G:\\project\\echodex-contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\IERC20.sol": {
-      "lastModificationDate": 1680772672717,
-      "contentHash": "ad7c2d0af148c8f9f097d65deeb4da6b",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 99999
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IERC20"
-      ]
-    },
     "G:\\project\\echodex-contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\extensions\\IERC20Metadata.sol": {
       "lastModificationDate": 1680772672719,
       "contentHash": "909ab67fc5c25033fe6cd364f8c056f9",
@@ -534,6 +499,41 @@
       ],
       "artifacts": [
         "IERC20Metadata"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\IERC20.sol": {
+      "lastModificationDate": 1680772672717,
+      "contentHash": "ad7c2d0af148c8f9f097d65deeb4da6b",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 99999
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC20"
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\PancakeRouter01.sol": {
@@ -579,8 +579,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\PancakeLibrary.sol": {
-      "lastModificationDate": 1681988140176,
-      "contentHash": "6b53d57e4bc21edda0641e969ad34de2",
+      "lastModificationDate": 1682073279449,
+      "contentHash": "b45dcfc37d3e643e2c7e876f6d3a2eb6",
       "sourceName": "contracts/libraries/PancakeLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -653,8 +653,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\PancakeRouter.sol": {
-      "lastModificationDate": 1681985141567,
-      "contentHash": "6a4319d36c62fce01e4d4e13946f205a",
+      "lastModificationDate": 1682072953078,
+      "contentHash": "0cbfc99bda7f5d5cc6c53ddc763c44ab",
       "sourceName": "contracts/PancakeRouter.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -696,8 +696,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\PancakeFactory.sol": {
-      "lastModificationDate": 1681976249075,
-      "contentHash": "13b7b8b4661409e3435b68259c1fee6b",
+      "lastModificationDate": 1682073249464,
+      "contentHash": "b154f0d3bd08178b91831ec00dd19538",
       "sourceName": "contracts/PancakeFactory.sol",
       "solcConfig": {
         "version": "0.5.16",
@@ -735,8 +735,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\PancakePair.sol": {
-      "lastModificationDate": 1681985000398,
-      "contentHash": "cd73af234b2efe0b12cb6aca58f334e8",
+      "lastModificationDate": 1682073169959,
+      "contentHash": "ee8306691109ffd202389510f47d8968",
       "sourceName": "contracts/PancakePair.sol",
       "solcConfig": {
         "version": "0.5.16",
@@ -815,41 +815,6 @@
         "PancakeERC20"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\UQ112x112.sol": {
-      "lastModificationDate": 1680772593315,
-      "contentHash": "b0877d3dc81239d674583ba379f411a1",
-      "sourceName": "contracts/libraries/UQ112x112.sol",
-      "solcConfig": {
-        "version": "0.5.16",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 99999
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "=0.5.16"
-      ],
-      "artifacts": [
-        "UQ112x112"
-      ]
-    },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\Math.sol": {
       "lastModificationDate": 1680772593314,
       "contentHash": "1824b2bc62c839fbe9aaa1d6bf16089f",
@@ -883,6 +848,41 @@
       ],
       "artifacts": [
         "Math"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\libraries\\UQ112x112.sol": {
+      "lastModificationDate": 1680772593315,
+      "contentHash": "b0877d3dc81239d674583ba379f411a1",
+      "sourceName": "contracts/libraries/UQ112x112.sol",
+      "solcConfig": {
+        "version": "0.5.16",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 99999
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "=0.5.16"
+      ],
+      "artifacts": [
+        "UQ112x112"
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\WBNB.sol": {

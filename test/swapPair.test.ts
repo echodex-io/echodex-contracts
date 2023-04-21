@@ -33,7 +33,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         tokenMEDIALFEE = await MockERC20.new("Token MEDIALFEE", "MEDIALFEE", parseEther("10000000"), { from: alice });
 
         // Deploy Factory
-        pancakeFactory = await PancakeFactory.new(alice, bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
+        pancakeFactory = await PancakeFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
 
         console.log(await pancakeFactory.INIT_CODE_PAIR_HASH())
 

@@ -8,8 +8,6 @@ import './libraries/PancakeLibrary.sol';
 contract PancakeFactory is IPancakeFactory {
     bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(PancakePair).creationCode));
 
-    address public feeTo;
-    address public feeToSetter;
     address public receiveFee;
     address public tokenFee;
     address public tokenMedialFee;
@@ -24,8 +22,7 @@ contract PancakeFactory is IPancakeFactory {
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
-    constructor(address _feeToSetter, address _receiveFee, address _tokenFee, address _tokenMedialFee, uint _percentFee, uint _percentFeeCaseSubTokenOut) public {
-        feeToSetter = _feeToSetter;
+    constructor(address _receiveFee, address _tokenFee, address _tokenMedialFee, uint _percentFee, uint _percentFeeCaseSubTokenOut) public {
         receiveFee = _receiveFee;
         tokenFee = _tokenFee;
         tokenMedialFee = _tokenMedialFee;
@@ -55,42 +52,10 @@ contract PancakeFactory is IPancakeFactory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function echoDexCreatePair(address tokenA, address tokenB, uint _percentRefund) external returns (address pair) {
-        require(tokenA != tokenB, 'Pancake: IDENTICAL_ADDRESSES');
-        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), 'Pancake: ZERO_ADDRESS');
-        require(getPair[token0][token1] == address(0), 'Pancake: PAIR_EXISTS'); // single check is sufficient
-        bytes memory bytecode = type(PancakePair).creationCode;
-        bytes32 salt = keccak256(abi.encodePacked(token0, token1));
-        assembly {
-            pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
-        }
-        PancakePair(pair).initialize(token0, token1);
-        getPair[token0][token1] = pair;
-        getPair[token1][token0] = pair; // populate mapping in the reverse direction
-        allPairs.push(pair);
-        emit PairCreated(token0, token1, pair, allPairs.length);
-
-        if (_percentRefund > 0) {
-            percentRefund[token0][token1] = _percentRefund;
-            percentRefund[token1][token0] = _percentRefund;
-        }
-    }
-
     function setPercentRefundPair(address tokenA, address tokenB, uint _percentRefund) external {
         require(msg.sender == owner, 'Pancake: FORBIDDEN');
         percentRefund[tokenA][tokenB] = _percentRefund;
         percentRefund[tokenB][tokenA] = _percentRefund;
-    }
-
-    function setFeeTo(address _feeTo) external {
-        require(msg.sender == feeToSetter, 'Pancake: FORBIDDEN');
-        feeTo = _feeTo;
-    }
-
-    function setFeeToSetter(address _feeToSetter) external {
-        require(msg.sender == feeToSetter, 'Pancake: FORBIDDEN');
-        feeToSetter = _feeToSetter;
     }
 
     function setTokenFee(address _tokenFee) external {
