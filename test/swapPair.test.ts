@@ -57,6 +57,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         result = await pancakeFactory.createPair(tokenVIVIAN.address, tokenMEDIALFEE.address, { from: alice });
         pairVIMEDIAL = await PancakePair.at(result.logs[0].args[2]);
 
+        await pancakeFactory.setPath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenMEDIALFEE.address, tokenFEE.address]);
 
         await tokenVANVAN.mintTokens(parseEther("2000000"), { from: alice });
         await tokenVIVIAN.mintTokens(parseEther("2000000"), { from: alice });

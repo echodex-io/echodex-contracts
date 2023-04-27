@@ -10,7 +10,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -45,7 +45,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -80,7 +80,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -115,7 +115,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -142,15 +142,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeFactory.sol": {
-      "lastModificationDate": 1682073846568,
-      "contentHash": "53409e28701b829230d0520010b64b6e",
+      "lastModificationDate": 1682579430580,
+      "contentHash": "da0379d1371e12e38ab5b149fe59fb47",
       "sourceName": "contracts/interfaces/IPancakeFactory.sol",
       "solcConfig": {
         "version": "0.8.4",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -185,7 +185,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -220,7 +220,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -255,7 +255,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -292,7 +292,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -327,7 +327,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -362,7 +362,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -399,7 +399,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -438,7 +438,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -473,7 +473,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -508,7 +508,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -545,7 +545,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -579,15 +579,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\PancakeLibrary.sol": {
-      "lastModificationDate": 1682073884208,
-      "contentHash": "21681cc54d1641454cd01def2980a022",
+      "lastModificationDate": 1682589789390,
+      "contentHash": "eb574515b2b8501b107e0da3cf07dc7e",
       "sourceName": "contracts/libraries/PancakeLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -626,7 +626,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -661,7 +661,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -704,7 +704,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -734,15 +734,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\PancakePair.sol": {
-      "lastModificationDate": 1682073759327,
-      "contentHash": "f326a5a8c3b4c37b4edd87cf38c6cfd4",
+      "lastModificationDate": 1682589753947,
+      "contentHash": "9a81b56cb7a7745aa2c065df88204b39",
       "sourceName": "contracts/PancakePair.sol",
       "solcConfig": {
         "version": "0.5.16",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -785,7 +785,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -820,7 +820,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -847,15 +847,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\PancakeFactory.sol": {
-      "lastModificationDate": 1682073759327,
-      "contentHash": "b9bb43f16aa6c9cc5d14db3af880af5d",
+      "lastModificationDate": 1682579426802,
+      "contentHash": "fe9a54e95801c3871deda5cc829f11c1",
       "sourceName": "contracts/PancakeFactory.sol",
       "solcConfig": {
         "version": "0.5.16",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {
@@ -894,7 +894,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 99999
+            "runs": 200
           },
           "outputSelection": {
             "*": {

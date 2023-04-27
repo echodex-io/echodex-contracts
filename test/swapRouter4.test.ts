@@ -68,6 +68,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         result = await pancakeFactory.createPair(tokenVIVIAN.address, tokenFEE.address, { from: alice });
         pairVIFEE = await PancakePair.at(result.logs[0].args[2]);
 
+        await pancakeFactory.setPath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenFEE.address]);
 
         await tokenVANVAN.mintTokens(parseEther("2000000"), { from: alice });
         await tokenVIVIAN.mintTokens(parseEther("2000000"), { from: alice });
@@ -238,7 +239,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
 
             console.log(String(await tokenFEE.balanceOf(alice)))
 
-            await pancakeRouter.echoDexSwapExactTokensForTokens(
+            await pancakeRouter.swapExactTokensForTokensPayWithTokenFee(
                 parseEther("100"), // 1 VANVAN
                 parseEther("500"), // 9 VIVIAN
                 [tokenVANVAN.address, tokenVIVIAN.address],

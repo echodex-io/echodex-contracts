@@ -37,4 +37,6 @@ interface IPancakeFactory {
     function setPercentFee(uint) external;
 
     function setPercentFeeCaseSubTokenOut(uint) external;
+
+    function setPath(address, address[] calldata) external;
 }

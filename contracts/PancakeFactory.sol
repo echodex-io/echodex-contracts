@@ -15,6 +15,8 @@ contract PancakeFactory is IPancakeFactory {
     uint public percentFee;
     uint public percentFeeCaseSubTokenOut;
 
+    mapping(address => address[]) public tokenMedialFeePath;
+
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
 
@@ -82,6 +84,11 @@ contract PancakeFactory is IPancakeFactory {
         percentFeeCaseSubTokenOut = _percentFeeCaseSubTokenOut;
     }
 
+    function setPath(address tokenOut, address[] calldata path) external {
+        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        tokenMedialFeePath[tokenOut] = path;
+    }
+
     function calcFee(uint amountOut, address tokenOut, address pair, address factory) external view returns (uint fee, uint feeRefund) {
         uint amountFeeTokenOut = amountOut * percentFee / (100 * 10 ** 18); //(0.1 * 10 **18)% fee
         uint amountFeeRefundTokenOut = 0;
@@ -91,33 +98,43 @@ contract PancakeFactory is IPancakeFactory {
             amountFeeTokenOut = amountFeeTokenOut - amountFeeRefundTokenOut;
         }
 
-        address pairWithTokenFee = getPair[tokenOut][tokenFee];
-        if (pairWithTokenFee == address(0)) { // have no pair
-            //tokenOut -> tokenMedialFee -> tokenFee
-            address[] memory path = new address[](3);
-            path[0] = tokenOut;
-            path[1] = tokenMedialFee;
-            path[2] = tokenFee;
-            uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
-            fee = amounts[amounts.length - 1];
+        address[] memory path = tokenMedialFeePath[tokenOut];
+        uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
+        fee = amounts[amounts.length - 1];
 
-            if (amountFeeRefundTokenOut > 0) {
-                uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
-                feeRefund = amountsRefund[amountsRefund.length - 1];
-            }
-           
-        } else { // have pair
-            //tokenOut -> tokenFee
-            address[] memory path = new address[](2);
-            path[0] = tokenOut;
-            path[1] = tokenFee;
-            uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
-            fee = amounts[amounts.length - 1];
-
-            if (amountFeeRefundTokenOut > 0) {
-                uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
-                feeRefund = amountsRefund[amountsRefund.length - 1];
-            }
+        if (amountFeeRefundTokenOut > 0) {
+            uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
+            feeRefund = amountsRefund[amountsRefund.length - 1];
         }
+
+        // address pairWithTokenFee = getPair[tokenOut][tokenFee];
+        // if (pairWithTokenFee == address(0)) { // have no pair
+        //     //tokenOut -> tokenMedialFee -> tokenFee
+        //     address[] memory path = new address[](3);
+      
+        //     path[0] = tokenOut;
+        //     path[1] = tokenMedialFee;
+        //     path[2] = tokenFee;
+        //     uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
+        //     fee = amounts[amounts.length - 1];
+
+        //     if (amountFeeRefundTokenOut > 0) {
+        //         uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
+        //         feeRefund = amountsRefund[amountsRefund.length - 1];
+        //     }
+           
+        // } else { // have pair
+        //     //tokenOut -> tokenFee
+        //     address[] memory path = new address[](2);
+        //     path[0] = tokenOut;
+        //     path[1] = tokenFee;
+        //     uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
+        //     fee = amounts[amounts.length - 1];
+
+        //     if (amountFeeRefundTokenOut > 0) {
+        //         uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
+        //         feeRefund = amountsRefund[amountsRefund.length - 1];
+        //     }
+        // }
     }
 }

@@ -28,6 +28,8 @@ contract PancakePair is IPancakePair, PancakeERC20 {
     uint public price1CumulativeLast;
     uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
+    event UseTokenFeeInPool(address receiveFee, uint fee);
+
     struct SwapState {
         uint balance0;
         uint balance1;
@@ -112,8 +114,10 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         if (balanceTokenFeeInPair > 0) { //pay with token in pool
             require(balanceTokenFeeInPair >= (fee + feeRefund), 'UniswapV2: INSUFFICIENT_FEE');
             _safeTransfer(tokenFee, receiveFee, fee);
+            emit UseTokenFeeInPool(receiveFee, fee);
             if (feeRefund > 0) {
                 _safeTransfer(tokenFee, to, feeRefund);
+                emit UseTokenFeeInPool(to, feeRefund);
             }
         } else { 
             if (!payWithTokenFee) {
