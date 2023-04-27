@@ -177,8 +177,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakePair.sol": {
-      "lastModificationDate": 1682073335079,
-      "contentHash": "67fbf297ff4bd26c326509038f52ee9d",
+      "lastModificationDate": 1682590550356,
+      "contentHash": "42237ead9f4c0bff39cf8631582f3174",
       "sourceName": "contracts/interfaces/IPancakePair.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -579,8 +579,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\PancakeLibrary.sol": {
-      "lastModificationDate": 1682589789390,
-      "contentHash": "eb574515b2b8501b107e0da3cf07dc7e",
+      "lastModificationDate": 1682590595325,
+      "contentHash": "df281195c742dcba060143ab1f3bf2aa",
       "sourceName": "contracts/libraries/PancakeLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -734,8 +734,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\PancakePair.sol": {
-      "lastModificationDate": 1682589753947,
-      "contentHash": "9a81b56cb7a7745aa2c065df88204b39",
+      "lastModificationDate": 1682590502874,
+      "contentHash": "2641e47334b51101828c50fe5e06d746",
       "sourceName": "contracts/PancakePair.sol",
       "solcConfig": {
         "version": "0.5.16",

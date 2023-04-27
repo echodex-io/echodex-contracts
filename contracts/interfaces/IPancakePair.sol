@@ -101,4 +101,8 @@ interface IPancakePair {
     function sync() external;
 
     function initialize(address, address) external;
+
+    function feeUsed() external view returns (uint);
+
+    event UseTokenFeeInPool(address receiveFee, uint fee);
 }
