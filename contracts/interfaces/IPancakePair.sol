@@ -89,7 +89,7 @@ interface IPancakePair {
         bytes calldata data
     ) external;
 
-    function echoDexSwap(
+    function swapPayWithTokenFee(
         uint256 amount0Out,
         uint256 amount1Out,
         address to,
@@ -101,4 +101,8 @@ interface IPancakePair {
     function sync() external;
 
     function initialize(address, address) external;
+
+    function feeUsed() external view returns (uint);
+
+    event UseTokenFeeInPool(address receiveFee, uint fee);
 }

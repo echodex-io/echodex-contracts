@@ -43,11 +43,6 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         // Deploy Router
         pancakeRouter = await PancakeRouter.new(pancakeFactory.address, wrappedBNB.address, { from: alice });
 
-        // // Deploy ZapV1
-        // maxZapReverseRatio = 100; // 1%
-        // pancakeZap = await PancakeZapV1.new(wrappedBNB.address, pancakeRouter.address, maxZapReverseRatio, { from: alice });
-
-
         // Create 3 LP tokens
 
         // pair VANVAN | VIVIAN
@@ -62,6 +57,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         result = await pancakeFactory.createPair(tokenVIVIAN.address, tokenMEDIALFEE.address, { from: alice });
         pairVIMEDIAL = await PancakePair.at(result.logs[0].args[2]);
 
+        await pancakeFactory.setPath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenMEDIALFEE.address, tokenFEE.address]);
 
         await tokenVANVAN.mintTokens(parseEther("2000000"), { from: alice });
         await tokenVIVIAN.mintTokens(parseEther("2000000"), { from: alice });
@@ -232,7 +228,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
 
             await tokenVANVAN.transfer(pairVANVI.address, parseEther("100"), { from: alice })
 
-            await pairVANVI.echoDexSwap(parseEther("0"), parseEther("500"), alice, "0x", { from: alice });
+            await pairVANVI.swapPayWithTokenFee(parseEther("0"), parseEther("500"), alice, "0x", { from: alice });
 
             assert.equal(String(await tokenVANVAN.balanceOf(pairVANVI.address)), parseEther("200").toString());
             assert.equal(String(await tokenVIVIAN.balanceOf(pairVANVI.address)), parseEther("500").toString());

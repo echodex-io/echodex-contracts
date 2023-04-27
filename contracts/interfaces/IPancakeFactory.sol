@@ -30,11 +30,13 @@ interface IPancakeFactory {
 
     function setReceiveFee(address) external;
 
-    function percentRefund(address tokenA, address tokenB) external view returns (uint);
+    function percentRefund(address pair) external view returns (uint _percentRefund);
 
-    function setPercentRefundPair(address, address, uint) external;
+    function setPercentRefundPair(address, uint) external;
 
     function setPercentFee(uint) external;
 
     function setPercentFeeCaseSubTokenOut(uint) external;
+
+    function setPath(address, address[] calldata) external;
 }
