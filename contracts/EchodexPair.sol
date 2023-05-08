@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity =0.5.16;
 
-import './interfaces/IPancakePair.sol';
-import './PancakeERC20.sol';
+import './interfaces/IEchodexPair.sol';
+import './EchodexERC20.sol';
 import './libraries/Math.sol';
 import './libraries/UQ112x112.sol';
 import './interfaces/IERC20.sol';
-import './interfaces/IPancakeFactory.sol';
-import './interfaces/IPancakeCallee.sol';
+import './interfaces/IEchodexFactory.sol';
+import './interfaces/IEchodexCallee.sol';
 
-contract PancakePair is IPancakePair, PancakeERC20 {
+contract EchodexPair is IEchodexPair, EchodexERC20 {
     using SafeMath  for uint;
     using UQ112x112 for uint224;
 
@@ -28,7 +28,8 @@ contract PancakePair is IPancakePair, PancakeERC20 {
     uint public price1CumulativeLast;
     uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
-    uint public feeUsed;
+    uint public totalFee;
+    uint public currentFee;
 
     event UseTokenFeeInPool(address receiveFee, uint fee);
 
@@ -51,7 +52,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
 
     uint private unlocked = 1;
     modifier lock() {
-        require(unlocked == 1, 'Pancake: LOCKED');
+        require(unlocked == 1, 'Echodex: LOCKED');
         unlocked = 0;
         _;
         unlocked = 1;
@@ -65,7 +66,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
 
     function _safeTransfer(address token, address to, uint value) private {
         (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'Pancake: TRANSFER_FAILED');
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'Echodex: TRANSFER_FAILED');
     }
 
     event Mint(address indexed sender, uint amount0, uint amount1);
@@ -82,7 +83,8 @@ contract PancakePair is IPancakePair, PancakeERC20 {
 
     constructor() public {
         factory = msg.sender;
-        feeUsed = 0;
+        totalFee = 0;
+        currentFee = 0;
     }
 
     // called once by the factory at time of deployment
@@ -94,7 +96,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
 
     // update reserves and, on the first call per block, price accumulators
     function _update(uint balance0, uint balance1, uint112 _reserve0, uint112 _reserve1) private {
-        require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'Pancake: OVERFLOW');
+        require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'Echodex: OVERFLOW');
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
         if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
@@ -111,16 +113,15 @@ contract PancakePair is IPancakePair, PancakeERC20 {
     // pay fee
     function _payFee(uint fee, uint feeRefund, address to, bool payWithTokenFee) private returns (bool isSubTokenOut) {
         isSubTokenOut = false;
-        address tokenFee = IPancakeFactory(factory).tokenFee();
-        address receiveFee = IPancakeFactory(factory).receiveFee();
-        uint balanceTokenFeeInPair = IERC20(tokenFee).balanceOf(address(this));
-        if (balanceTokenFeeInPair > 0) { //pay with token in pool
-            require(balanceTokenFeeInPair >= (fee + feeRefund), 'UniswapV2: INSUFFICIENT_FEE');
-            feeUsed = feeUsed + fee;
+        address tokenFee = IEchodexFactory(factory).tokenFee();
+        address receiveFee = IEchodexFactory(factory).receiveFee();
+        if (currentFee > 0) { //pay with token in pool
+            require(currentFee >= (fee + feeRefund), 'UniswapV2: INSUFFICIENT_FEE');
+            currentFee = currentFee - fee;
             _safeTransfer(tokenFee, receiveFee, fee);
             emit UseTokenFeeInPool(receiveFee, fee);
             if (feeRefund > 0) {
-                feeUsed = feeUsed + feeRefund;
+                currentFee = currentFee - feeRefund;
                 _safeTransfer(tokenFee, to, feeRefund);
                 emit UseTokenFeeInPool(to, feeRefund);
             }
@@ -153,7 +154,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         } else {
             liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
         }
-        require(liquidity > 0, 'Pancake: INSUFFICIENT_LIQUIDITY_MINTED');
+        require(liquidity > 0, 'Echodex: INSUFFICIENT_LIQUIDITY_MINTED');
         _mint(to, liquidity);
 
         _update(balance0, balance1, _reserve0, _reserve1);
@@ -172,7 +173,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         amount0 = liquidity.mul(balance0) / _totalSupply; // using balances ensures pro-rata distribution
         amount1 = liquidity.mul(balance1) / _totalSupply; // using balances ensures pro-rata distribution
-        require(amount0 > 0 && amount1 > 0, 'Pancake: INSUFFICIENT_LIQUIDITY_BURNED');
+        require(amount0 > 0 && amount1 > 0, 'Echodex: INSUFFICIENT_LIQUIDITY_BURNED');
         _burn(address(this), liquidity);
         _safeTransfer(_token0, to, amount0);
         _safeTransfer(_token1, to, amount1);
@@ -212,17 +213,17 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
 
         //fee 
-        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
+        (uint fee, uint feeRefund) = IEchodexFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
         state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, false); 
 
         if (state.isSubTokenOut) {
-            amountOut = amountOut - amountOut * IPancakeFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
+            amountOut = amountOut - amountOut * IEchodexFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
             _safeTransfer(tokenOut, stateTemp.to, amountOut);
         } else {
             _safeTransfer(tokenOut, stateTemp.to, amountOut);
         }
 
-        if (stateTemp.data.length > 0) IPancakeCallee(stateTemp.to).pancakeCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
+        if (stateTemp.data.length > 0) IEchodexCallee(stateTemp.to).echodexCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
         state.balance0 = IERC20(stateTemp.token0).balanceOf(address(this));
         state.balance1 = IERC20(stateTemp.token1).balanceOf(address(this));
         }
@@ -275,17 +276,17 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
 
         //fee 
-        (uint fee, uint feeRefund) = IPancakeFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
+        (uint fee, uint feeRefund) = IEchodexFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
         state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, true); 
 
         if (state.isSubTokenOut) {
-            amountOut = amountOut - amountOut * IPancakeFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
+            amountOut = amountOut - amountOut * IEchodexFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
             _safeTransfer(tokenOut, stateTemp.to, amountOut);
         } else {
             _safeTransfer(tokenOut, stateTemp.to, amountOut);
         }
 
-        if (stateTemp.data.length > 0) IPancakeCallee(stateTemp.to).pancakeCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
+        if (stateTemp.data.length > 0) IEchodexCallee(stateTemp.to).echodexCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
         state.balance0 = IERC20(stateTemp.token0).balanceOf(address(this));
         state.balance1 = IERC20(stateTemp.token1).balanceOf(address(this));
         }
@@ -308,6 +309,13 @@ contract PancakePair is IPancakePair, PancakeERC20 {
         // 101 * 990.09901
         _update(state.balance0, state.balance1, _reserve0, _reserve1);
         emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
+    }
+
+    function addFee(uint amount, address from) external lock {
+        address tokenFee = IEchodexFactory(factory).tokenFee();
+        IERC20(tokenFee).transferFrom(from, address(this), amount);
+        totalFee = totalFee + amount;
+        currentFee = currentFee + amount;
     }
 
     // force balances to match reserves

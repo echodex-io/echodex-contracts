@@ -106,218 +106,6 @@
         "IWETH"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeCallee.sol": {
-      "lastModificationDate": 1680772593312,
-      "contentHash": "d1ca55704a49166661c5cadb2f9da344",
-      "sourceName": "contracts/interfaces/IPancakeCallee.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.5.0"
-      ],
-      "artifacts": [
-        "IPancakeCallee"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeFactory.sol": {
-      "lastModificationDate": 1682579430580,
-      "contentHash": "da0379d1371e12e38ab5b149fe59fb47",
-      "sourceName": "contracts/interfaces/IPancakeFactory.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.5.0"
-      ],
-      "artifacts": [
-        "IPancakeFactory"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakePair.sol": {
-      "lastModificationDate": 1682590550356,
-      "contentHash": "42237ead9f4c0bff39cf8631582f3174",
-      "sourceName": "contracts/interfaces/IPancakePair.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.5.0"
-      ],
-      "artifacts": [
-        "IPancakePair"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeERC20.sol": {
-      "lastModificationDate": 1680772593312,
-      "contentHash": "284f884da0e02388848af80a7fc9ce94",
-      "sourceName": "contracts/interfaces/IPancakeERC20.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.5.0"
-      ],
-      "artifacts": [
-        "IPancakeERC20"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeRouter02.sol": {
-      "lastModificationDate": 1682073335079,
-      "contentHash": "193d4cad19e907788df32ecedd5b7200",
-      "sourceName": "contracts/interfaces/IPancakeRouter02.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IPancakeRouter01.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IPancakeRouter02"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IPancakeRouter01.sol": {
-      "lastModificationDate": 1682072078378,
-      "contentHash": "465d14141a693d24ff1032b71f7d1f3a",
-      "sourceName": "contracts/interfaces/IPancakeRouter01.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IPancakeRouter01"
-      ]
-    },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\Babylonian.sol": {
       "lastModificationDate": 1680772593314,
       "contentHash": "e41c1ccbfbdbaa04db057c93aab11417",
@@ -536,87 +324,6 @@
         "IERC20Metadata"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\PancakeRouter01.sol": {
-      "lastModificationDate": 1680772593312,
-      "contentHash": "afbdb090ee1e240b22bde29fffce155c",
-      "sourceName": "contracts/PancakeRouter01.sol",
-      "solcConfig": {
-        "version": "0.6.6",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@uniswap/lib/contracts/libraries/TransferHelper.sol",
-        "./libraries/PancakeLibrary.sol",
-        "./interfaces/IPancakeRouter01.sol",
-        "./interfaces/IPancakeFactory.sol",
-        "./interfaces/IERC20.sol",
-        "./interfaces/IWETH.sol"
-      ],
-      "versionPragmas": [
-        "=0.6.6"
-      ],
-      "artifacts": [
-        "PancakeRouter01"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\PancakeLibrary.sol": {
-      "lastModificationDate": 1682590595325,
-      "contentHash": "df281195c742dcba060143ab1f3bf2aa",
-      "sourceName": "contracts/libraries/PancakeLibrary.sol",
-      "solcConfig": {
-        "version": "0.6.6",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./SafeMath.sol",
-        "../interfaces/IPancakeFactory.sol",
-        "../interfaces/IPancakePair.sol"
-      ],
-      "versionPragmas": [
-        ">=0.5.0"
-      ],
-      "artifacts": [
-        "PancakeLibrary"
-      ]
-    },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\SafeMath.sol": {
       "lastModificationDate": 1680772593314,
       "contentHash": "894093d34b4dbb90ac7df14d37faf31e",
@@ -650,130 +357,6 @@
       ],
       "artifacts": [
         "SafeMath"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\PancakeRouter.sol": {
-      "lastModificationDate": 1682073335078,
-      "contentHash": "a2c2fab62e8d6742afc5ccd88a0e120a",
-      "sourceName": "contracts/PancakeRouter.sol",
-      "solcConfig": {
-        "version": "0.6.6",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@uniswap/lib/contracts/libraries/TransferHelper.sol",
-        "./interfaces/IPancakeRouter02.sol",
-        "./interfaces/IPancakeFactory.sol",
-        "./libraries/PancakeLibrary.sol",
-        "./libraries/SafeMath.sol",
-        "./interfaces/IERC20.sol",
-        "./interfaces/IWETH.sol"
-      ],
-      "versionPragmas": [
-        "=0.6.6"
-      ],
-      "artifacts": [
-        "PancakeRouter"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\PancakeERC20.sol": {
-      "lastModificationDate": 1680772593311,
-      "contentHash": "1c7b96bc2fdd38b255b2f50ddabe9299",
-      "sourceName": "contracts/PancakeERC20.sol",
-      "solcConfig": {
-        "version": "0.5.16",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./interfaces/IPancakeERC20.sol",
-        "./libraries/SafeMath.sol"
-      ],
-      "versionPragmas": [
-        "=0.5.16"
-      ],
-      "artifacts": [
-        "PancakeERC20"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\PancakePair.sol": {
-      "lastModificationDate": 1682590502874,
-      "contentHash": "2641e47334b51101828c50fe5e06d746",
-      "sourceName": "contracts/PancakePair.sol",
-      "solcConfig": {
-        "version": "0.5.16",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./interfaces/IPancakePair.sol",
-        "./PancakeERC20.sol",
-        "./libraries/Math.sol",
-        "./libraries/UQ112x112.sol",
-        "./interfaces/IERC20.sol",
-        "./interfaces/IPancakeFactory.sol",
-        "./interfaces/IPancakeCallee.sol"
-      ],
-      "versionPragmas": [
-        "=0.5.16"
-      ],
-      "artifacts": [
-        "PancakePair"
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\Math.sol": {
@@ -846,45 +429,6 @@
         "UQ112x112"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\PancakeFactory.sol": {
-      "lastModificationDate": 1682579426802,
-      "contentHash": "fe9a54e95801c3871deda5cc829f11c1",
-      "sourceName": "contracts/PancakeFactory.sol",
-      "solcConfig": {
-        "version": "0.5.16",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./interfaces/IPancakeFactory.sol",
-        "./PancakePair.sol",
-        "./libraries/PancakeLibrary.sol"
-      ],
-      "versionPragmas": [
-        "=0.5.16"
-      ],
-      "artifacts": [
-        "PancakeFactory"
-      ]
-    },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\WBNB.sol": {
       "lastModificationDate": 1680772593315,
       "contentHash": "52237cc07b0e66bb43e65b38acaa9271",
@@ -918,6 +462,462 @@
       ],
       "artifacts": [
         "WBNB"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\EchodexERC20.sol": {
+      "lastModificationDate": 1683529477397,
+      "contentHash": "e3553a1382666ae2ac31768118163ea9",
+      "sourceName": "contracts/EchodexERC20.sol",
+      "solcConfig": {
+        "version": "0.5.16",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IEchodexERC20.sol",
+        "./libraries/SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "=0.5.16"
+      ],
+      "artifacts": [
+        "EchodexERC20"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\EchodexPair.sol": {
+      "lastModificationDate": 1683529785171,
+      "contentHash": "ff64efcb1020cb628ddacfa5d2f4d0f9",
+      "sourceName": "contracts/EchodexPair.sol",
+      "solcConfig": {
+        "version": "0.5.16",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IEchodexPair.sol",
+        "./EchodexERC20.sol",
+        "./libraries/Math.sol",
+        "./libraries/UQ112x112.sol",
+        "./interfaces/IERC20.sol",
+        "./interfaces/IEchodexFactory.sol",
+        "./interfaces/IEchodexCallee.sol"
+      ],
+      "versionPragmas": [
+        "=0.5.16"
+      ],
+      "artifacts": [
+        "EchodexPair"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\EchodexFactory.sol": {
+      "lastModificationDate": 1683529638977,
+      "contentHash": "0268d2338ba70548e8a0fdd18c5fe847",
+      "sourceName": "contracts/EchodexFactory.sol",
+      "solcConfig": {
+        "version": "0.5.16",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IEchodexFactory.sol",
+        "./EchodexPair.sol",
+        "./libraries/EchodexLibrary.sol"
+      ],
+      "versionPragmas": [
+        "=0.5.16"
+      ],
+      "artifacts": [
+        "EchodexFactory"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexCallee.sol": {
+      "lastModificationDate": 1683529172129,
+      "contentHash": "d514297ecdde42225b774db7f7f0787a",
+      "sourceName": "contracts/interfaces/IEchodexCallee.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IEchodexCallee"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexFactory.sol": {
+      "lastModificationDate": 1683529187516,
+      "contentHash": "a829e73c672800c172bb054436827812",
+      "sourceName": "contracts/interfaces/IEchodexFactory.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IEchodexFactory"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexRouter01.sol": {
+      "lastModificationDate": 1683529328695,
+      "contentHash": "566b169d20441173691d05796a7e7b47",
+      "sourceName": "contracts/interfaces/IEchodexRouter01.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IEchodexRouter01"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexRouter02.sol": {
+      "lastModificationDate": 1683529339382,
+      "contentHash": "c2dd4be9da43421a4fe0506716311bb4",
+      "sourceName": "contracts/interfaces/IEchodexRouter02.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IEchodexRouter01.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IEchodexRouter02"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexPair.sol": {
+      "lastModificationDate": 1683529194494,
+      "contentHash": "e10fcb525ec9c3fafc342dadf6bd8a73",
+      "sourceName": "contracts/interfaces/IEchodexPair.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IEchodexPair"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexERC20.sol": {
+      "lastModificationDate": 1683529180021,
+      "contentHash": "9386ba60c4d83253fa9ec83acc44a5ae",
+      "sourceName": "contracts/interfaces/IEchodexERC20.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IEchodexERC20"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
+      "lastModificationDate": 1683529885646,
+      "contentHash": "e2bbeb04becc7bb2e28bb99abb5160e8",
+      "sourceName": "contracts/libraries/EchodexLibrary.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./SafeMath.sol",
+        "../interfaces/IEchodexFactory.sol",
+        "../interfaces/IEchodexPair.sol"
+      ],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "EchodexLibrary"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\EchodexRouter.sol": {
+      "lastModificationDate": 1683529681601,
+      "contentHash": "c2256014968ec9f2dad3dfdedff33a21",
+      "sourceName": "contracts/EchodexRouter.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@uniswap/lib/contracts/libraries/TransferHelper.sol",
+        "./interfaces/IEchodexRouter02.sol",
+        "./interfaces/IEchodexFactory.sol",
+        "./libraries/EchodexLibrary.sol",
+        "./libraries/SafeMath.sol",
+        "./interfaces/IERC20.sol",
+        "./interfaces/IWETH.sol"
+      ],
+      "versionPragmas": [
+        "=0.6.6"
+      ],
+      "artifacts": [
+        "EchodexRouter"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\EchodexRouter01.sol": {
+      "lastModificationDate": 1683529690628,
+      "contentHash": "1b4b372914e320944262a69504780d27",
+      "sourceName": "contracts/EchodexRouter01.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@uniswap/lib/contracts/libraries/TransferHelper.sol",
+        "./libraries/EchodexLibrary.sol",
+        "./interfaces/IEchodexRouter01.sol",
+        "./interfaces/IEchodexFactory.sol",
+        "./interfaces/IERC20.sol",
+        "./interfaces/IWETH.sol"
+      ],
+      "versionPragmas": [
+        "=0.6.6"
+      ],
+      "artifacts": [
+        "EchodexRouter01"
       ]
     }
   }

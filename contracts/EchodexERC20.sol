@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity =0.5.16;
 
-import "./interfaces/IPancakeERC20.sol";
+import "./interfaces/IEchodexERC20.sol";
 import "./libraries/SafeMath.sol";
 
-contract PancakeERC20 is IPancakeERC20 {
+contract EchodexERC20 is IEchodexERC20 {
     using SafeMath for uint256;
 
-    string public constant name = "Pancake LPs";
-    string public constant symbol = "Cake-LP";
+    string public constant name = "Echodex LPs";
+    string public constant symbol = "Echodex-LP";
     uint8 public constant decimals = 18;
     uint256 public totalSupply;
     mapping(address => uint256) public balanceOf;
@@ -100,7 +100,7 @@ contract PancakeERC20 is IPancakeERC20 {
         bytes32 r,
         bytes32 s
     ) external {
-        require(deadline >= block.timestamp, "Pancake: EXPIRED");
+        require(deadline >= block.timestamp, "Echodex: EXPIRED");
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
@@ -109,7 +109,7 @@ contract PancakeERC20 is IPancakeERC20 {
             )
         );
         address recoveredAddress = ecrecover(digest, v, r, s);
-        require(recoveredAddress != address(0) && recoveredAddress == owner, "Pancake: INVALID_SIGNATURE");
+        require(recoveredAddress != address(0) && recoveredAddress == owner, "Echodex: INVALID_SIGNATURE");
         _approve(owner, spender, value);
     }
 }

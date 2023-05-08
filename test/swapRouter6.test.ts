@@ -4,16 +4,16 @@ import { assert, expect } from "chai";
 import { BN, constants, expectEvent, expectRevert, time } from "@openzeppelin/test-helpers";
 
 const MockERC20 = artifacts.require("./utils/MockERC20.sol");
-const PancakeFactory = artifacts.require("./PancakeFactory.sol");
-const PancakePair = artifacts.require("./PancakePair.sol");
-const PancakeRouter = artifacts.require("./PancakeRouter.sol");
+const EchodexFactory = artifacts.require("./EchodexFactory.sol");
+const EchodexPair = artifacts.require("./EchodexPair.sol");
+const EchodexRouter = artifacts.require("./EchodexRouter.sol");
 const WBNB = artifacts.require("./WBNB.sol");
-const ERC20 = artifacts.require("./PancakeERC20.sol")
+const ERC20 = artifacts.require("./EchodexERC20.sol")
 
-contract("PancakePair", ([alice, bob, carol, david, erin]) => {
+contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
-    let pancakeRouter;
-    let pancakeFactory;
+    let echodexRouter;
+    let echodexFactory;
     let wrappedBNB;
 
     let tokenVANVAN;
@@ -35,40 +35,40 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
 
 
         // Deploy Factory
-        pancakeFactory = await PancakeFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
+        echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
 
-        console.log(await pancakeFactory.INIT_CODE_PAIR_HASH())
+        console.log(await echodexFactory.INIT_CODE_PAIR_HASH())
 
         // Deploy Wrapped BNB
         wrappedBNB = await WBNB.new({ from: alice });
 
         // Deploy Router
-        pancakeRouter = await PancakeRouter.new(pancakeFactory.address, wrappedBNB.address, { from: alice });
+        echodexRouter = await EchodexRouter.new(echodexFactory.address, wrappedBNB.address, { from: alice });
 
         // // Deploy ZapV1
         // maxZapReverseRatio = 100; // 1%
-        // pancakeZap = await PancakeZapV1.new(wrappedBNB.address, pancakeRouter.address, maxZapReverseRatio, { from: alice });
+        // echodexZap = await EchodexZapV1.new(wrappedBNB.address, echodexRouter.address, maxZapReverseRatio, { from: alice });
 
 
         // Create 3 LP tokens
 
         // pair VANVAN | VIVIAN
-        let result = await pancakeFactory.createPair(tokenVANVAN.address, tokenVIVIAN.address, { from: alice });
-        pairVANVI = await PancakePair.at(result.logs[0].args[2]);
+        let result = await echodexFactory.createPair(tokenVANVAN.address, tokenVIVIAN.address, { from: alice });
+        pairVANVI = await EchodexPair.at(result.logs[0].args[2]);
 
         // pair FEE | MEDIALFEE
-        result = await pancakeFactory.createPair(tokenFEE.address, tokenMEDIALFEE.address, { from: alice });
-        pairFEEMEDIAL = await PancakePair.at(result.logs[0].args[2]);
+        result = await echodexFactory.createPair(tokenFEE.address, tokenMEDIALFEE.address, { from: alice });
+        pairFEEMEDIAL = await EchodexPair.at(result.logs[0].args[2]);
 
         // pair VIVIAN | MEDIALFEE
-        result = await pancakeFactory.createPair(tokenVIVIAN.address, tokenMEDIALFEE.address, { from: alice });
-        pairVIMEDIAL = await PancakePair.at(result.logs[0].args[2]);
+        result = await echodexFactory.createPair(tokenVIVIAN.address, tokenMEDIALFEE.address, { from: alice });
+        pairVIMEDIAL = await EchodexPair.at(result.logs[0].args[2]);
 
         // pair VIVIAN | FEE
-        result = await pancakeFactory.createPair(tokenVIVIAN.address, tokenFEE.address, { from: alice });
-        pairVIFEE = await PancakePair.at(result.logs[0].args[2]);
+        result = await echodexFactory.createPair(tokenVIVIAN.address, tokenFEE.address, { from: alice });
+        pairVIFEE = await EchodexPair.at(result.logs[0].args[2]);
 
-        await pancakeFactory.setPath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenFEE.address]);
+        await echodexFactory.setPath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenFEE.address]);
 
         await tokenVANVAN.mintTokens(parseEther("2000000"), { from: alice });
         await tokenVIVIAN.mintTokens(parseEther("2000000"), { from: alice });
@@ -76,19 +76,19 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         await tokenMEDIALFEE.mintTokens(parseEther("2000000"), { from: alice });
 
         // approve route
-        await tokenVANVAN.approve(pancakeRouter.address, constants.MAX_UINT256, {
+        await tokenVANVAN.approve(echodexRouter.address, constants.MAX_UINT256, {
             from: alice,
         });
 
-        await tokenVIVIAN.approve(pancakeRouter.address, constants.MAX_UINT256, {
+        await tokenVIVIAN.approve(echodexRouter.address, constants.MAX_UINT256, {
             from: alice,
         });
 
-        await tokenFEE.approve(pancakeRouter.address, constants.MAX_UINT256, {
+        await tokenFEE.approve(echodexRouter.address, constants.MAX_UINT256, {
             from: alice,
         });
 
-        await tokenMEDIALFEE.approve(pancakeRouter.address, constants.MAX_UINT256, {
+        await tokenMEDIALFEE.approve(echodexRouter.address, constants.MAX_UINT256, {
             from: alice,
         });
     });
@@ -97,7 +97,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
         it("User adds liquidity to LP tokens", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
 
-            /* Add liquidity (Pancake Router)
+            /* Add liquidity (Echodex Router)
              * address tokenB,
              * uint256 amountADesired,
              * uint256 amountBDesired,
@@ -110,7 +110,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
             await tokenFEE.transfer(pairVANVI.address, parseEther("1000"), { from: alice })
 
             // 1 VANVAN = 10 VIVIAN
-            let result = await pancakeRouter.addLiquidity(
+            let result = await echodexRouter.addLiquidity(
                 tokenVANVAN.address,
                 tokenVIVIAN.address,
                 parseEther("100"), // 100 VANVAN
@@ -140,7 +140,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
             assert.equal(String(await tokenFEE.balanceOf(pairVANVI.address)), parseEther("1000").toString());
 
             // 1 MEDIAL = 10 FEE
-            result = await pancakeRouter.addLiquidity(
+            result = await echodexRouter.addLiquidity(
                 tokenMEDIALFEE.address,
                 tokenFEE.address,
                 parseEther("100"), // 100 token MEDIAL
@@ -169,7 +169,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
             assert.equal(String(await tokenFEE.balanceOf(pairFEEMEDIAL.address)), parseEther("1000").toString());
 
             // 1 VIVIAN = 10 MEDIAL
-            result = await pancakeRouter.addLiquidity(
+            result = await echodexRouter.addLiquidity(
                 tokenVIVIAN.address,
                 tokenMEDIALFEE.address,
                 parseEther("100"), // 100 token VIVIAN
@@ -198,7 +198,7 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
             assert.equal(String(await tokenMEDIALFEE.balanceOf(pairVIMEDIAL.address)), parseEther("1000").toString());
 
             // 1 VIVIAN = 10 FEE
-            result = await pancakeRouter.addLiquidity(
+            result = await echodexRouter.addLiquidity(
                 tokenVIVIAN.address,
                 tokenFEE.address,
                 parseEther("100"), // 100 token VIVIAN
@@ -235,9 +235,15 @@ contract("PancakePair", ([alice, bob, carol, david, erin]) => {
                 from: alice,
             });
 
+            // addFee
+            await tokenFEE.mintTokens(parseEther("5"), { from: alice });
+            await pairVANVI.addFee(parseEther("5"), alice, {
+                from: alice
+            })
+
             console.log(String(await tokenFEE.balanceOf(pairVANVI.address)))
 
-            await pancakeRouter.swapExactTokensForTokens(
+            await echodexRouter.swapExactTokensForTokens(
                 parseEther("100"), // 1 VANVAN
                 parseEther("500"), // 9 VIVIAN
                 [tokenVANVAN.address, tokenVIVIAN.address],

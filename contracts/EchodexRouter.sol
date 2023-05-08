@@ -3,21 +3,21 @@ pragma solidity =0.6.6;
 
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
-import "./interfaces/IPancakeRouter02.sol";
-import "./interfaces/IPancakeFactory.sol";
-import "./libraries/PancakeLibrary.sol";
+import "./interfaces/IEchodexRouter02.sol";
+import "./interfaces/IEchodexFactory.sol";
+import "./libraries/EchodexLibrary.sol";
 import "./libraries/SafeMath.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 
-contract PancakeRouter is IPancakeRouter02 {
+contract EchodexRouter is IEchodexRouter02 {
     using SafeMath for uint256;
 
     address public immutable override factory;
     address public immutable override WETH;
 
     modifier ensure(uint256 deadline) {
-        require(deadline >= block.timestamp, "PancakeRouter: EXPIRED");
+        require(deadline >= block.timestamp, "EchodexRouter: EXPIRED");
         _;
     }
 
@@ -40,21 +40,21 @@ contract PancakeRouter is IPancakeRouter02 {
         uint256 amountBMin
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // create the pair if it doesn't exist yet
-        if (IPancakeFactory(factory).getPair(tokenA, tokenB) == address(0)) {
-            IPancakeFactory(factory).createPair(tokenA, tokenB);
+        if (IEchodexFactory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IEchodexFactory(factory).createPair(tokenA, tokenB);
         }
-        (uint256 reserveA, uint256 reserveB) = PancakeLibrary.getReserves(factory, tokenA, tokenB);
+        (uint256 reserveA, uint256 reserveB) = EchodexLibrary.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
-            uint256 amountBOptimal = PancakeLibrary.quote(amountADesired, reserveA, reserveB);
+            uint256 amountBOptimal = EchodexLibrary.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                require(amountBOptimal >= amountBMin, "PancakeRouter: INSUFFICIENT_B_AMOUNT");
+                require(amountBOptimal >= amountBMin, "EchodexRouter: INSUFFICIENT_B_AMOUNT");
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
-                uint256 amountAOptimal = PancakeLibrary.quote(amountBDesired, reserveB, reserveA);
+                uint256 amountAOptimal = EchodexLibrary.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                require(amountAOptimal >= amountAMin, "PancakeRouter: INSUFFICIENT_A_AMOUNT");
+                require(amountAOptimal >= amountAMin, "EchodexRouter: INSUFFICIENT_A_AMOUNT");
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
@@ -81,10 +81,10 @@ contract PancakeRouter is IPancakeRouter02 {
         )
     {
         (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
-        address pair = PancakeLibrary.pairFor(factory, tokenA, tokenB);
+        address pair = EchodexLibrary.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        liquidity = IPancakePair(pair).mint(to);
+        liquidity = IEchodexPair(pair).mint(to);
     }
 
     function addLiquidityETH(
@@ -114,11 +114,11 @@ contract PancakeRouter is IPancakeRouter02 {
             amountTokenMin,
             amountETHMin
         );
-        address pair = PancakeLibrary.pairFor(factory, token, WETH);
+        address pair = EchodexLibrary.pairFor(factory, token, WETH);
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(WETH).deposit{value: amountETH}();
         assert(IWETH(WETH).transfer(pair, amountETH));
-        liquidity = IPancakePair(pair).mint(to);
+        liquidity = IEchodexPair(pair).mint(to);
         // refund dust eth, if any
         if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
@@ -133,13 +133,13 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) public virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
-        address pair = PancakeLibrary.pairFor(factory, tokenA, tokenB);
-        IPancakePair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
-        (uint256 amount0, uint256 amount1) = IPancakePair(pair).burn(to);
-        (address token0, ) = PancakeLibrary.sortTokens(tokenA, tokenB);
+        address pair = EchodexLibrary.pairFor(factory, tokenA, tokenB);
+        IEchodexPair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        (uint256 amount0, uint256 amount1) = IEchodexPair(pair).burn(to);
+        (address token0, ) = EchodexLibrary.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
-        require(amountA >= amountAMin, "PancakeRouter: INSUFFICIENT_A_AMOUNT");
-        require(amountB >= amountBMin, "PancakeRouter: INSUFFICIENT_B_AMOUNT");
+        require(amountA >= amountAMin, "EchodexRouter: INSUFFICIENT_A_AMOUNT");
+        require(amountB >= amountBMin, "EchodexRouter: INSUFFICIENT_B_AMOUNT");
     }
 
     function removeLiquidityETH(
@@ -177,9 +177,9 @@ contract PancakeRouter is IPancakeRouter02 {
         bytes32 r,
         bytes32 s
     ) external virtual override returns (uint256 amountA, uint256 amountB) {
-        address pair = PancakeLibrary.pairFor(factory, tokenA, tokenB);
+        address pair = EchodexLibrary.pairFor(factory, tokenA, tokenB);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        IPancakePair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IEchodexPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
     }
 
@@ -195,9 +195,9 @@ contract PancakeRouter is IPancakeRouter02 {
         bytes32 r,
         bytes32 s
     ) external virtual override returns (uint256 amountToken, uint256 amountETH) {
-        address pair = PancakeLibrary.pairFor(factory, token, WETH);
+        address pair = EchodexLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        IPancakePair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IEchodexPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline);
     }
 
@@ -228,9 +228,9 @@ contract PancakeRouter is IPancakeRouter02 {
         bytes32 r,
         bytes32 s
     ) external virtual override returns (uint256 amountETH) {
-        address pair = PancakeLibrary.pairFor(factory, token, WETH);
+        address pair = EchodexLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        IPancakePair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IEchodexPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         amountETH = removeLiquidityETHSupportingFeeOnTransferTokens(
             token,
             liquidity,
@@ -251,15 +251,15 @@ contract PancakeRouter is IPancakeRouter02 {
     ) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0, ) = PancakeLibrary.sortTokens(input, output);
+            (address token0, ) = EchodexLibrary.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
-            address to = i < path.length - 2 ? PancakeLibrary.pairFor(factory, output, path[i + 2]) : _to;
+            address to = i < path.length - 2 ? EchodexLibrary.pairFor(factory, output, path[i + 2]) : _to;
             if (payWithTokenFee) {
-                IPancakePair(PancakeLibrary.pairFor(factory, input, output)).swapPayWithTokenFee(amount0Out, amount1Out, to, new bytes(0));
+                IEchodexPair(EchodexLibrary.pairFor(factory, input, output)).swapPayWithTokenFee(amount0Out, amount1Out, to, new bytes(0));
             } else {
-                IPancakePair(PancakeLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
+                IEchodexPair(EchodexLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
             }
             
         }
@@ -272,12 +272,12 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = PancakeLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to, false);
@@ -290,12 +290,12 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = PancakeLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to, true);
@@ -308,12 +308,12 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = PancakeLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT");
+        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to, false);
@@ -326,12 +326,12 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = PancakeLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT");
+        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to, true);
@@ -343,11 +343,11 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsOut(factory, msg.value, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsOut(factory, msg.value, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(PancakeLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to, false);
     }
 
@@ -357,11 +357,11 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsOut(factory, msg.value, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsOut(factory, msg.value, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(PancakeLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to, true);
     }
 
@@ -372,13 +372,13 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT");
+        require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this), false);
@@ -393,13 +393,13 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT");
+        require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this), true);
@@ -414,13 +414,13 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this), false);
@@ -435,13 +435,13 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this), true);
@@ -455,11 +455,11 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= msg.value, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT");
+        require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= msg.value, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(PancakeLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to, false);
         // refund dust eth, if any
         if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
@@ -471,11 +471,11 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WETH, "PancakeRouter: INVALID_PATH");
-        amounts = PancakeLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= msg.value, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT");
+        require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
+        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= msg.value, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(PancakeLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to, true);
         // refund dust eth, if any
         if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
@@ -486,8 +486,8 @@ contract PancakeRouter is IPancakeRouter02 {
     function _swapSupportingFeeOnTransferTokens(address[] memory path, address _to, bool payWithTokenFee) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0, ) = PancakeLibrary.sortTokens(input, output);
-            IPancakePair pair = IPancakePair(PancakeLibrary.pairFor(factory, input, output));
+            (address token0, ) = EchodexLibrary.sortTokens(input, output);
+            IEchodexPair pair = IEchodexPair(EchodexLibrary.pairFor(factory, input, output));
             uint256 amountInput;
             uint256 amountOutput;
             {
@@ -496,11 +496,11 @@ contract PancakeRouter is IPancakeRouter02 {
                 (uint256 reserveInput, uint256 reserveOutput) =
                     input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
                 amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
-                amountOutput = PancakeLibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
+                amountOutput = EchodexLibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
             }
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
-            address to = i < path.length - 2 ? PancakeLibrary.pairFor(factory, output, path[i + 2]) : _to;
+            address to = i < path.length - 2 ? EchodexLibrary.pairFor(factory, output, path[i + 2]) : _to;
             if (payWithTokenFee) {
                 pair.swapPayWithTokenFee(amount0Out, amount1Out, to, new bytes(0));
             } else {
@@ -520,14 +520,14 @@ contract PancakeRouter is IPancakeRouter02 {
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amountIn
         );
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to, false);
         require(
             IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
-            "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+            "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
 
@@ -541,14 +541,14 @@ contract PancakeRouter is IPancakeRouter02 {
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amountIn
         );
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to, true);
         require(
             IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
-            "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+            "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
 
@@ -558,15 +558,15 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) {
-        require(path[0] == WETH, "PancakeRouter: INVALID_PATH");
+        require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
         uint256 amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
-        assert(IWETH(WETH).transfer(PancakeLibrary.pairFor(factory, path[0], path[1]), amountIn));
+        assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amountIn));
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to, false);
         require(
             IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
-            "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+            "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
 
@@ -576,15 +576,15 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) {
-        require(path[0] == WETH, "PancakeRouter: INVALID_PATH");
+        require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
         uint256 amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
-        assert(IWETH(WETH).transfer(PancakeLibrary.pairFor(factory, path[0], path[1]), amountIn));
+        assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amountIn));
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to, true);
         require(
             IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
-            "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+            "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
 
@@ -595,16 +595,16 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) {
-        require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH");
+        require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amountIn
         );
         _swapSupportingFeeOnTransferTokens(path, address(this), false);
         uint256 amountOut = IERC20(WETH).balanceOf(address(this));
-        require(amountOut >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(amountOut >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         IWETH(WETH).withdraw(amountOut);
         TransferHelper.safeTransferETH(to, amountOut);
     }
@@ -616,16 +616,16 @@ contract PancakeRouter is IPancakeRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) {
-        require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH");
+        require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            PancakeLibrary.pairFor(factory, path[0], path[1]),
+            EchodexLibrary.pairFor(factory, path[0], path[1]),
             amountIn
         );
         _swapSupportingFeeOnTransferTokens(path, address(this), true);
         uint256 amountOut = IERC20(WETH).balanceOf(address(this));
-        require(amountOut >= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(amountOut >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         IWETH(WETH).withdraw(amountOut);
         TransferHelper.safeTransferETH(to, amountOut);
     }
@@ -636,7 +636,7 @@ contract PancakeRouter is IPancakeRouter02 {
         uint256 reserveA,
         uint256 reserveB
     ) public pure virtual override returns (uint256 amountB) {
-        return PancakeLibrary.quote(amountA, reserveA, reserveB);
+        return EchodexLibrary.quote(amountA, reserveA, reserveB);
     }
 
     function getAmountOut(
@@ -644,7 +644,7 @@ contract PancakeRouter is IPancakeRouter02 {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure virtual override returns (uint256 amountOut) {
-        return PancakeLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
+        return EchodexLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
     function getAmountIn(
@@ -652,7 +652,7 @@ contract PancakeRouter is IPancakeRouter02 {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure virtual override returns (uint256 amountIn) {
-        return PancakeLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
+        return EchodexLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)
@@ -662,7 +662,7 @@ contract PancakeRouter is IPancakeRouter02 {
         override
         returns (uint256[] memory amounts)
     {
-        return PancakeLibrary.getAmountsOut(factory, amountIn, path);
+        return EchodexLibrary.getAmountsOut(factory, amountIn, path);
     }
 
     function getAmountsIn(uint256 amountOut, address[] memory path)
@@ -672,6 +672,6 @@ contract PancakeRouter is IPancakeRouter02 {
         override
         returns (uint256[] memory amounts)
     {
-        return PancakeLibrary.getAmountsIn(factory, amountOut, path);
+        return EchodexLibrary.getAmountsIn(factory, amountOut, path);
     }
 }

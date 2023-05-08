@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity =0.5.16;
 
-import './interfaces/IPancakeFactory.sol';
-import './PancakePair.sol';
-import './libraries/PancakeLibrary.sol';
+import './interfaces/IEchodexFactory.sol';
+import './EchodexPair.sol';
+import './libraries/EchodexLibrary.sol';
 
-contract PancakeFactory is IPancakeFactory {
-    bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(PancakePair).creationCode));
+contract EchodexFactory is IEchodexFactory {
+    bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(EchodexPair).creationCode));
 
     address public receiveFee;
     address public tokenFee;
@@ -38,16 +38,16 @@ contract PancakeFactory is IPancakeFactory {
     }
 
     function createPair(address tokenA, address tokenB) external returns (address pair) {
-        require(tokenA != tokenB, 'Pancake: IDENTICAL_ADDRESSES');
+        require(tokenA != tokenB, 'Echodex: IDENTICAL_ADDRESSES');
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), 'Pancake: ZERO_ADDRESS');
-        require(getPair[token0][token1] == address(0), 'Pancake: PAIR_EXISTS'); // single check is sufficient
-        bytes memory bytecode = type(PancakePair).creationCode;
+        require(token0 != address(0), 'Echodex: ZERO_ADDRESS');
+        require(getPair[token0][token1] == address(0), 'Echodex: PAIR_EXISTS'); // single check is sufficient
+        bytes memory bytecode = type(EchodexPair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
         assembly {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        PancakePair(pair).initialize(token0, token1);
+        EchodexPair(pair).initialize(token0, token1);
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
@@ -55,37 +55,37 @@ contract PancakeFactory is IPancakeFactory {
     }
 
     function setPercentRefundPair(address pair, uint _percentRefund) external {
-        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
         percentRefund[pair] = _percentRefund;
     }
 
     function setTokenFee(address _tokenFee) external {
-        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
         tokenFee = _tokenFee;
     }
 
     function setTokenMedialFee(address _tokenMedialFee) external {
-        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
         tokenMedialFee = _tokenMedialFee;
     }
 
     function setReceiveFee(address _receiveFee) external {
-        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
         receiveFee = _receiveFee;
     }
 
     function setPercentFee(uint _percentFee) external {
-        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
         percentFee = _percentFee;
     }
 
     function setPercentFeeCaseSubTokenOut (uint _percentFeeCaseSubTokenOut) external {
-        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
         percentFeeCaseSubTokenOut = _percentFeeCaseSubTokenOut;
     }
 
     function setPath(address tokenOut, address[] calldata path) external {
-        require(msg.sender == owner, 'Pancake: FORBIDDEN');
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
         tokenMedialFeePath[tokenOut] = path;
     }
 
@@ -99,42 +99,12 @@ contract PancakeFactory is IPancakeFactory {
         }
 
         address[] memory path = tokenMedialFeePath[tokenOut];
-        uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
+        uint256[] memory amounts = EchodexLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
         fee = amounts[amounts.length - 1];
 
         if (amountFeeRefundTokenOut > 0) {
-            uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
+            uint256[] memory amountsRefund = EchodexLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
             feeRefund = amountsRefund[amountsRefund.length - 1];
         }
-
-        // address pairWithTokenFee = getPair[tokenOut][tokenFee];
-        // if (pairWithTokenFee == address(0)) { // have no pair
-        //     //tokenOut -> tokenMedialFee -> tokenFee
-        //     address[] memory path = new address[](3);
-      
-        //     path[0] = tokenOut;
-        //     path[1] = tokenMedialFee;
-        //     path[2] = tokenFee;
-        //     uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
-        //     fee = amounts[amounts.length - 1];
-
-        //     if (amountFeeRefundTokenOut > 0) {
-        //         uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
-        //         feeRefund = amountsRefund[amountsRefund.length - 1];
-        //     }
-           
-        // } else { // have pair
-        //     //tokenOut -> tokenFee
-        //     address[] memory path = new address[](2);
-        //     path[0] = tokenOut;
-        //     path[1] = tokenFee;
-        //     uint256[] memory amounts = PancakeLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
-        //     fee = amounts[amounts.length - 1];
-
-        //     if (amountFeeRefundTokenOut > 0) {
-        //         uint256[] memory amountsRefund = PancakeLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
-        //         feeRefund = amountsRefund[amountsRefund.length - 1];
-        //     }
-        // }
     }
 }

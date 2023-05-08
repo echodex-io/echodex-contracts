@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.5.0;
 
-interface IPancakePair {
+interface IEchodexPair {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Transfer(address indexed from, address indexed to, uint256 value);
 
@@ -96,13 +96,17 @@ interface IPancakePair {
         bytes calldata data
     ) external;
 
+    function addFee(uint amount, address from) external;
+
     function skim(address to) external;
 
     function sync() external;
 
     function initialize(address, address) external;
 
-    function feeUsed() external view returns (uint);
+    function totalFee() external view returns (uint);
+
+    function currentFee() external view returns (uint);
 
     event UseTokenFeeInPool(address receiveFee, uint fee);
 }
