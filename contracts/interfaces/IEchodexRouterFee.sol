@@ -3,7 +3,7 @@ pragma solidity >=0.6.2;
 
 import "./IEchodexRouter01.sol";
 
-interface IEchodexRouter02 is IEchodexRouter01 {
+interface IEchodexRouterFee is IEchodexRouter01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,

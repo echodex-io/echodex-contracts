@@ -239,7 +239,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
             console.log(String(await tokenFEE.balanceOf(alice)))
 
-            await echodexRouter.swapExactTokensForTokensPayWithTokenFee(
+            await echodexRouter.swapExactTokensForTokens(
                 parseEther("100"), // 1 VANVAN
                 parseEther("500"), // 9 VIVIAN
                 [tokenVANVAN.address, tokenVIVIAN.address],

@@ -3,14 +3,14 @@ pragma solidity =0.6.6;
 
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
-import "./interfaces/IEchodexRouter02.sol";
+import "./interfaces/IEchodexRouterFee.sol";
 import "./interfaces/IEchodexFactory.sol";
 import "./libraries/EchodexLibrary.sol";
 import "./libraries/SafeMath.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 
-contract EchodexRouter is IEchodexRouter02 {
+contract EchodexRouterFee is IEchodexRouterFee {
     using SafeMath for uint256;
 
     address public immutable override factory;
@@ -250,15 +250,19 @@ contract EchodexRouter is IEchodexRouter02 {
     ) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0,) = EchodexLibrary.sortTokens(input, output);
+            (address token0, address token1) = EchodexLibrary.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
             address to = i < path.length - 2 ? EchodexLibrary.pairFor(factory, output, path[i + 2]) : _to;
-            IEchodexPair(EchodexLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
+            address tokenOut = amount1Out == amountOut ? token0 : token1;
+            (uint fee,) = IEchodexFactory(factory).calcFee(amountOut, tokenOut, EchodexLibrary.pairFor(factory, input, output), factory);
+            address tokenFee = IEchodexFactory(factory).tokenFee();
+            IERC20(tokenFee).transferFrom(msg.sender, address(this), fee);
+            IEchodexPair(EchodexLibrary.pairFor(factory, input, output)).swapPayWithTokenFee(amount0Out, amount1Out, to, new bytes(0));
         }
     }
-
+   
     function swapExactTokensForTokens(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -387,7 +391,7 @@ contract EchodexRouter is IEchodexRouter02 {
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
             address to = i < path.length - 2 ? EchodexLibrary.pairFor(factory, output, path[i + 2]) : _to;
-            pair.swap(amount0Out, amount1Out, to, new bytes(0));
+            pair.swapPayWithTokenFee(amount0Out, amount1Out, to, new bytes(0));
         }
     }
 

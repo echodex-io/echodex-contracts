@@ -2,8 +2,8 @@
 pragma solidity ^0.8.4;
 
 /*
- * @author Uniswap
- * @notice Library from Uniswap
+ * @author Echodex
+ * @notice Library from Echodex
  */
 library Babylonian {
     function sqrt(uint256 x) internal pure returns (uint256) {

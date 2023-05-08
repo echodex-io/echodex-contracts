@@ -6,7 +6,7 @@ import { BN, constants, expectEvent, expectRevert, time } from "@openzeppelin/te
 const MockERC20 = artifacts.require("./utils/MockERC20.sol");
 const EchodexFactory = artifacts.require("./EchodexFactory.sol");
 const EchodexPair = artifacts.require("./EchodexPair.sol");
-const EchodexRouter = artifacts.require("./EchodexRouter.sol");
+const EchodexRouter = artifacts.require("./EchodexRouterFee.sol");
 const WBNB = artifacts.require("./WBNB.sol");
 
 contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
@@ -236,7 +236,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
                 from: alice,
             });
 
-            await echodexRouter.swapExactTokensForTokensPayWithTokenFee(
+            await echodexRouter.swapExactTokensForTokens(
                 parseEther("100"), // 1 VANVAN
                 parseEther("500"), // 9 VIVIAN
                 [tokenVANVAN.address, tokenVIVIAN.address],

@@ -89,7 +89,7 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
 
     // called once by the factory at time of deployment
     function initialize(address _token0, address _token1) external {
-        require(msg.sender == factory, 'UniswapV2: FORBIDDEN'); // sufficient check
+        require(msg.sender == factory, 'Echodex: FORBIDDEN'); // sufficient check
         token0 = _token0;
         token1 = _token1;
     }
@@ -116,7 +116,7 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
         address tokenFee = IEchodexFactory(factory).tokenFee();
         address receiveFee = IEchodexFactory(factory).receiveFee();
         if (currentFee > 0) { //pay with token in pool
-            require(currentFee >= (fee + feeRefund), 'UniswapV2: INSUFFICIENT_FEE');
+            require(currentFee >= (fee + feeRefund), 'Echodex: INSUFFICIENT_FEE');
             currentFee = currentFee - fee;
             _safeTransfer(tokenFee, receiveFee, fee);
             emit UseTokenFeeInPool(receiveFee, fee);
@@ -131,7 +131,7 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
             } else {
                 uint balanceTokenFeeInWalletUser = IERC20(tokenFee).balanceOf(to);
                 if (balanceTokenFeeInWalletUser >= fee) { // pay with token in user wallet
-                    IERC20(tokenFee).transferFrom(to, receiveFee, fee);
+                    IERC20(tokenFee).transferFrom(msg.sender, receiveFee, fee);
                 } else { // pay with sub tokenOut
                     isSubTokenOut = true;
                 }
@@ -186,9 +186,9 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
 
     // this low-level function should be called from a contract which performs important safety checks
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = false
-        require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
 
         SwapState memory state = SwapState({
             balance0: 0,
@@ -207,7 +207,7 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
             data: data
         });
 
-        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'UniswapV2: INVALID_TO');
+        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'Echodex: INVALID_TO');
 
         uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
         address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
@@ -230,14 +230,14 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
 
         state.amount0In = state.balance0 > _reserve0 - amount0Out ? state.balance0 - (_reserve0 - amount0Out) : 0;
         state.amount1In = state.balance1 > _reserve1 - amount1Out ? state.balance1 - (_reserve1 - amount1Out) : 0;
-        require(state.amount0In > 0 || state.amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
+        require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
         if (state.isSubTokenOut) {
             uint balance0Adjusted = state.balance0.mul(1000).sub(state.amount0In.mul(3));
             uint balance1Adjusted = state.balance1.mul(1000).sub(state.amount1In.mul(3));
-            require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+            require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
         } else {
-            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
         }
         }
       
@@ -249,9 +249,9 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
     }
 
     function swapPayWithTokenFee(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = true
-        require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
 
         SwapState memory state = SwapState({
             balance0: 0,
@@ -270,7 +270,7 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
             data: data
         });
 
-        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'UniswapV2: INVALID_TO');
+        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'Echodex: INVALID_TO');
 
         uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
         address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
@@ -293,14 +293,14 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
 
         state.amount0In = state.balance0 > _reserve0 - amount0Out ? state.balance0 - (_reserve0 - amount0Out) : 0;
         state.amount1In = state.balance1 > _reserve1 - amount1Out ? state.balance1 - (_reserve1 - amount1Out) : 0;
-        require(state.amount0In > 0 || state.amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
+        require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
         if (state.isSubTokenOut) {
             uint balance0Adjusted = state.balance0.mul(1000).sub(state.amount0In.mul(3));
             uint balance1Adjusted = state.balance1.mul(1000).sub(state.amount1In.mul(3));
-            require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+            require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
         } else {
-            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
         }
         }
       

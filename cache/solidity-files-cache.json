@@ -10,7 +10,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -45,7 +45,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -80,7 +80,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -107,15 +107,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\Babylonian.sol": {
-      "lastModificationDate": 1680772593314,
-      "contentHash": "e41c1ccbfbdbaa04db057c93aab11417",
+      "lastModificationDate": 1683532913853,
+      "contentHash": "54222c44fb37744bebf123a2d48c70ea",
       "sourceName": "contracts/libraries/Babylonian.sol",
       "solcConfig": {
         "version": "0.8.4",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -150,7 +150,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -187,7 +187,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -226,7 +226,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -261,7 +261,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -296,7 +296,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -333,7 +333,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -368,7 +368,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -403,7 +403,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -438,7 +438,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -473,7 +473,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -503,15 +503,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexPair.sol": {
-      "lastModificationDate": 1683529785171,
-      "contentHash": "ff64efcb1020cb628ddacfa5d2f4d0f9",
+      "lastModificationDate": 1683540349828,
+      "contentHash": "e586a6e39bc1da26193d19a074de82e3",
       "sourceName": "contracts/EchodexPair.sol",
       "solcConfig": {
         "version": "0.5.16",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -554,7 +554,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -593,7 +593,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -628,7 +628,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -663,7 +663,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -690,15 +690,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexRouter02.sol": {
-      "lastModificationDate": 1683529339382,
-      "contentHash": "c2dd4be9da43421a4fe0506716311bb4",
+      "lastModificationDate": 1683543368941,
+      "contentHash": "e5a3cdd1a0c8f4eb2ea17f336f12296b",
       "sourceName": "contracts/interfaces/IEchodexRouter02.sol",
       "solcConfig": {
         "version": "0.8.4",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -735,7 +735,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -770,7 +770,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -797,15 +797,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
-      "lastModificationDate": 1683529885646,
-      "contentHash": "e2bbeb04becc7bb2e28bb99abb5160e8",
+      "lastModificationDate": 1683543486571,
+      "contentHash": "61392dd61965688840e11745792b9568",
       "sourceName": "contracts/libraries/EchodexLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -836,15 +836,15 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexRouter.sol": {
-      "lastModificationDate": 1683529681601,
-      "contentHash": "c2256014968ec9f2dad3dfdedff33a21",
+      "lastModificationDate": 1683543445725,
+      "contentHash": "8ccaf2515c3a07073508e6b8b4f18ccf",
       "sourceName": "contracts/EchodexRouter.sol",
       "solcConfig": {
         "version": "0.6.6",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -887,7 +887,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10
           },
           "outputSelection": {
             "*": {
@@ -918,6 +918,86 @@
       ],
       "artifacts": [
         "EchodexRouter01"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexRouterFee.sol": {
+      "lastModificationDate": 1683543392820,
+      "contentHash": "100dedaf0c10586d51e03bbaba9c1b61",
+      "sourceName": "contracts/interfaces/IEchodexRouterFee.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IEchodexRouter01.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IEchodexRouterFee"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\EchodexRouterFee.sol": {
+      "lastModificationDate": 1683543411565,
+      "contentHash": "64e0ab3b395b33ef0ee52a0fa0148175",
+      "sourceName": "contracts/EchodexRouterFee.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@uniswap/lib/contracts/libraries/TransferHelper.sol",
+        "./interfaces/IEchodexRouterFee.sol",
+        "./interfaces/IEchodexFactory.sol",
+        "./libraries/EchodexLibrary.sol",
+        "./libraries/SafeMath.sol",
+        "./interfaces/IERC20.sol",
+        "./interfaces/IWETH.sol"
+      ],
+      "versionPragmas": [
+        "=0.6.6"
+      ],
+      "artifacts": [
+        "EchodexRouterFee"
       ]
     }
   }
