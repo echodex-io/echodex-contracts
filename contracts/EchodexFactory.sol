@@ -8,29 +8,23 @@ import './libraries/EchodexLibrary.sol';
 contract EchodexFactory is IEchodexFactory {
     bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(EchodexPair).creationCode));
 
-    address public receiveFee;
+    address public receiveFeeAddress;
     address public tokenFee;
-    address public tokenMedialFee;
     address public owner;
-    uint public percentFee;
-    uint public percentFeeCaseSubTokenOut;
 
-    mapping(address => address[]) public tokenMedialFeePath;
+    mapping(address => address[]) public feePath;
 
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
 
-    mapping(address => uint) public percentRefund;
+    mapping(address => uint) public refundPercent;
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
-    constructor(address _receiveFee, address _tokenFee, address _tokenMedialFee, uint _percentFee, uint _percentFeeCaseSubTokenOut) public {
-        receiveFee = _receiveFee;
+    constructor(address _receiveFeeAddress, address _tokenFee) public {
+        receiveFeeAddress = _receiveFeeAddress;
         tokenFee = _tokenFee;
-        tokenMedialFee = _tokenMedialFee;
         owner = msg.sender;
-        percentFee = _percentFee;
-        percentFeeCaseSubTokenOut = _percentFeeCaseSubTokenOut;
     }
 
     function allPairsLength() external view returns (uint) {
@@ -54,9 +48,9 @@ contract EchodexFactory is IEchodexFactory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setPercentRefundPair(address pair, uint _percentRefund) external {
+    function setRefundPercentPair(address pair, uint _refundPercent) external {
         require(msg.sender == owner, 'Echodex: FORBIDDEN');
-        percentRefund[pair] = _percentRefund;
+        refundPercent[pair] = _refundPercent;
     }
 
     function setTokenFee(address _tokenFee) external {
@@ -64,41 +58,26 @@ contract EchodexFactory is IEchodexFactory {
         tokenFee = _tokenFee;
     }
 
-    function setTokenMedialFee(address _tokenMedialFee) external {
+    function setReceiveFeeAddress(address _receiveFeeAddress) external {
         require(msg.sender == owner, 'Echodex: FORBIDDEN');
-        tokenMedialFee = _tokenMedialFee;
+        receiveFeeAddress = _receiveFeeAddress;
     }
 
-    function setReceiveFee(address _receiveFee) external {
+    function setFeePath(address tokenOut, address[] calldata path) external {
         require(msg.sender == owner, 'Echodex: FORBIDDEN');
-        receiveFee = _receiveFee;
-    }
-
-    function setPercentFee(uint _percentFee) external {
-        require(msg.sender == owner, 'Echodex: FORBIDDEN');
-        percentFee = _percentFee;
-    }
-
-    function setPercentFeeCaseSubTokenOut (uint _percentFeeCaseSubTokenOut) external {
-        require(msg.sender == owner, 'Echodex: FORBIDDEN');
-        percentFeeCaseSubTokenOut = _percentFeeCaseSubTokenOut;
-    }
-
-    function setPath(address tokenOut, address[] calldata path) external {
-        require(msg.sender == owner, 'Echodex: FORBIDDEN');
-        tokenMedialFeePath[tokenOut] = path;
+        feePath[tokenOut] = path;
     }
 
     function calcFee(uint amountOut, address tokenOut, address pair, address factory) external view returns (uint fee, uint feeRefund) {
-        uint amountFeeTokenOut = amountOut * percentFee / (100 * 10 ** 18); //(0.1 * 10 **18)% fee
+        uint amountFeeTokenOut = amountOut * (0.1 * 10 ** 18) / (100 * 10 ** 18); //(0.1 * 10 **18)% fee
         uint amountFeeRefundTokenOut = 0;
         feeRefund = 0;
-        if (percentRefund[pair] > 0) {
-            amountFeeRefundTokenOut = amountOut * percentRefund[pair]  / (100 * 10 ** 18); // refund (0.05 * 10 **18)% fee
-            amountFeeTokenOut = amountFeeTokenOut - amountFeeRefundTokenOut;
+        if (refundPercent[pair] > 0) {
+            amountFeeRefundTokenOut = amountOut * refundPercent[pair]  / (100 * 10 ** 18); // refund (0.05 * 10 **18)% fee
+            // amountFeeTokenOut = amountFeeTokenOut - amountFeeRefundTokenOut;
         }
 
-        address[] memory path = tokenMedialFeePath[tokenOut];
+        address[] memory path = feePath[tokenOut];
         uint256[] memory amounts = EchodexLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
         fee = amounts[amounts.length - 1];
 

@@ -38,7 +38,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
 
         // Deploy Factory
-        echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
+        echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, { from: alice });
 
         console.log(await echodexFactory.INIT_CODE_PAIR_HASH())
 
@@ -235,6 +235,9 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
             await tokenFEE.approve(pairVANVI.address, constants.MAX_UINT256, {
                 from: alice,
             });
+
+            // router approve pair
+            await echodexRouter.approveTokenFee(pairVANVI.address);
 
             await echodexRouter.swapExactTokensForTokens(
                 parseEther("100"), // 1 VANVAN

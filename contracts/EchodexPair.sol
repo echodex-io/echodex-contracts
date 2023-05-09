@@ -31,14 +31,15 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
     uint public totalFee;
     uint public currentFee;
 
-    event UseTokenFeeInPool(address receiveFee, uint fee);
+    event UseTokenFeeInPool(address receiveFeeAddress, uint fee);
 
     struct SwapState {
         uint balance0;
         uint balance1;
-        bool isSubTokenOut;
         uint amount0In;
         uint amount1In;
+        uint112 _reserve0;
+        uint112 _reserve1;
     }
 
     struct SwapVarTemp {
@@ -47,7 +48,6 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
         uint amount0Out;
         uint amount1Out;
         address to;
-        bytes data;
     }
 
     uint private unlocked = 1;
@@ -111,32 +111,18 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
     }
 
     // pay fee
-    function _payFee(uint fee, uint feeRefund, address to, bool payWithTokenFee) private returns (bool isSubTokenOut) {
-        isSubTokenOut = false;
+    function _payFee(uint fee, uint feeRefund, address refundFeeAddress) private { //payWithTokenFee = true
         address tokenFee = IEchodexFactory(factory).tokenFee();
-        address receiveFee = IEchodexFactory(factory).receiveFee();
-        if (currentFee > 0) { //pay with token in pool
-            require(currentFee >= (fee + feeRefund), 'Echodex: INSUFFICIENT_FEE');
-            currentFee = currentFee - fee;
-            _safeTransfer(tokenFee, receiveFee, fee);
-            emit UseTokenFeeInPool(receiveFee, fee);
-            if (feeRefund > 0) {
-                currentFee = currentFee - feeRefund;
-                _safeTransfer(tokenFee, to, feeRefund);
-                emit UseTokenFeeInPool(to, feeRefund);
-            }
-        } else { 
-            if (!payWithTokenFee) {
-                isSubTokenOut = true;
-            } else {
-                uint balanceTokenFeeInWalletUser = IERC20(tokenFee).balanceOf(to);
-                if (balanceTokenFeeInWalletUser >= fee) { // pay with token in user wallet
-                    IERC20(tokenFee).transferFrom(msg.sender, receiveFee, fee);
-                } else { // pay with sub tokenOut
-                    isSubTokenOut = true;
-                }
-            }
+        address receiveFeeAddress = IEchodexFactory(factory).receiveFeeAddress();
+        require(currentFee >= fee, 'Echodex: INSUFFICIENT_FEE_TOKEN');
+
+        currentFee = currentFee - fee;
+        _safeTransfer(tokenFee, receiveFeeAddress, fee - feeRefund);
+        if (feeRefund > 0) {
+            _safeTransfer(tokenFee, refundFeeAddress, feeRefund);
         }
+
+        emit UseTokenFeeInPool(receiveFeeAddress, fee);
     }
 
     // this low-level function should be called from a contract which performs important safety checks
@@ -184,136 +170,143 @@ contract EchodexPair is IEchodexPair, EchodexERC20 {
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
+    function _preSwap(uint amount0Out, uint amount1Out, address to) private view returns(SwapState memory state){
+        require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
+       
+        state = SwapState({
+            balance0: 0,
+            balance1: 0,
+            amount0In: 0,
+            amount1In: 0,
+            _reserve0: _reserve0,
+            _reserve1: _reserve1
+        });
+        // { // scope for _token{0,1}, avoids stack too deep errors
+        // stateTemp = SwapVarTemp({
+        //     token0: token0,
+        //     token1: token1,
+        //     amount0Out: amount0Out,
+        //     amount1Out: amount1Out,
+        //     to: to
+        // });
+
+
+        require(to != token0 && to != token1, 'Echodex: INVALID_TO');
+    }
+
     // this low-level function should be called from a contract which performs important safety checks
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = false
-        require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
-        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
+        // require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
+        // (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        // require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
 
-        SwapState memory state = SwapState({
-            balance0: 0,
-            balance1: 0,
-            isSubTokenOut: false,
-            amount0In: 0,
-            amount1In: 0
-        });
-        { // scope for _token{0,1}, avoids stack too deep errors
-        SwapVarTemp memory stateTemp = SwapVarTemp({
-            token0: token0,
-            token1: token1,
-            amount0Out: amount0Out,
-            amount1Out: amount1Out,
-            to: to,
-            data: data
-        });
+        // SwapState memory state = SwapState({
+        //     balance0: 0,
+        //     balance1: 0,
+        //     amount0In: 0,
+        //     amount1In: 0
+        // });
+        // { // scope for _token{0,1}, avoids stack too deep errors
+        // SwapVarTemp memory stateTemp = SwapVarTemp({
+        //     token0: token0,
+        //     token1: token1,
+        //     amount0Out: amount0Out,
+        //     amount1Out: amount1Out,
+        //     to: to,
+        //     data: data
+        // });
 
-        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'Echodex: INVALID_TO');
+        // require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'Echodex: INVALID_TO');
 
-        uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
-        address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
 
-        //fee 
-        (uint fee, uint feeRefund) = IEchodexFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
-        state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, false); 
+        SwapState memory state = _preSwap(amount0Out, amount1Out, to);
 
-        if (state.isSubTokenOut) {
-            amountOut = amountOut - amountOut * IEchodexFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
-            _safeTransfer(tokenOut, stateTemp.to, amountOut);
-        } else {
-            _safeTransfer(tokenOut, stateTemp.to, amountOut);
-        }
+        uint amountOut = amount0Out > 0 ? amount0Out : amount1Out;
+        address tokenOut = amount0Out > 0 ? token0 : token1;
 
-        if (stateTemp.data.length > 0) IEchodexCallee(stateTemp.to).echodexCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
-        state.balance0 = IERC20(stateTemp.token0).balanceOf(address(this));
-        state.balance1 = IERC20(stateTemp.token1).balanceOf(address(this));
-        }
+        amountOut = amountOut - amountOut * (0.3 * 10 ** 18) / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
+        _safeTransfer(tokenOut, to, amountOut);
 
-        state.amount0In = state.balance0 > _reserve0 - amount0Out ? state.balance0 - (_reserve0 - amount0Out) : 0;
-        state.amount1In = state.balance1 > _reserve1 - amount1Out ? state.balance1 - (_reserve1 - amount1Out) : 0;
+        if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
+        state.balance0 = IERC20(token0).balanceOf(address(this));
+        state.balance1 = IERC20(token1).balanceOf(address(this));
+        // }
+
+        state.amount0In = state.balance0 > state._reserve0 - amount0Out ? state.balance0 - (state._reserve0 - amount0Out) : 0;
+        state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;
         require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        if (state.isSubTokenOut) {
             uint balance0Adjusted = state.balance0.mul(1000).sub(state.amount0In.mul(3));
             uint balance1Adjusted = state.balance1.mul(1000).sub(state.amount1In.mul(3));
-            require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
-        } else {
-            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
-        }
+            require(balance0Adjusted.mul(balance1Adjusted) >= uint(state._reserve0).mul(state._reserve1).mul(1000**2), 'Echodex: K');
         }
       
         // 100 * 1000
         // 1 -> 9.9009901 // 9.87128713 tru fee
         // 101 * 990.09901
-        _update(state.balance0, state.balance1, _reserve0, _reserve1);
+        _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
         emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
     }
 
-    function swapPayWithTokenFee(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = true
-        require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
-        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
+    function swapPayWithTokenFee(uint amount0Out, uint amount1Out, address to, address refundFeeAddress, bytes calldata data) external lock { // payWithTokenFee = true
+        // require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
+        // (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        // require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
 
-        SwapState memory state = SwapState({
-            balance0: 0,
-            balance1: 0,
-            isSubTokenOut: false,
-            amount0In: 0,
-            amount1In: 0
-        });
-        { // scope for _token{0,1}, avoids stack too deep errors
-        SwapVarTemp memory stateTemp = SwapVarTemp({
-            token0: token0,
-            token1: token1,
-            amount0Out: amount0Out,
-            amount1Out: amount1Out,
-            to: to,
-            data: data
-        });
+        // SwapState memory state = SwapState({
+        //     balance0: 0,
+        //     balance1: 0,
+        //     amount0In: 0,
+        //     amount1In: 0
+        // });
+        // { // scope for _token{0,1}, avoids stack too deep errors
+        // SwapVarTemp memory stateTemp = SwapVarTemp({
+        //     token0: token0,
+        //     token1: token1,
+        //     amount0Out: amount0Out,
+        //     amount1Out: amount1Out,
+        //     to: to,
+        //     data: data
+        // });
 
-        require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'Echodex: INVALID_TO');
+        // require(stateTemp.to != stateTemp.token0 && stateTemp.to != stateTemp.token1, 'Echodex: INVALID_TO');
 
-        uint amountOut = stateTemp.amount0Out > 0 ? stateTemp.amount0Out : stateTemp.amount1Out;
-        address tokenOut = stateTemp.amount0Out > 0 ? stateTemp.token0 : stateTemp.token1;
+        // (SwapState memory state, SwapVarTemp memory stateTemp) = _preSwap(amount0Out, amount1Out, to, data);
+
+        SwapState memory state = _preSwap(amount0Out, amount1Out, to);
+
+        uint amountOut = amount0Out > 0 ? amount0Out : amount1Out;
+        address tokenOut = amount0Out > 0 ? token0 : token1;
 
         //fee 
         (uint fee, uint feeRefund) = IEchodexFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
-        state.isSubTokenOut = _payFee(fee, feeRefund, stateTemp.to, true); 
+        _payFee(fee, feeRefund, refundFeeAddress); 
+        _safeTransfer(tokenOut, to, amountOut);
 
-        if (state.isSubTokenOut) {
-            amountOut = amountOut - amountOut * IEchodexFactory(factory).percentFeeCaseSubTokenOut() / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
-            _safeTransfer(tokenOut, stateTemp.to, amountOut);
-        } else {
-            _safeTransfer(tokenOut, stateTemp.to, amountOut);
-        }
+        if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
+        state.balance0 = IERC20(token0).balanceOf(address(this));
+        state.balance1 = IERC20(token1).balanceOf(address(this));
+        // }
 
-        if (stateTemp.data.length > 0) IEchodexCallee(stateTemp.to).echodexCall(msg.sender, stateTemp.amount0Out, stateTemp.amount1Out, stateTemp.data);
-        state.balance0 = IERC20(stateTemp.token0).balanceOf(address(this));
-        state.balance1 = IERC20(stateTemp.token1).balanceOf(address(this));
-        }
-
-        state.amount0In = state.balance0 > _reserve0 - amount0Out ? state.balance0 - (_reserve0 - amount0Out) : 0;
-        state.amount1In = state.balance1 > _reserve1 - amount1Out ? state.balance1 - (_reserve1 - amount1Out) : 0;
+        state.amount0In = state.balance0 > state._reserve0 - amount0Out ? state.balance0 - (state._reserve0 - amount0Out) : 0;
+        state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;
         require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        if (state.isSubTokenOut) {
-            uint balance0Adjusted = state.balance0.mul(1000).sub(state.amount0In.mul(3));
-            uint balance1Adjusted = state.balance1.mul(1000).sub(state.amount1In.mul(3));
-            require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
-        } else {
-            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Echodex: K');
-        }
+        require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(state._reserve0).mul(state._reserve1).mul(1000**2), 'Echodex: K');
         }
       
         // 100 * 1000
         // 1 -> 9.9009901 // 9.87128713 tru fee
         // 101 * 990.09901
-        _update(state.balance0, state.balance1, _reserve0, _reserve1);
+        _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
         emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
     }
 
-    function addFee(uint amount, address from) external lock {
+    function addFee(uint amount) external lock {
         address tokenFee = IEchodexFactory(factory).tokenFee();
-        IERC20(tokenFee).transferFrom(from, address(this), amount);
+        IERC20(tokenFee).transferFrom(msg.sender, address(this), amount);
         totalFee = totalFee + amount;
         currentFee = currentFee + amount;
     }

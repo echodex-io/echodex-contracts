@@ -6,7 +6,7 @@ import { BN, constants, expectEvent, expectRevert, time } from "@openzeppelin/te
 const MockERC20 = artifacts.require("./utils/MockERC20.sol");
 const EchodexFactory = artifacts.require("./EchodexFactory.sol");
 const EchodexPair = artifacts.require("./EchodexPair.sol");
-const EchodexRouter = artifacts.require("./EchodexRouter.sol");
+const EchodexRouter = artifacts.require("./EchodexRouterFee.sol");
 const WBNB = artifacts.require("./WBNB.sol");
 
 contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
@@ -35,7 +35,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
 
         // Deploy Factory
-        echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
+        echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, { from: alice });
 
         console.log(await echodexFactory.INIT_CODE_PAIR_HASH())
 
@@ -237,6 +237,8 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
                 from: alice,
             });
 
+            // router approve pair
+            await echodexRouter.approveTokenFee(pairVANVI.address);
             console.log(String(await tokenFEE.balanceOf(alice)))
 
             await echodexRouter.swapExactTokensForTokens(

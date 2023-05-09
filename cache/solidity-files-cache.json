@@ -360,7 +360,7 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\Math.sol": {
-      "lastModificationDate": 1680772593314,
+      "lastModificationDate": 1683629300123,
       "contentHash": "1824b2bc62c839fbe9aaa1d6bf16089f",
       "sourceName": "contracts/libraries/Math.sol",
       "solcConfig": {
@@ -395,7 +395,7 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\UQ112x112.sol": {
-      "lastModificationDate": 1680772593315,
+      "lastModificationDate": 1683629297713,
       "contentHash": "b0877d3dc81239d674583ba379f411a1",
       "sourceName": "contracts/libraries/UQ112x112.sol",
       "solcConfig": {
@@ -465,7 +465,7 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexERC20.sol": {
-      "lastModificationDate": 1683529477397,
+      "lastModificationDate": 1683629243589,
       "contentHash": "e3553a1382666ae2ac31768118163ea9",
       "sourceName": "contracts/EchodexERC20.sol",
       "solcConfig": {
@@ -503,8 +503,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexPair.sol": {
-      "lastModificationDate": 1683540349828,
-      "contentHash": "e586a6e39bc1da26193d19a074de82e3",
+      "lastModificationDate": 1683629271213,
+      "contentHash": "b8897badc2ecd40d892eaa589bee7a59",
       "sourceName": "contracts/EchodexPair.sol",
       "solcConfig": {
         "version": "0.5.16",
@@ -546,8 +546,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexFactory.sol": {
-      "lastModificationDate": 1683529638977,
-      "contentHash": "0268d2338ba70548e8a0fdd18c5fe847",
+      "lastModificationDate": 1683629321306,
+      "contentHash": "811e3cdc985c8183c08e650e77ab974f",
       "sourceName": "contracts/EchodexFactory.sol",
       "solcConfig": {
         "version": "0.5.16",
@@ -620,8 +620,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexFactory.sol": {
-      "lastModificationDate": 1683529187516,
-      "contentHash": "a829e73c672800c172bb054436827812",
+      "lastModificationDate": 1683629313238,
+      "contentHash": "86a8832fb638099c0099008921d0723a",
       "sourceName": "contracts/interfaces/IEchodexFactory.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -727,8 +727,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexPair.sol": {
-      "lastModificationDate": 1683529194494,
-      "contentHash": "e10fcb525ec9c3fafc342dadf6bd8a73",
+      "lastModificationDate": 1683628275325,
+      "contentHash": "f3bb33ee653da6369e833b03c26fdf75",
       "sourceName": "contracts/interfaces/IEchodexPair.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -797,8 +797,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
-      "lastModificationDate": 1683543486571,
-      "contentHash": "61392dd61965688840e11745792b9568",
+      "lastModificationDate": 1683629366684,
+      "contentHash": "57b78683875fcd1176a37171c0024206",
       "sourceName": "contracts/libraries/EchodexLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -920,46 +920,9 @@
         "EchodexRouter01"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexRouterFee.sol": {
-      "lastModificationDate": 1683543392820,
-      "contentHash": "100dedaf0c10586d51e03bbaba9c1b61",
-      "sourceName": "contracts/interfaces/IEchodexRouterFee.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 10
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IEchodexRouter01.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IEchodexRouterFee"
-      ]
-    },
     "G:\\project\\echodex-contracts\\contracts\\EchodexRouterFee.sol": {
-      "lastModificationDate": 1683543411565,
-      "contentHash": "64e0ab3b395b33ef0ee52a0fa0148175",
+      "lastModificationDate": 1683628874407,
+      "contentHash": "61797356b83170fdcb1f9734210c6d74",
       "sourceName": "contracts/EchodexRouterFee.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -986,7 +949,6 @@
       },
       "imports": [
         "@uniswap/lib/contracts/libraries/TransferHelper.sol",
-        "./interfaces/IEchodexRouterFee.sol",
         "./interfaces/IEchodexFactory.sol",
         "./libraries/EchodexLibrary.sol",
         "./libraries/SafeMath.sol",

@@ -93,10 +93,11 @@ interface IEchodexPair {
         uint256 amount0Out,
         uint256 amount1Out,
         address to,
+        address refundFeeAddress,
         bytes calldata data
     ) external;
 
-    function addFee(uint amount, address from) external;
+    function addFee(uint amount) external;
 
     function skim(address to) external;
 
@@ -108,5 +109,5 @@ interface IEchodexPair {
 
     function currentFee() external view returns (uint);
 
-    event UseTokenFeeInPool(address receiveFee, uint fee);
+    event UseTokenFeeInPool(address receiveFeeAddress, uint fee);
 }

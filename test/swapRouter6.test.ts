@@ -35,7 +35,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
 
         // Deploy Factory
-        echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, tokenMEDIALFEE.address, "100000000000000000", "300000000000000000", { from: alice });
+        echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, { from: alice });
 
         console.log(await echodexFactory.INIT_CODE_PAIR_HASH())
 

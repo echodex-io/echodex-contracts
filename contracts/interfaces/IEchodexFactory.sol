@@ -18,25 +18,15 @@ interface IEchodexFactory {
 
     function tokenFee() external view returns (address);
 
-    function receiveFee() external view returns (address);
-
-    function percentFee() external view returns(uint);
-
-    function percentFeeCaseSubTokenOut() external view returns(uint);
+    function receiveFeeAddress() external view returns (address);
 
     function setTokenFee(address) external;
 
-    function setTokenMedialFee(address) external;
+    function setReceiveFeeAddress(address) external;
 
-    function setReceiveFee(address) external;
+    function refundPercent(address pair) external view returns (uint _refundPercent);
 
-    function percentRefund(address pair) external view returns (uint _percentRefund);
+    function setRefundPercentPair(address, uint) external;
 
-    function setPercentRefundPair(address, uint) external;
-
-    function setPercentFee(uint) external;
-
-    function setPercentFeeCaseSubTokenOut(uint) external;
-
-    function setPath(address, address[] calldata) external;
+    function setFeePath(address, address[] calldata) external;
 }
