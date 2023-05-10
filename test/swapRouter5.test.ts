@@ -67,7 +67,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         result = await echodexFactory.createPair(tokenVIVIAN.address, tokenFEE.address, { from: alice });
         pairVIFEE = await EchodexPair.at(result.logs[0].args[2]);
 
-        await echodexFactory.setPath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenFEE.address]);
+        await echodexFactory.setFeePath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenFEE.address]);
 
         await tokenVANVAN.mintTokens(parseEther("2000000"), { from: alice });
         await tokenVIVIAN.mintTokens(parseEther("2000000"), { from: alice });

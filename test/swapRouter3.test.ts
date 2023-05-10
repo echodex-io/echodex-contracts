@@ -6,7 +6,7 @@ import { BN, constants, expectEvent, expectRevert, time } from "@openzeppelin/te
 const MockERC20 = artifacts.require("./utils/MockERC20.sol");
 const EchodexFactory = artifacts.require("./EchodexFactory.sol");
 const EchodexPair = artifacts.require("./EchodexPair.sol");
-const EchodexRouter = artifacts.require("./EchodexRouter.sol");
+const EchodexRouter = artifacts.require("./EchodexRouterFee.sol");
 const WBNB = artifacts.require("./WBNB.sol");
 const ERC20 = artifacts.require("./EchodexERC20.sol")
 
@@ -64,7 +64,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         result = await echodexFactory.createPair(tokenVIVIAN.address, tokenMEDIALFEE.address, { from: alice });
         pairVIMEDIAL = await EchodexPair.at(result.logs[0].args[2]);
 
-        await echodexFactory.setPath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenMEDIALFEE.address, tokenFEE.address]);
+        await echodexFactory.setFeePath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenMEDIALFEE.address, tokenFEE.address]);
 
         await tokenVANVAN.mintTokens(parseEther("2000000"), { from: alice });
         await tokenVIVIAN.mintTokens(parseEther("2000000"), { from: alice });
@@ -202,7 +202,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
             // addFee
             await tokenFEE.mintTokens(parseEther("48"), { from: alice });
-            await pairVANVI.addFee(parseEther("48"), alice, {
+            await pairVANVI.addFee(parseEther("48"), {
                 from: alice
             })
 
@@ -212,6 +212,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
                 [tokenVANVAN.address, tokenVIVIAN.address],
                 alice,
                 deadline,
+                [parseEther("0")],
                 { from: alice }
             )
 
