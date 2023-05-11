@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
-import './interfaces/IEchodexFactory.sol';
 import './EchodexPair.sol';
 import './libraries/EchodexLibrary.sol';
 
-contract EchodexFactory is IEchodexFactory {
+contract EchodexFactory {
     bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(EchodexPair).creationCode));
 
     address public receiveFeeAddress;

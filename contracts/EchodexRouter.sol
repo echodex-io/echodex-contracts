@@ -3,18 +3,17 @@ pragma solidity =0.6.6;
 
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
-import "./interfaces/IEchodexRouter02.sol";
 import "./interfaces/IEchodexFactory.sol";
 import "./libraries/EchodexLibrary.sol";
 import "./libraries/SafeMath.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 
-contract EchodexRouter is IEchodexRouter02 {
+contract EchodexRouter {
     using SafeMath for uint256;
 
-    address public immutable override factory;
-    address public immutable override WETH;
+    address public immutable factory;
+    address public immutable WETH;
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, "EchodexRouter: EXPIRED");
@@ -72,7 +71,6 @@ contract EchodexRouter is IEchodexRouter02 {
     )
         external
         virtual
-        override
         ensure(deadline)
         returns (
             uint256 amountA,
@@ -98,7 +96,6 @@ contract EchodexRouter is IEchodexRouter02 {
         external
         payable
         virtual
-        override
         ensure(deadline)
         returns (
             uint256 amountToken,
@@ -132,7 +129,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint256 amountBMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
+    ) public virtual ensure(deadline) returns (uint256 amountA, uint256 amountB) {
         address pair = EchodexLibrary.pairFor(factory, tokenA, tokenB);
         IEchodexPair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
         (uint256 amount0, uint256 amount1) = IEchodexPair(pair).burn(to);
@@ -149,7 +146,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
+    ) public virtual ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
         (amountToken, amountETH) = removeLiquidity(
             token,
             WETH,
@@ -176,7 +173,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external virtual override returns (uint256 amountA, uint256 amountB) {
+    ) external virtual returns (uint256 amountA, uint256 amountB) {
         address pair = EchodexLibrary.pairFor(factory, tokenA, tokenB);
         uint256 value = approveMax ? uint256(-1) : liquidity;
         IEchodexPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
@@ -194,7 +191,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external virtual override returns (uint256 amountToken, uint256 amountETH) {
+    ) external virtual returns (uint256 amountToken, uint256 amountETH) {
         address pair = EchodexLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
         IEchodexPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
@@ -209,7 +206,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountETH) {
+    ) public virtual ensure(deadline) returns (uint256 amountETH) {
         (, amountETH) = removeLiquidity(token, WETH, liquidity, amountTokenMin, amountETHMin, address(this), deadline);
         TransferHelper.safeTransfer(token, to, IERC20(token).balanceOf(address(this)));
         IWETH(WETH).withdraw(amountETH);
@@ -227,7 +224,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external virtual override returns (uint256 amountETH) {
+    ) external virtual returns (uint256 amountETH) {
         address pair = EchodexLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
         IEchodexPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
@@ -265,7 +262,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
         amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
@@ -283,7 +280,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
         amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
@@ -300,7 +297,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external payable virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
         amounts = EchodexLibrary.getAmountsOut(factory, msg.value, path);
         require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
@@ -315,7 +312,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
         amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
@@ -336,7 +333,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
         amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
@@ -356,7 +353,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external payable virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
         amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= msg.value, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
@@ -397,7 +394,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) {
+    ) external virtual ensure(deadline) {
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -417,7 +414,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) {
+    ) external payable virtual ensure(deadline) {
         require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
         uint256 amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
@@ -436,7 +433,7 @@ contract EchodexRouter is IEchodexRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) {
+    ) external virtual ensure(deadline) {
         require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
         TransferHelper.safeTransferFrom(
             path[0],
@@ -456,7 +453,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint256 amountA,
         uint256 reserveA,
         uint256 reserveB
-    ) public pure virtual override returns (uint256 amountB) {
+    ) public pure virtual returns (uint256 amountB) {
         return EchodexLibrary.quote(amountA, reserveA, reserveB);
     }
 
@@ -464,7 +461,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint256 amountIn,
         uint256 reserveIn,
         uint256 reserveOut
-    ) public pure virtual override returns (uint256 amountOut) {
+    ) public pure virtual returns (uint256 amountOut) {
         return EchodexLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
@@ -472,7 +469,7 @@ contract EchodexRouter is IEchodexRouter02 {
         uint256 amountOut,
         uint256 reserveIn,
         uint256 reserveOut
-    ) public pure virtual override returns (uint256 amountIn) {
+    ) public pure virtual returns (uint256 amountIn) {
         return EchodexLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 
@@ -480,7 +477,6 @@ contract EchodexRouter is IEchodexRouter02 {
         public
         view
         virtual
-        override
         returns (uint256[] memory amounts)
     {
         return EchodexLibrary.getAmountsOut(factory, amountIn, path);
@@ -490,7 +486,6 @@ contract EchodexRouter is IEchodexRouter02 {
         public
         view
         virtual
-        override
         returns (uint256[] memory amounts)
     {
         return EchodexLibrary.getAmountsIn(factory, amountOut, path);

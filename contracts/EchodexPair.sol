@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
-import './interfaces/IEchodexPair.sol';
 import './EchodexERC20.sol';
 import './libraries/Math.sol';
 import './libraries/UQ112x112.sol';
@@ -9,7 +8,7 @@ import './interfaces/IERC20.sol';
 import './interfaces/IEchodexFactory.sol';
 import './interfaces/IEchodexCallee.sol';
 
-contract EchodexPair is IEchodexPair, EchodexERC20 {
+contract EchodexPair is EchodexERC20 {
     using SafeMath  for uint;
     using UQ112x112 for uint224;
 
