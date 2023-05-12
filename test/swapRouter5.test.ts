@@ -92,7 +92,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         });
     });
 
-    describe("Swap Router 2 path fee and pay with sub tokenOut", async () => {
+    describe("Swap qua Router, fee trừ ở tokenOut", async () => {
         it("User adds liquidity to LP tokens", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
 

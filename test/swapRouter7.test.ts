@@ -88,7 +88,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         });
     });
 
-    describe("Swap not set path", async () => {
+    describe("test case err Swap not set path", async () => {
         it("User adds liquidity to LP tokens", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
 

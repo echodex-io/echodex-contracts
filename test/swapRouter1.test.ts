@@ -92,7 +92,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         });
     });
 
-    describe("Swap Router 3 path fee and pay with token in user wallet", async () => {
+    describe("Swap qua Router, qua token fee trung gian, trả fee bằng token fee trong ví user", async () => {
         it("User adds liquidity to LP tokens", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
             await tokenFEE.mintTokens(parseEther("1000"), { from: alice });

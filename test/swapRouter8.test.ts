@@ -92,7 +92,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         });
     });
 
-    describe("Swap Router fee refund", async () => {
+    describe("Swap qua Router, test fee refund", async () => {
         it("User adds liquidity to LP tokens", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
             await tokenFEE.mintTokens(parseEther("1000"), { from: alice });
