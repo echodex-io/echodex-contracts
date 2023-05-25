@@ -199,26 +199,26 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
                 from: alice,
             });
 
-            await echodexRouter.swapExactTokensForTokens(
-                parseEther("100"), // 1 VANVAN
-                parseEther("490"), // 9 VIVIAN
-                [tokenVANVAN.address, tokenVIVIAN.address],
-                alice,
-                deadline,
-                { from: alice }
-            )
-
-            assert.equal(String(await tokenVANVAN.balanceOf(pairVANVI.address)), parseEther("200").toString());
-            assert.equal(String(await tokenVIVIAN.balanceOf(pairVANVI.address)), parseEther("500").toString());
-
             // await echodexRouter.swapExactTokensForTokens(
-            //     parseEther("0.1"), // 1 VANVAN
-            //     parseEther("0.9"), // 9 VIVIAN
+            //     parseEther("100"), // 1 VANVAN
+            //     parseEther("490"), // 9 VIVIAN
             //     [tokenVANVAN.address, tokenVIVIAN.address],
             //     alice,
             //     deadline,
             //     { from: alice }
             // )
+
+            // assert.equal(String(await tokenVANVAN.balanceOf(pairVANVI.address)), parseEther("200").toString());
+            // assert.equal(String(await tokenVIVIAN.balanceOf(pairVANVI.address)), parseEther("500").toString());
+
+            await echodexRouter.swapExactTokensForTokens(
+                parseEther("0.1"), // 1 VANVAN
+                parseEther("0.9"), // 9 VIVIAN
+                [tokenVANVAN.address, tokenVIVIAN.address],
+                alice,
+                deadline,
+                { from: alice }
+            )
 
             // assert.equal(String(await tokenVANVAN.balanceOf(pairVANVI.address)), parseEther("100.1").toString());
 

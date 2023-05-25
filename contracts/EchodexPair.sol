@@ -214,7 +214,7 @@ contract EchodexPair is EchodexERC20 {
         state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;
         require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(state._reserve0).mul(state._reserve1).mul(1000**2), 'Echodex: K');
+            require(state.balance0.mul(state.balance1) >= uint(state._reserve0).mul(state._reserve1), 'Echodex: K');
         }
 
         _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
@@ -240,7 +240,7 @@ contract EchodexPair is EchodexERC20 {
         state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;
         require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(state._reserve0).mul(state._reserve1).mul(1000**2), 'Echodex: K');
+        require(state.balance0.mul(state.balance1) >= uint(state._reserve0).mul(state._reserve1), 'Echodex: K');
         }
       
         // 100 * 1000

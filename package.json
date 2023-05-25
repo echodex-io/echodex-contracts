@@ -10,13 +10,15 @@
         "deploy:mainnet": "npx hardhat run --network mainnet scripts/deploy.ts",
         "test": "npx hardhat test",
         "test:coverage": "npx hardhat coverage",
-        "test:size-contracts": "npx hardhat size-contracts"
+        "test:size-contracts": "npx hardhat size-contracts",
+        "build-contracts": "sol-merger \"./contracts/*.sol\" ./build"
     },
     "devDependencies": {
         "@openzeppelin/contracts": "^4.2.0",
         "@types/mocha": "^10.0.1",
         "@uniswap/lib": "4.0.1-alpha",
         "hardhat": "^2.13.0",
+        "sol-merger": "^4.4.0",
         "ts-node": "^10.9.1",
         "typescript": "^5.0.3"
     },
@@ -29,6 +31,7 @@
         "ethers": "^5.0.13",
         "hardhat-abi-exporter": "^2.10.1",
         "hardhat-contract-sizer": "^2.8.0",
-        "solidity-coverage": "^0.8.2"
+        "solidity-coverage": "^0.8.2",
+        "web3": "^1.10.0"
     }
 }

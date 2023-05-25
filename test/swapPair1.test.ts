@@ -22,16 +22,15 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
     let pairVANVI;
     let pairFEEMEDIAL;
     let pairVIMEDIAL;
-    let pairVIFEE;
+
 
     before(async () => {
         // d
         // Deploy ERC20s
         tokenVANVAN = await MockERC20.new("Token VANVAN", "VANVAN", parseEther("10000000"), { from: alice });
         tokenVIVIAN = await MockERC20.new("Token VIVIAN", "VIVIAN", parseEther("10000000"), { from: alice });
-        tokenFEE = await MockERC20.new("Token FEE", "FEE", parseEther("2000"), { from: alice });
+        tokenFEE = await MockERC20.new("Token FEE", "FEE", parseEther("1000"), { from: alice });
         tokenMEDIALFEE = await MockERC20.new("Token MEDIALFEE", "MEDIALFEE", parseEther("10000000"), { from: alice });
-
 
         // Deploy Factory
         echodexFactory = await EchodexFactory.new(bob, tokenFEE.address, { from: alice });
@@ -43,11 +42,6 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
         // Deploy Router
         echodexRouter = await EchodexRouter.new(echodexFactory.address, wrappedBNB.address, { from: alice });
-
-        // // Deploy ZapV1
-        // maxZapReverseRatio = 100; // 1%
-        // echodexZap = await EchodexZapV1.new(wrappedBNB.address, echodexRouter.address, maxZapReverseRatio, { from: alice });
-
 
         // Create 3 LP tokens
 
@@ -63,11 +57,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         result = await echodexFactory.createPair(tokenVIVIAN.address, tokenMEDIALFEE.address, { from: alice });
         pairVIMEDIAL = await EchodexPair.at(result.logs[0].args[2]);
 
-        // pair VIVIAN | FEE
-        result = await echodexFactory.createPair(tokenVIVIAN.address, tokenFEE.address, { from: alice });
-        pairVIFEE = await EchodexPair.at(result.logs[0].args[2]);
-
-        await echodexFactory.setFeePath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenFEE.address]);
+        await echodexFactory.setFeePath(tokenVIVIAN.address, [tokenVIVIAN.address, tokenMEDIALFEE.address, tokenFEE.address]);
 
         await tokenVANVAN.mintTokens(parseEther("2000000"), { from: alice });
         await tokenVIVIAN.mintTokens(parseEther("2000000"), { from: alice });
@@ -92,9 +82,11 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         });
     });
 
-    describe("Swap qua Router, fee trừ ở tokenOut", async () => {
+    describe("Swap qua Pair, trả fee bằng tokenOut, lỗi K", async () => {
         it("User adds liquidity to LP tokens", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
+            await tokenFEE.mintTokens(parseEther("1000"), { from: alice });
+
 
             /* Add liquidity (Echodex Router)
              * address tokenB,
@@ -193,57 +185,61 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
             assert.equal(String(await tokenVIVIAN.balanceOf(pairVIMEDIAL.address)), parseEther("100").toString());
             assert.equal(String(await tokenMEDIALFEE.balanceOf(pairVIMEDIAL.address)), parseEther("1000").toString());
 
-            // 1 VIVIAN = 10 FEE
-            result = await echodexRouter.addLiquidity(
-                tokenVIVIAN.address,
-                tokenFEE.address,
-                parseEther("100"), // 100 token VIVIAN
-                parseEther("1000"), // 1000 token FEE
-                parseEther("100"),
-                parseEther("1000"),
-                alice,
-                deadline,
-                { from: alice }
-            );
 
-            expectEvent.inTransaction(result.receipt.transactionHash, tokenVIVIAN, "Transfer", {
-                from: alice,
-                to: pairVIFEE.address,
-                value: parseEther("100").toString(),
-            });
+            // // 1 VIVIAN = 10 FEE
+            // result = await echodexRouter.addLiquidity(
+            //     tokenVIVIAN.address,
+            //     tokenMEDIALFEE.address,
+            //     parseEther("100"), // 100 token VIVIAN
+            //     parseEther("1000"), // 1000 token FEE
+            //     parseEther("100"),
+            //     parseEther("1000"),
+            //     alice,
+            //     deadline,
+            //     { from: alice }
+            // );
 
-            expectEvent.inTransaction(result.receipt.transactionHash, tokenFEE, "Transfer", {
-                from: alice,
-                to: pairVIFEE.address,
-                value: parseEther("1000").toString(),
-            });
+            // expectEvent.inTransaction(result.receipt.transactionHash, tokenVIVIAN, "Transfer", {
+            //     from: alice,
+            //     to: pairVIMEDIAL.address,
+            //     value: parseEther("100").toString(),
+            // });
 
-            // assert.equal(String(await pairBC.totalSupply()), parseEther("10000").toString());
-            assert.equal(String(await tokenVIVIAN.balanceOf(pairVIFEE.address)), parseEther("100").toString());
-            assert.equal(String(await tokenFEE.balanceOf(pairVIFEE.address)), parseEther("1000").toString());
+            // expectEvent.inTransaction(result.receipt.transactionHash, tokenMEDIALFEE, "Transfer", {
+            //     from: alice,
+            //     to: pairVIMEDIAL.address,
+            //     value: parseEther("1000").toString(),
+            // });
+
+            // // assert.equal(String(await pairBC.totalSupply()), parseEther("10000").toString());
+            // assert.equal(String(await tokenVIVIAN.balanceOf(pairVIMEDIAL.address)), parseEther("100").toString());
+            // assert.equal(String(await tokenMEDIALFEE.balanceOf(pairVIMEDIAL.address)), parseEther("1000").toString());
         });
 
-        it("Swap Router", async function () {
+        it("Swap Pair", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
+
+            await tokenFEE.mintTokens(parseEther("2000000"), { from: alice });
 
             // approve pair
             await tokenFEE.approve(pairVANVI.address, constants.MAX_UINT256, {
                 from: alice,
             });
 
-            await echodexRouter.swapExactTokensForTokens(
-                parseEther("100"), // 1 VANVAN
-                parseEther("500"), // 9 VIVIAN
-                [tokenVANVAN.address, tokenVIVIAN.address],
-                alice,
-                deadline,
-                { from: alice }
-            )
+            await tokenVANVAN.transfer(pairVANVI.address, parseEther("100"), { from: alice })
 
-            assert.equal(String(await tokenVANVAN.balanceOf(pairVANVI.address)), parseEther("200").toString());
-            assert.equal(String(await tokenVIVIAN.balanceOf(pairVANVI.address)), parseEther("500").toString());
+            await expectRevert(
+                pairVANVI.swap(
+                    parseEther("0"),
+                    parseEther("501"), // 9 VIVIAN
+                    alice,
+                    "0x",
+                    { from: alice }),
+                'Echodex: K'
+            );
+
+            // 47.39 Fee
         })
+
     });
-
-
 });
