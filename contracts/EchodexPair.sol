@@ -201,27 +201,22 @@ contract EchodexPair is EchodexERC20 {
 
         uint amountOut = amount0Out > 0 ? amount0Out : amount1Out;
         address tokenOut = amount0Out > 0 ? token0 : token1;
-
-        amountOut = amountOut - amountOut * (0.3 * 10 ** 18) / (100 * 10 ** 18); // fee (0.3 * 10 **18)% amountOut
+        uint fee = amountOut.mul(3) / 1000;
+        amountOut = amountOut.sub(fee);
         _safeTransfer(tokenOut, to, amountOut);
+        _safeTransfer(tokenOut, IEchodexFactory(factory).receiveFeeAddress(), fee);
 
         if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
         state.balance0 = IERC20(token0).balanceOf(address(this));
         state.balance1 = IERC20(token1).balanceOf(address(this));
-        // }
 
         state.amount0In = state.balance0 > state._reserve0 - amount0Out ? state.balance0 - (state._reserve0 - amount0Out) : 0;
         state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;
         require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-            uint balance0Adjusted = state.balance0.mul(1000).sub(state.amount0In.mul(3));
-            uint balance1Adjusted = state.balance1.mul(1000).sub(state.amount1In.mul(3));
-            require(balance0Adjusted.mul(balance1Adjusted) >= uint(state._reserve0).mul(state._reserve1).mul(1000**2), 'Echodex: K');
+            require(state.balance0.mul(state.balance1).mul(1000**2) >= uint(state._reserve0).mul(state._reserve1).mul(1000**2), 'Echodex: K');
         }
-      
-        // 100 * 1000
-        // 1 -> 9.9009901 // 9.87128713 tru fee
-        // 101 * 990.09901
+
         _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
         emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
     }
@@ -240,7 +235,6 @@ contract EchodexPair is EchodexERC20 {
         if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
         state.balance0 = IERC20(token0).balanceOf(address(this));
         state.balance1 = IERC20(token1).balanceOf(address(this));
-        // }
 
         state.amount0In = state.balance0 > state._reserve0 - amount0Out ? state.balance0 - (state._reserve0 - amount0Out) : 0;
         state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;

@@ -5,15 +5,15 @@ async function main() {
     // Deploy Factory
     const EchodexFactory = await ethers.getContractFactory("EchodexFactory");
     const echodexFactory = await EchodexFactory.deploy(
-        "0xC0F007ef85eC29A911c022DfebA75e63EC5ff98A", //_receiveFeeAddress
-        "0xf440Bef79904289aBaF48bbFa69E15ce9c774709" //_tokenFee
+        "0x0868F7cA0784E0f735deF407A7B7D0fbf8c0C975", //_receiveFeeAddress
+        "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE" //_tokenFee
     );
     await echodexFactory.deployed();
     console.log(
         `EchodexFactory deployed to ${echodexFactory.address}`
     );
 
-    await echodexFactory.setFeePath("0xEAB2Ae4D6768564eac97419d139EEA86705430D2", ["0xEAB2Ae4D6768564eac97419d139EEA86705430D2", "0x1Ea958e55F5fa135FB0dE8Eb4252776139544fCB", "0xf440Bef79904289aBaF48bbFa69E15ce9c774709"]);
+    // await echodexFactory.setFeePath("0xEAB2Ae4D6768564eac97419d139EEA86705430D2", ["0xEAB2Ae4D6768564eac97419d139EEA86705430D2", "0x1Ea958e55F5fa135FB0dE8Eb4252776139544fCB", "0xf440Bef79904289aBaF48bbFa69E15ce9c774709"]);
 
     // Deploy Router
     const EchodexRouter = await ethers.getContractFactory("EchodexRouter");

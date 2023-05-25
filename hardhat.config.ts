@@ -10,7 +10,7 @@ import "dotenv/config";
 const lineaTestnet: NetworkUserConfig = {
     url: "https://rpc.goerli.linea.build/",
     chainId: 59140,
-    accounts: ["7405d14a489b723000415c63e06b58c1389ba9d34dc2828b30bce703440eea1d"],
+    accounts: [process.env.PRIVATE_KEY as string],
 };
 
 const bscMainnet: NetworkUserConfig = {

@@ -68,7 +68,8 @@ contract EchodexFactory {
     }
 
     function calcFee(uint amountOut, address tokenOut, address pair, address factory) external view returns (uint fee, uint feeRefund) {
-        uint amountFeeTokenOut = amountOut * (0.1 * 10 ** 18) / (100 * 10 ** 18); //(0.1 * 10 **18)% fee
+        uint amountFeeTokenOut = amountOut / 1000;
+
         uint amountFeeRefundTokenOut = 0;
         feeRefund = 0;
         if (refundPercent[pair] > 0) {

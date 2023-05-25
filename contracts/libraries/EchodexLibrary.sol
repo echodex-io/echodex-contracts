@@ -29,7 +29,7 @@ library EchodexLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        hex"8c68ab9748161cdbebb8187e2149f5064d7587a257d3a40011f2dc7345c31e85" // init code hash
+                        hex"b039c56425b9e07f62723163173012c540a2e79c749cceb466167ded396e202a" // init code hash
                     )
                 )
             )
@@ -67,10 +67,22 @@ library EchodexLibrary {
     ) internal pure returns (uint256 amountOut) {
         require(amountIn > 0, "EchodexLibrary: INSUFFICIENT_INPUT_AMOUNT");
         require(reserveIn > 0 && reserveOut > 0, "EchodexLibrary: INSUFFICIENT_LIQUIDITY");
-        uint256 amountInWithFee = amountIn.mul(1000); // 1 * 1000
-        uint256 numerator = amountInWithFee.mul(reserveOut); // 1000 * 1000
-        uint256 denominator = reserveIn.mul(1000).add(amountInWithFee); // 100 * 1000 + 1000
-        amountOut = numerator / denominator; //1000000 /101000 =  9.9009901
+        // uint256 amountInWithFee = amountIn.mul(1000); // 1 * 1000
+        // uint256 numerator = amountInWithFee.mul(reserveOut); // 1000 * 1000
+        // uint256 denominator = reserveIn.mul(1000).add(amountInWithFee); // 100 * 1000 + 1000
+        // amountOut = numerator / denominator; //1000000 /101000 =  9.9009901
+
+        uint256 amountInWithFee = amountIn; // 1
+        uint256 numerator = amountInWithFee.mul(reserveOut); // 1 * 1000
+        uint256 denominator = reserveIn.add(amountInWithFee); // 100 + 1
+        amountOut = numerator / denominator; //1000 / 101 =  9.9009901
+
+        // amountInWithFee = 100,000,000,000,000,000
+
+        // numerator = 100,000,000,000,000,000 * 1000000000000000000000 = 100,000,000,000,000,000,000,000,000,000,000,000,000
+        // denominator = 100000000000000000000 + 100,000,000,000,000,000 = 100,100,000,000,000,000,000
+        // amountOut = 999,000,999,000,999,000
+
     }
 
     // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
@@ -81,9 +93,13 @@ library EchodexLibrary {
     ) internal pure returns (uint256 amountIn) {
         require(amountOut > 0, "EchodexLibrary: INSUFFICIENT_OUTPUT_AMOUNT");
         require(reserveIn > 0 && reserveOut > 0, "EchodexLibrary: INSUFFICIENT_LIQUIDITY");
-        uint256 numerator = reserveIn.mul(amountOut).mul(1000); // 100 * 500 * 1000
-        uint256 denominator = reserveOut.sub(amountOut).mul(1000); // (1000 - 500) * 1000
-        amountIn = (numerator / denominator).add(1); // 50000000 / 500000 = 100 + 1 = 2.01
+        // uint256 numerator = reserveIn.mul(amountOut).mul(1000); // 100 * 500 * 1000
+        // uint256 denominator = reserveOut.sub(amountOut).mul(1000); // (1000 - 500) * 1000
+        // amountIn = (numerator / denominator).add(1); // 50000000 / 500000 = 100 + 1 = 2.01
+
+        uint256 numerator = reserveIn.mul(amountOut); // 100 * 500
+        uint256 denominator = reserveOut.sub(amountOut); // 1000 - 500
+        amountIn = (numerator / denominator).add(1); // 50000 / 500 = 100 + 1 = 2.01
     }
 
     // performs chained getAmountOut calculations on any number of pairs

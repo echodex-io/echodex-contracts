@@ -241,7 +241,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
             )
 
             assert.equal(String(await tokenVANVAN.balanceOf(pairVANVI.address)), parseEther("200").toString());
-            assert.equal(String(await tokenVIVIAN.balanceOf(pairVANVI.address)), parseEther("501.5").toString());
+            assert.equal(String(await tokenVIVIAN.balanceOf(pairVANVI.address)), parseEther("500").toString());
         })
     });
 
