@@ -233,9 +233,9 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
             await tokenFEE.mintTokens(parseEther("2000000"), { from: alice });
 
             // approve pair
-            await tokenFEE.approve(pairVANVI.address, constants.MAX_UINT256, {
-                from: alice,
-            });
+            // await tokenFEE.approve(pairVANVI.address, constants.MAX_UINT256, {
+            //     from: alice,
+            // });
 
             // // router approve pair
             // await echodexRouter.approveTokenFee(pairVANVI.address);

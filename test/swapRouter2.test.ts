@@ -195,9 +195,9 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
             const deadline = new BN(await time.latest()).add(new BN("100"));
 
             // approve pair
-            await tokenFEE.approve(pairVANVI.address, constants.MAX_UINT256, {
-                from: alice,
-            });
+            // await tokenFEE.approve(pairVANVI.address, constants.MAX_UINT256, {
+            //     from: alice,
+            // });
 
             // await echodexRouter.swapExactTokensForTokens(
             //     parseEther("100"), // 1 VANVAN
