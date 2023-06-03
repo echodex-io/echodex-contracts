@@ -29,4 +29,6 @@ interface IEchodexFactory {
     function setRefundPercentPair(address, uint) external;
 
     function setFeePath(address, address[] calldata) external;
+
+    function feePathLenght(address, uint) external;
 }

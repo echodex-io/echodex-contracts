@@ -186,8 +186,8 @@
       ]
     },
     "D:\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
-      "lastModificationDate": 1685006342663,
-      "contentHash": "c834cd90b18c5055eb246bbbf5843a17",
+      "lastModificationDate": 1685030652201,
+      "contentHash": "70e3f066a13de26945e44d4619f7fd8b",
       "sourceName": "contracts/libraries/EchodexLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -309,8 +309,8 @@
       ]
     },
     "D:\\echodex-contracts\\contracts\\EchodexFactory.sol": {
-      "lastModificationDate": 1684991182047,
-      "contentHash": "0dd84eb476acb8c7c6892c1ee4b77d2b",
+      "lastModificationDate": 1685030530873,
+      "contentHash": "08d3eb2a3dad2c75d53bf22fe087afd0",
       "sourceName": "contracts/EchodexFactory.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -347,8 +347,8 @@
       ]
     },
     "D:\\echodex-contracts\\contracts\\interfaces\\IEchodexFactory.sol": {
-      "lastModificationDate": 1683873049885,
-      "contentHash": "bd918051d98137bd3097b995032bb0bb",
+      "lastModificationDate": 1685030562155,
+      "contentHash": "346c33279979a775b0ae21f003e15b5a",
       "sourceName": "contracts/interfaces/IEchodexFactory.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -629,8 +629,8 @@
       ]
     },
     "D:\\echodex-contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\ERC20.sol": {
-      "lastModificationDate": 1685005913320,
-      "contentHash": "3ae5166c6827a9cf1a7a462d1632b464",
+      "lastModificationDate": 1685007667107,
+      "contentHash": "834a0dde221759af42b030253315b086",
       "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -703,8 +703,8 @@
       ]
     },
     "D:\\echodex-contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\IERC20.sol": {
-      "lastModificationDate": 1685005913410,
-      "contentHash": "df36f7051335cd1e748b1b6463b7fdd3",
+      "lastModificationDate": 1685007667642,
+      "contentHash": "ad7c2d0af148c8f9f097d65deeb4da6b",
       "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -738,7 +738,7 @@
       ]
     },
     "D:\\echodex-contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\extensions\\IERC20Metadata.sol": {
-      "lastModificationDate": 1685005913421,
+      "lastModificationDate": 1685007667650,
       "contentHash": "909ab67fc5c25033fe6cd364f8c056f9",
       "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
       "solcConfig": {
