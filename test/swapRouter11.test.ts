@@ -93,7 +93,7 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
         });
     });
 
-    describe("Swap qua Router, trả fee bằng token fee trong pool và trong ví user", async () => {
+    describe("Swap qua Router, trả fee bằng token fee trong pool và trong ví user, pair dc set refund", async () => {
         it("User adds liquidity to LP tokens", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
 
@@ -229,6 +229,9 @@ contract("EchodexPair", ([alice, bob, carol, david, erin]) => {
 
         it("Swap Router", async function () {
             const deadline = new BN(await time.latest()).add(new BN("100"));
+
+            //set refund pair
+            await echodexFactory.setRefundPercentPair(pairVANVI.address, parseEther("0.05"))
 
             // approve pair
             await tokenFEE.approve(pairVANVI.address, constants.MAX_UINT256, {
