@@ -109,5 +109,5 @@ interface IEchodexPair {
 
     function currentFee() external view returns (uint);
 
-    event UseTokenFeeInPool(address receiveFeeAddress, uint fee);
+    event AddFee(uint amount);
 }

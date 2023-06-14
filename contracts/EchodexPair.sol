@@ -30,8 +30,6 @@ contract EchodexPair is EchodexERC20 {
     uint public totalFee;
     uint public currentFee;
 
-    event UseTokenFeeInPool(address receiveFeeAddress, uint fee);
-
     struct SwapState {
         uint balance0;
         uint balance1;
@@ -76,9 +74,12 @@ contract EchodexPair is EchodexERC20 {
         uint amount1In,
         uint amount0Out,
         uint amount1Out,
-        address indexed to
+        address indexed to,
+        uint amountTokenFee,
+        uint refundFee
     );
     event Sync(uint112 reserve0, uint112 reserve1);
+    event AddFee(uint amount);
 
     constructor() public {
         factory = msg.sender;
@@ -120,8 +121,6 @@ contract EchodexPair is EchodexERC20 {
         if (feeRefund > 0) {
             _safeTransfer(tokenFee, refundFeeAddress, feeRefund);
         }
-
-        emit UseTokenFeeInPool(receiveFeeAddress, fee);
     }
 
     // this low-level function should be called from a contract which performs important safety checks
@@ -218,7 +217,7 @@ contract EchodexPair is EchodexERC20 {
         }
 
         _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
-        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
+        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to, 0 ,0);
     }
 
     function swapPayWithTokenFee(uint amount0Out, uint amount1Out, address to, address refundFeeAddress, bytes calldata data) external lock { // payWithTokenFee = true
@@ -243,11 +242,8 @@ contract EchodexPair is EchodexERC20 {
         require(state.balance0.mul(state.balance1) >= uint(state._reserve0).mul(state._reserve1), 'Echodex: K');
         }
       
-        // 100 * 1000
-        // 1 -> 9.9009901 // 9.87128713 tru fee
-        // 101 * 990.09901
         _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
-        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to);
+        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to, fee, feeRefund);
     }
 
     function addFee(uint amount) external lock {
@@ -255,6 +251,8 @@ contract EchodexPair is EchodexERC20 {
         IERC20(tokenFee).transferFrom(msg.sender, address(this), amount);
         totalFee = totalFee + amount;
         currentFee = currentFee + amount;
+
+        emit AddFee(amount);
     }
 
     // force balances to match reserves
