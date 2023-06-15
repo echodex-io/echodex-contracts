@@ -5,7 +5,7 @@ module.exports = {
 		"libraries/EchodexLibrary.sol",
 		"libraries/SafeMath.sol",
 		"libraries/UQ112x112.sol",
-		"libraries/WBNB.sol",
+		"libraries/WETH.sol",
 		"EchodexERC20.sol",
 		"EchodexFactory.sol",
 		"EchodexPair.sol",

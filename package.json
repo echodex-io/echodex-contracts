@@ -1,22 +1,19 @@
 {
     "name": "echodex-contracts",
-    "description": "Exchange contracts from Uniswap v2, and new features (zaps)",
+    "description": "Exchange contracts from Echodex",
     "version": "2.0.0",
     "license": "GPL-3.0/MIT",
     "private": true,
     "scripts": {
         "compile": "npx hardhat compile",
-        "deploy:linea": "npx hardhat run --network linea scripts/deploy.ts",
-        "deploy:mainnet": "npx hardhat run --network mainnet scripts/deploy.ts",
+        "deploy:testnet": "npx hardhat run --network testnet scripts/deploy.ts",
         "test": "npx hardhat test",
         "test:coverage": "npx hardhat coverage",
         "test:size-contracts": "npx hardhat size-contracts",
         "build-contracts": "sol-merger \"./contracts/*.sol\" ./build"
     },
     "devDependencies": {
-        "@openzeppelin/contracts": "^4.2.0",
         "@types/mocha": "^10.0.1",
-        "@uniswap/lib": "4.0.1-alpha",
         "hardhat": "^2.13.0",
         "sol-merger": "^4.4.0",
         "ts-node": "^10.9.1",
@@ -31,7 +28,7 @@
         "ethers": "^5.0.13",
         "hardhat-abi-exporter": "^2.10.1",
         "hardhat-contract-sizer": "^2.8.0",
-        "solidity-coverage": "^0.8.2",
+        "solidity-coverage": "^0.7.22",
         "web3": "^1.10.0"
     }
 }

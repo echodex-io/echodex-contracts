@@ -13,7 +13,6 @@ contract EchodexFactory {
 
     mapping(address => address[]) public feePath;
     mapping(address => uint) public feePathLenght;
-
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
 
