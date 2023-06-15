@@ -12,7 +12,7 @@ contract EchodexFactory {
     address public owner;
 
     mapping(address => address[]) public feePath;
-    mapping(address => uint) public feePathLenght;
+    mapping(address => uint) public feePathLength;
 
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
@@ -66,7 +66,7 @@ contract EchodexFactory {
     function setFeePath(address tokenOut, address[] calldata path) external {
         require(msg.sender == owner, 'Echodex: FORBIDDEN');
         feePath[tokenOut] = path;
-        feePathLenght[tokenOut] = path.length;
+        feePathLength[tokenOut] = path.length;
     }
 
     function calcFee(uint amountOut, address tokenOut, address pair, address factory) external view returns (uint fee, uint feeRefund) {
