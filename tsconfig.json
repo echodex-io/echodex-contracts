@@ -8,8 +8,6 @@
         "outDir": "./dist",
         "strict": true,
         "rootDirs": [
-            "./src",
-            "./scripts",
             "./test"
         ],
         "esModuleInterop": true
@@ -19,9 +17,7 @@
         "node_modules"
     ],
     "include": [
-        "./test",
-        "./src",
-        "./scripts"
+        "test/**/*.ts",
     ],
     "files": [
         "./hardhat.config.ts"

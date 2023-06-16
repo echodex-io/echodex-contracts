@@ -76,7 +76,6 @@ contract EchodexFactory {
         feeRefund = 0;
         if (refundPercent[pair] > 0) {
             amountFeeRefundTokenOut = amountOut * refundPercent[pair]  / (100 * 10 ** 18); // refund (0.05 * 10 **18)% fee
-            // amountFeeTokenOut = amountFeeTokenOut - amountFeeRefundTokenOut;
         }
 
         address[] memory path = feePath[tokenOut];

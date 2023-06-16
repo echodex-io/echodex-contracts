@@ -39,14 +39,6 @@ contract EchodexPair is EchodexERC20 {
         uint112 _reserve1;
     }
 
-    struct SwapVarTemp {
-        address token0;
-        address token1;
-        uint amount0Out;
-        uint amount1Out;
-        address to;
-    }
-
     uint private unlocked = 1;
     modifier lock() {
         require(unlocked == 1, 'Echodex: LOCKED');
@@ -172,7 +164,6 @@ contract EchodexPair is EchodexERC20 {
         require(amount0Out > 0 || amount1Out > 0, 'Echodex: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Echodex: INSUFFICIENT_LIQUIDITY');
-       
         state = SwapState({
             balance0: 0,
             balance1: 0,
@@ -181,15 +172,6 @@ contract EchodexPair is EchodexERC20 {
             _reserve0: _reserve0,
             _reserve1: _reserve1
         });
-        // { // scope for _token{0,1}, avoids stack too deep errors
-        // stateTemp = SwapVarTemp({
-        //     token0: token0,
-        //     token1: token1,
-        //     amount0Out: amount0Out,
-        //     amount1Out: amount1Out,
-        //     to: to
-        // });
-
 
         require(to != token0 && to != token1, 'Echodex: INVALID_TO');
     }
@@ -226,9 +208,9 @@ contract EchodexPair is EchodexERC20 {
         uint amountOut = amount0Out > 0 ? amount0Out : amount1Out;
         address tokenOut = amount0Out > 0 ? token0 : token1;
 
-        //fee 
+        //fee
         (uint fee, uint feeRefund) = IEchodexFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
-        _payFee(fee, feeRefund, refundFeeAddress); 
+        _payFee(fee, feeRefund, refundFeeAddress);
         _safeTransfer(tokenOut, to, amountOut);
 
         if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
@@ -241,7 +223,6 @@ contract EchodexPair is EchodexERC20 {
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
         require(state.balance0.mul(state.balance1) >= uint(state._reserve0).mul(state._reserve1), 'Echodex: K');
         }
-      
         _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
         emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to, fee, feeRefund);
     }
