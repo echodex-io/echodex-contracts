@@ -1,4 +1,4 @@
-# Echodex Core Smart
+# Echodex Core Smart Contracts
 
 Smart contracts of echodex exchange
 
