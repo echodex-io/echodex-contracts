@@ -5,7 +5,7 @@ const Web3 = require('web3')
 const web3 = new Web3("https://rpc.goerli.linea.build/")
 
 async function main() {
-    const FACTORY_ADDRESS = "0x9942Ebb843Dc4Aeb3c08D959da568E7b91B98e25"
+    const FACTORY_ADDRESS = "0x1930b00e116f1dc285e7722a1eb81a396000d1f7"
     const abi = [
         {
             "inputs": [
@@ -192,6 +192,25 @@ async function main() {
                     "internalType": "address",
                     "name": "",
                     "type": "address"
+                }
+            ],
+            "name": "feePathLength",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
                 },
                 {
                     "internalType": "address",
@@ -331,7 +350,7 @@ async function main() {
             "type": "function"
         }
     ]
-    const myAddress = "0x8be21043E75A280a1feD218b62f117a6881573a2"
+    const myAddress = "0x0868F7cA0784E0f735deF407A7B7D0fbf8c0C975"
 
     var contract = new web3.eth.Contract(
         abi,
