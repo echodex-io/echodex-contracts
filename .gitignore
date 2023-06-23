@@ -3,3 +3,4 @@ node_modules/
 .env
 artifacts/
 cache/
+cache/solidity-files-cache.json
