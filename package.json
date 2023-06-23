@@ -13,6 +13,7 @@
         "build-contracts": "sol-merger \"./contracts/*.sol\" ./build"
     },
     "devDependencies": {
+        "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
         "@types/mocha": "^10.0.1",
         "chai": "^4.3.7",
         "hardhat": "^2.15.0",

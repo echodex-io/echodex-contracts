@@ -149,7 +149,7 @@ describe("Swap Pay With ECP", () => {
                 [amountFee]
             )
         } catch (error: any) {
-            expect(error.message).to.include("ds-math-sub-underflow")
+            expect(error.message).to.include("SafeMath: subtraction overflow")
         }
 
         // ******** CASE 2 ********

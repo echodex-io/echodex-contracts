@@ -41,11 +41,15 @@ export async function deployExchange(ecp: Contract) {
     // Deploy Router fee
     const EchodexRouterFee = await ethers.getContractFactory("EchodexRouterFee");
     const routerFee = await EchodexRouterFee.connect(sender).deploy(factory.address, weth.address);
+    //Deploy Farm
+    const EchodexFarm = await ethers.getContractFactory("EchodexFarm");
+    const echodexFarm = await EchodexFarm.connect(sender).deploy(factory.address);
     return {
         factory,
         weth,
         router,
-        routerFee
+        routerFee,
+        echodexFarm
     }
 }
 
@@ -90,9 +94,9 @@ export async function calcOutputAmount(pair: Contract, tokenIn: Contract, amount
 export async function calcAmountFee(factory: Contract, tokenOut: Contract, amountOut: BigNumber) {
     const feePathLength = await factory.feePathLength(tokenOut.address);
     let result = amountOut.div(1000); // 0.1% fee of amountOut
-    for(let i = 0; i < feePathLength.toNumber() - 1; i++) {
+    for (let i = 0; i < feePathLength.toNumber() - 1; i++) {
         const token0 = await factory.feePath(tokenOut.address, i);
-        const token1 = await factory.feePath(tokenOut.address, i+1);
+        const token1 = await factory.feePath(tokenOut.address, i + 1);
         const pairAddress = await factory.getPair(token0, token1);
         const pairArtifact = await artifacts.readArtifact("EchodexPair");
         const accounts = await ethers.getSigners();
