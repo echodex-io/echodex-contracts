@@ -20,8 +20,8 @@ contract EchodexFarm {
         address pairAddress;
         uint256 amountReward;
         address tokenReward;
-        uint256 startDate; // new Date().getTime() / 1000
-        uint256 endDate; // new Date().getTime() / 1000
+        uint256 startDate;  // second timestamp
+        uint256 endDate;    // second timestamp
         uint256 accAmountPerShare;
         uint256 totalLP;
         uint256 totalReward;
@@ -38,8 +38,8 @@ contract EchodexFarm {
     mapping(address => mapping(uint256 => User)) public users; // address => poolId => UserInfo
 
     event PoolCreated(
-        uint256 poolId, 
-        address pairAddress, 
+        uint256 poolId,
+        address pairAddress,
         address tokenA,
         address tokenB,
         uint256 amountReward,
@@ -118,7 +118,7 @@ contract EchodexFarm {
     function stake(uint256 poolId, uint256 amountLP) external {
         require(amountLP > 0 , "EchodexFarm: AMOUNT_LP_NOT_ZERO");
 
-        Pool storage pool = pools[poolId]; 
+        Pool storage pool = pools[poolId];
         require(pool.startDate <= block.timestamp, "EchodexFarm: NOT_START");
         require(block.timestamp <= pool.endDate, "EchodexFarm: OVER_TIME");
 
@@ -128,7 +128,6 @@ contract EchodexFarm {
         _audit(user, pool);
 
         TransferHelper.safeTransferFrom(pool.pairAddress, msg.sender, address(this), amountLP);
-       
         pool.totalLP = pool.totalLP.add(amountLP);
         user.amount = user.amount.add(amountLP);
         user.rewardDebt = user.amount.mul(pool.accAmountPerShare).div(1e12);
@@ -142,9 +141,8 @@ contract EchodexFarm {
         require(amountLP > 0 , "EchodexFarm: AMOUNT_LP_NOT_ZERO");
 
         // unstake sau enddate
-        Pool storage pool = pools[poolId]; 
+        Pool storage pool = pools[poolId];
         User storage user = users[msg.sender][poolId];
-       
         require(amountLP <= user.amount , "EchodexFarm: INSUFFICIENT_AMOUNT");
 
         _update(pool);
@@ -162,7 +160,7 @@ contract EchodexFarm {
     }
 
     function harvest(uint256 poolId) external {
-        Pool storage pool = pools[poolId]; 
+        Pool storage pool = pools[poolId];
         User storage user = users[msg.sender][poolId];
 
         _update(pool);

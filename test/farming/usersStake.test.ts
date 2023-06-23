@@ -3,7 +3,7 @@ import { Contract } from "ethers";
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { MAX_INT, addLiquidity, deployExchange, deployTokens } from "../prepare";
 
-describe("nhieu nguoi farm", async () => {
+describe("Farming: 2 users", async () => {
     // tokens
     let usdt: Contract;
     let btc: Contract;
@@ -64,7 +64,7 @@ describe("nhieu nguoi farm", async () => {
 
     });
 
-    it("sender stake 1LP , sender1 stake 2LP , 1h sau harvest ca 2", async function () {
+    it("user1 stake 1LP + user2 stake 2LP -> harvest all after 1h", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
         const sender1 = accounts[1];
@@ -111,7 +111,7 @@ describe("nhieu nguoi farm", async () => {
         expect(Number(balanceEcpAfter1)).to.lessThan(Number(balanceEcpBefore1.add(ethers.utils.parseEther("2403"))));  // tolerance block time
     })
 
-    it("sender stake 1LP , sender1 stake 2LP , 1h sau sender harvest , 1h sau sender1 harvest, 1h sau harvest ca 2", async function () {
+    it("user1 stake 1LP + user2 stake 2LP -> user1 harvest after 1h -> user2 harvest after 1h -> harvest all after 1h", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
         const sender1 = accounts[1];
@@ -161,7 +161,7 @@ describe("nhieu nguoi farm", async () => {
         expect(Number(balanceEcpAfter1)).to.lessThan(Number(balanceEcpBefore1.add(ethers.utils.parseEther("7200"))));
     })
 
-    it("sender stake 1LP , sender1 stake 2LP , 1h sau sender unstake , 1h sau sender1 harvest , 1h sau sender harvest", async function () {
+    it("user1 stake 1LP + user2 stake 2LP -> user1 unstake after 1h -> user2 harvest after 1h -> user1 harvest after 1h", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
         const sender1 = accounts[1];

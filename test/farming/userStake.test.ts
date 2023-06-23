@@ -3,7 +3,7 @@ import { Contract } from "ethers";
 import { MAX_INT, addLiquidity, deployExchange, deployTokens } from "../prepare";
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 
-describe("1 nguoi farm", async () => {
+describe("Farming: 1 user", async () => {
     // tokens
     let usdt: Contract;
     let btc: Contract;
@@ -29,7 +29,7 @@ describe("1 nguoi farm", async () => {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
-        // approve 
+        // approve
         await ecp.connect(sender).approve(echodexFarm.address, MAX_INT);
 
         // create pair and appro
@@ -53,7 +53,7 @@ describe("1 nguoi farm", async () => {
         )
     });
 
-    it("1h sau unstake", async function () {
+    it("unstake after 1 hour", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
@@ -91,7 +91,7 @@ describe("1 nguoi farm", async () => {
         expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("3604")))); // tolerance block time
     })
 
-    it("1h sau stake them 2LP, 1h sau unstake", async function () {
+    it("stake more after 1h -> unstake", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
@@ -136,7 +136,7 @@ describe("1 nguoi farm", async () => {
         expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("7205")))); // tolerance block time
     })
 
-    it("stake 5LP , 1h sau unstake 3LP , 1h sau harvest", async function () {
+    it("stake 5LP -> unstake 3LP after 1h -> harvest afer 1h", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
@@ -177,7 +177,7 @@ describe("1 nguoi farm", async () => {
         expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("7205")))); // tolerance block time
     })
 
-    it("harvest sau endTime", async function () {
+    it("harvest after endTime", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
@@ -210,7 +210,7 @@ describe("1 nguoi farm", async () => {
         expect(Number(balanceEcpAfter)).to.equal(Number(balanceEcpBefore.add(ethers.utils.parseEther("2592000"))));
     })
 
-    it("1h sau unstake, harvest sau endTime", async function () {
+    it("unstake -> harvest after endTime", async function () {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
