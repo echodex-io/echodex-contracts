@@ -51,7 +51,7 @@ describe("Farming: 2 users", async () => {
         await addLiquidity(sender1, router, usdt, btc, ethers.utils.parseEther("100"), ethers.utils.parseEther("1000"));
 
         // create pool
-        const startDate = await time.latest()
+        const startDate = await time.latest() + 1
         await echodexFarm.connect(sender).createPool(
             usdt.address,
             btc.address,
@@ -60,8 +60,6 @@ describe("Farming: 2 users", async () => {
             startDate,
             startDate + 2592000, // 30 day
         )
-
-
     });
 
     it("user1 stake 1LP + user2 stake 2LP -> harvest all after 1h", async function () {

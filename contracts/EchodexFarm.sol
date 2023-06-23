@@ -27,6 +27,8 @@ contract EchodexFarm {
         uint256 totalReward;
         uint256 amountPerSecond;
         uint256 lastRewardTimestamp;
+        address owner;
+        bool withdrawExcessReward;
     }
     mapping (uint256 => Pool) public pools;
 
@@ -83,16 +85,23 @@ contract EchodexFarm {
         uint256 amountHarvested
     );
 
+    event WithdrawExcess(
+        uint256 poolId,
+        uint256 amount
+    );
+
     constructor(address _factory) public {
         owner = msg.sender;
         factory = _factory;
     }
 
     function createPool(address tokenA, address tokenB, uint256 amountReward, address tokenReward, uint256 startDate, uint256 endDate) external {
+        require(block.timestamp <= startDate, "EchodexFarm: WRONG_TIME");
+        require(startDate + 30 * 60 <= endDate, "EchodexFarm: WRONG_TIME");
+        
         address pairAddress = IEchodexFactory(factory).getPair(tokenA, tokenB);
         require(pairAddress != address(0), "EchodexFarm: PAIR_NOT_EXIST");
-        require(startDate < endDate, "EchodexFarm: WRONG_TIME");
-        require(block.timestamp < endDate , "EchodexFarm: WRONG_TIME");
+       
 
         uint256 amountPerSecond = amountReward.div(endDate.sub(startDate));
         pools[currentPoolId] = Pool({
@@ -106,7 +115,9 @@ contract EchodexFarm {
             totalLP: 0,
             totalReward: 0,
             amountPerSecond: amountPerSecond,
-            lastRewardTimestamp: startDate
+            lastRewardTimestamp: 0,
+            owner: msg.sender,
+            withdrawExcessReward: false
         });
 
         TransferHelper.safeTransferFrom(tokenReward, msg.sender, address(this), amountReward);
@@ -121,6 +132,10 @@ contract EchodexFarm {
         Pool storage pool = pools[poolId];
         require(pool.startDate <= block.timestamp, "EchodexFarm: NOT_START");
         require(block.timestamp <= pool.endDate, "EchodexFarm: OVER_TIME");
+
+        if (pool.lastRewardTimestamp == 0) {
+            pool.lastRewardTimestamp = block.timestamp;
+        }
 
         User storage user = users[msg.sender][poolId];
 
@@ -140,7 +155,6 @@ contract EchodexFarm {
     function unstake(uint256 poolId, uint256 amountLP) external {
         require(amountLP > 0 , "EchodexFarm: AMOUNT_LP_NOT_ZERO");
 
-        // unstake sau enddate
         Pool storage pool = pools[poolId];
         User storage user = users[msg.sender][poolId];
         require(amountLP <= user.amount , "EchodexFarm: INSUFFICIENT_AMOUNT");
@@ -177,9 +191,24 @@ contract EchodexFarm {
         emit UserUpdate(msg.sender, poolId, user.amount, user.rewardDebt, user.rewardEarn);
     }
 
+    function withdrawExcessReward(uint256 poolId) external {
+        Pool storage pool = pools[poolId];
+        require(pool.owner == msg.sender, "EchodexFarm: NO_PERMISSION");
+        require(pool.endDate < block.timestamp, "EchodexFarm: POOL_NOT_END");
+        require(pool.withdrawExcessReward == false, "EchodexFarm: WITHDRAWED");
+        
+        uint256 excess = pool.amountReward.sub(pool.totalReward);
+        require(excess > 0, "EchodexFarm: NO_EXCESS");
+
+        _safeTransfer(pool.tokenReward, msg.sender, excess);
+        pool.withdrawExcessReward = true;
+
+        emit WithdrawExcess(poolId, excess);
+    }
+
     function _safeTransfer(address token, address to, uint value) private {
         (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'Echodex: TRANSFER_FAILED');
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'EchodexFarm: TRANSFER_FAILED');
     }
 
     function _update(Pool storage pool) private {

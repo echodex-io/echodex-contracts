@@ -43,12 +43,13 @@ describe("Farming: 1 user", async () => {
         await addLiquidity(sender, router, usdt, btc, ethers.utils.parseEther("100"), ethers.utils.parseEther("1000"));
 
         // create pool
+        const startDate = await time.latest() + 1
         await echodexFarm.connect(sender).createPool(
             usdt.address,
             btc.address,
             ethers.utils.parseEther("2592000"),
             ecp.address,
-            await time.latest(),
+            startDate,
             await time.latest() + 2592000, // 30 day
         )
     });
@@ -207,7 +208,8 @@ describe("Farming: 1 user", async () => {
             0
         )
         const balanceEcpAfter = await ecp.balanceOf(sender.address);
-        expect(Number(balanceEcpAfter)).to.equal(Number(balanceEcpBefore.add(ethers.utils.parseEther("2592000"))));
+        expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("2592000"))));
+        expect(Number(balanceEcpAfter)).to.greaterThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("2591998")))); // tolerance block time
     })
 
     it("unstake -> harvest after endTime", async function () {
