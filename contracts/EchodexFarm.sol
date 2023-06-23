@@ -28,7 +28,8 @@ contract EchodexFarm {
         uint256 amountPerSecond;
         uint256 lastRewardTimestamp;
         address owner;
-        bool withdrawExcessReward;
+        uint256 totalExcessReward;
+        uint256 startTimeExcess;
     }
     mapping (uint256 => Pool) public pools;
 
@@ -117,7 +118,8 @@ contract EchodexFarm {
             amountPerSecond: amountPerSecond,
             lastRewardTimestamp: 0,
             owner: msg.sender,
-            withdrawExcessReward: false
+            startTimeExcess: startDate,
+            totalExcessReward: 0
         });
 
         TransferHelper.safeTransferFrom(tokenReward, msg.sender, address(this), amountReward);
@@ -135,6 +137,11 @@ contract EchodexFarm {
 
         if (pool.lastRewardTimestamp == 0) {
             pool.lastRewardTimestamp = block.timestamp;
+        }
+
+        if (pool.startTimeExcess != 0) {
+            pool.totalExcessReward = pool.totalExcessReward.add(block.timestamp.sub(pool.startTimeExcess));
+            pool.startTimeExcess = 0;
         }
 
         User storage user = users[msg.sender][poolId];
@@ -168,6 +175,10 @@ contract EchodexFarm {
         user.amount = user.amount.sub(amountLP);
         user.rewardDebt = user.amount.mul(pool.accAmountPerShare).div(1e12);
 
+        if (pool.totalLP == 0) {
+            pool.startTimeExcess = block.timestamp;
+        }
+
         emit PoolUpdate(poolId, pool.accAmountPerShare, pool.totalLP, pool.totalReward, pool.lastRewardTimestamp);
         emit UserUpdate(msg.sender, poolId, user.amount, user.rewardDebt, user.rewardEarn);
         emit Unstake(poolId, msg.sender, amountLP);
@@ -195,15 +206,17 @@ contract EchodexFarm {
         Pool storage pool = pools[poolId];
         require(pool.owner == msg.sender, "EchodexFarm: NO_PERMISSION");
         require(pool.endDate < block.timestamp, "EchodexFarm: POOL_NOT_END");
-        require(pool.withdrawExcessReward == false, "EchodexFarm: WITHDRAWED");
-        
-        uint256 excess = pool.amountReward.sub(pool.totalReward);
-        require(excess > 0, "EchodexFarm: NO_EXCESS");
 
-        _safeTransfer(pool.tokenReward, msg.sender, excess);
-        pool.withdrawExcessReward = true;
+        if (pool.startTimeExcess != 0) {
+            pool.totalExcessReward = pool.totalExcessReward.add(pool.endDate.sub(pool.startTimeExcess));
+            pool.startTimeExcess = 0;
+        }
 
-        emit WithdrawExcess(poolId, excess);
+        require(pool.totalExcessReward > 0, "EchodexFarm: NO_EXCESS");
+
+        _safeTransfer(pool.tokenReward, msg.sender, pool.totalExcessReward.mul(pool.amountPerSecond));
+        emit WithdrawExcess(poolId, pool.totalExcessReward);
+        pool.totalExcessReward = 0;
     }
 
     function _safeTransfer(address token, address to, uint value) private {
