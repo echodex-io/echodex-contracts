@@ -30,6 +30,7 @@ contract EchodexFarm {
         address owner;
         uint256 totalExcessReward;
         uint256 startTimeExcess;
+        // bool isBlueCheck;
     }
     mapping (uint256 => Pool) public pools;
 
@@ -91,6 +92,11 @@ contract EchodexFarm {
         uint256 amount
     );
 
+    event BlueCheck(
+        uint256 poolId,
+        bool isBlueCheck
+    );
+
     constructor(address _factory) public {
         owner = msg.sender;
         factory = _factory;
@@ -120,6 +126,7 @@ contract EchodexFarm {
             owner: msg.sender,
             startTimeExcess: startDate,
             totalExcessReward: 0
+            // isBlueCheck: false
         });
 
         TransferHelper.safeTransferFrom(tokenReward, msg.sender, address(this), amountReward);
@@ -217,6 +224,15 @@ contract EchodexFarm {
         _safeTransfer(pool.tokenReward, msg.sender, pool.totalExcessReward.mul(pool.amountPerSecond));
         emit WithdrawExcess(poolId, pool.totalExcessReward);
         pool.totalExcessReward = 0;
+    }
+
+    function setBlueCheck(uint256 poolId, bool isBlueCheck) external {
+        require(owner == msg.sender, "EchodexFarm: FORBIDDEN");
+        require(poolId < currentPoolId, "EchodexFarm: NOT_EXIST");
+        // Pool storage pool = pools[poolId];
+        // pool.isBlueCheck = isBlueCheck;
+
+        emit BlueCheck(poolId, isBlueCheck);
     }
 
     function _safeTransfer(address token, address to, uint value) private {
