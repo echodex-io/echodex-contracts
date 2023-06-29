@@ -357,13 +357,8 @@ async function main() {
         FACTORY_ADDRESS,
         { from: myAddress });
 
-    // var data = contract.methods.setFeePath(
-    //     "0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1",
-    //     ["0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdc -> ECP
-    // )
-    var data = contract.methods.setFeePath(
-        "0x4ccb503a5d792eabeff688010e609d40f9a54148",
-        ["0x4ccb503a5d792eabeff688010e609d40f9a54148", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdt -> ECP
+    var data = contract.methods.setTokenFee(
+        "0x3c0b0a0c42c49b6c34b578b59852f2a2d0d62da9", //xECP
     )
 
     var count = await web3.eth.getTransactionCount(myAddress);

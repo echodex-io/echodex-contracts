@@ -358,14 +358,14 @@ async function main() {
         { from: myAddress });
 
     var data = contract.methods.setRefundPercentPair(
-        "0x1769de2b375b1deec5c2b00e562c20b3470e4c21", // wETH - eUsdt
+        "0x3855f32b590f5fd6ba5cbcf5e1d073de346b00c3", // wETH - eUsdt
         "50000000000000000" // 0.05
     )
 
     var count = await web3.eth.getTransactionCount(myAddress);
     var rawTransaction = {
         "from": myAddress,
-        "gasPrice": web3.utils.toHex(5000000000),
+        "gasPrice": web3.utils.toHex("5000000000000"),
         "gas": web3.utils.toHex(200000),
         "to": FACTORY_ADDRESS,
         "value": web3.utils.toHex('0'),
