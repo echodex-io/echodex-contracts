@@ -7,7 +7,7 @@ async function main() {
     const echodexFarm = await EchodexFarm.deploy(
         "0x1930b00e116f1dc285e7722a1eb81a396000D1f7", // factory
     );
-    await echodexFarm.deployed();
+    await echodexFarm.deployed({ gasPrice: "2000000000000" });
     console.log(
         `EchodexFarm deployed to ${echodexFarm.address}`
     );
