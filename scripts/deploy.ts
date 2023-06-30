@@ -6,9 +6,10 @@ async function main() {
     const EchodexFactory = await ethers.getContractFactory("EchodexFactory");
     const echodexFactory = await EchodexFactory.deploy(
         "0x8be21043E75A280a1feD218b62f117a6881573a2", //_receiveFeeAddress
-        "0xa10F180629F857A3053cd2680Dd198e724E1A31b" //xECP
+        "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", //ECP
+        "0x3c0B0A0c42c49b6C34B578B59852f2A2d0d62dA9" //xECP
     );
-    await echodexFactory.deployed();
+    await echodexFactory.deployed({ gasPrice: "2000000000000" });
     console.log(
         `EchodexFactory deployed to ${echodexFactory.address}`
     );
@@ -16,23 +17,23 @@ async function main() {
     // Deploy Router
     const EchodexRouter = await ethers.getContractFactory("EchodexRouter");
     const echodexRouter = await EchodexRouter.deploy(
-        echodexFactory.address, //"0x41838D4F691ee09cf77305A148BAB18217a35596", // echodexFactory.address // factory address
+        echodexFactory.address,
         "0x2c1b868d6596a18e32e61b901e4060c872647b6c" // WETH
     );
-    await echodexRouter.deployed();
+    await echodexRouter.deployed({ gasPrice: "2000000000000" });
     console.log(
-        `EchodexRouter deployed to ${echodexRouter.address}` //0x0a82ccA304Fb8aEa8A4a392C710eE8779c828277
+        `EchodexRouter deployed to ${echodexRouter.address}`
     );
 
     // Deploy Router Fee
     const EchodexRouterFee = await ethers.getContractFactory("EchodexRouterFee");
     const echodexRouterFee = await EchodexRouterFee.deploy(
-        echodexFactory.address, //"0x41838D4F691ee09cf77305A148BAB18217a35596", // echodexFactory.address // factory address
+        echodexFactory.address,
         "0x2c1b868d6596a18e32e61b901e4060c872647b6c" // WETH
     );
-    await echodexRouterFee.deployed();
+    await echodexRouterFee.deployed({ gasPrice: "2000000000000" });
     console.log(
-        `EchodexRouterFee deployed to ${echodexRouterFee.address}` //0xC053301891b0903a037fCABd71A952cD8eFC28ba
+        `EchodexRouterFee deployed to ${echodexRouterFee.address}`
     );
 }
 

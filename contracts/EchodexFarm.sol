@@ -104,7 +104,7 @@ contract EchodexFarm {
     );
 
     event StopPool(
-        uint256 pooId
+        uint256 poolId
     );
 
     constructor(address _factory, address _WETH) public {

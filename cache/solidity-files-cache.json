@@ -630,8 +630,8 @@
       ]
     },
     "D:\\echodex-contracts\\contracts\\EchodexFarm.sol": {
-      "lastModificationDate": 1688139748122,
-      "contentHash": "4c5d113d1eb5d52710f30bfa951aab44",
+      "lastModificationDate": 1688141248678,
+      "contentHash": "f666a064d4aa8ad21713822b4c461893",
       "sourceName": "contracts/EchodexFarm.sol",
       "solcConfig": {
         "version": "0.6.6",
