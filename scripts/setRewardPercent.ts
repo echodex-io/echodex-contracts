@@ -5,7 +5,7 @@ const Web3 = require('web3')
 const web3 = new Web3("https://rpc.goerli.linea.build/")
 
 async function main() {
-    const FACTORY_ADDRESS = "0x1930b00e116f1dc285e7722a1eb81a396000d1f7"
+    const FACTORY_ADDRESS = "0x606e751038844115DD8B9d419FA6Cdc71F695526"
     const abi = [
         {
             "inputs": [
@@ -17,6 +17,11 @@ async function main() {
                 {
                     "internalType": "address",
                     "name": "_tokenFee",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_tokenReward",
                     "type": "address"
                 }
             ],
@@ -102,36 +107,26 @@ async function main() {
         {
             "inputs": [
                 {
-                    "internalType": "uint256",
-                    "name": "amountOut",
-                    "type": "uint256"
-                },
-                {
                     "internalType": "address",
                     "name": "tokenOut",
                     "type": "address"
                 },
                 {
-                    "internalType": "address",
-                    "name": "pair",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "factory",
-                    "type": "address"
-                }
-            ],
-            "name": "calcFee",
-            "outputs": [
-                {
                     "internalType": "uint256",
-                    "name": "fee",
+                    "name": "amountOut",
                     "type": "uint256"
                 },
                 {
                     "internalType": "uint256",
-                    "name": "feeRefund",
+                    "name": "percent",
+                    "type": "uint256"
+                }
+            ],
+            "name": "calcFeeOrReward",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "amount",
                     "type": "uint256"
                 }
             ],
@@ -263,7 +258,7 @@ async function main() {
                     "type": "address"
                 }
             ],
-            "name": "refundPercent",
+            "name": "rewardPercent",
             "outputs": [
                 {
                     "internalType": "uint256",
@@ -314,11 +309,11 @@ async function main() {
                 },
                 {
                     "internalType": "uint256",
-                    "name": "_refundPercent",
+                    "name": "_percent",
                     "type": "uint256"
                 }
             ],
-            "name": "setRefundPercentPair",
+            "name": "setRewardPercent",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
@@ -337,8 +332,34 @@ async function main() {
             "type": "function"
         },
         {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_tokenReward",
+                    "type": "address"
+                }
+            ],
+            "name": "setTokenReward",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [],
             "name": "tokenFee",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "tokenReward",
             "outputs": [
                 {
                     "internalType": "address",
@@ -357,8 +378,8 @@ async function main() {
         FACTORY_ADDRESS,
         { from: myAddress });
 
-    var data = contract.methods.setRefundPercentPair(
-        "0x3855f32b590f5fd6ba5cbcf5e1d073de346b00c3", // wETH - eUsdt
+    var data = contract.methods.setRewardPercent(
+        "0x5892FB7d00d833853e6cbD0c4f9d8EC6520cb779", // wETH - eUsdt
         "50000000000000000" // 0.05
     )
 
