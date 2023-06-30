@@ -93,7 +93,6 @@ interface IEchodexPair {
         uint256 amount0Out,
         uint256 amount1Out,
         address to,
-        address refundFeeAddress,
         bytes calldata data
     ) external;
 

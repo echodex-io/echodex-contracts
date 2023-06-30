@@ -14,9 +14,10 @@ interface IEchodexFactory {
 
     function INIT_CODE_PAIR_HASH() external view returns (bytes32);
 
-    function calcFee(uint, address, address, address) external view returns(uint, uint);
+    function calcFeeOrReward(address tokenOut, uint amountOut, uint percent) external view returns(uint amount);
 
     function tokenFee() external view returns (address);
+    function tokenReward() external view returns (address);
 
     function receiveFeeAddress() external view returns (address);
 
@@ -24,7 +25,7 @@ interface IEchodexFactory {
 
     function setReceiveFeeAddress(address) external;
 
-    function refundPercent(address pair) external view returns (uint _refundPercent);
+    function rewardPercent(address pair) external view returns (uint percent);
 
     function setRefundPercentPair(address, uint) external;
 

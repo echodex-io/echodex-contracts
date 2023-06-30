@@ -5,10 +5,13 @@ import './EchodexPair.sol';
 import './libraries/EchodexLibrary.sol';
 
 contract EchodexFactory {
+    using SafeMath  for uint;
     bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(EchodexPair).creationCode));
+    uint private constant FEE_DENOMINATOR = 10000;
 
     address public receiveFeeAddress;
     address public tokenFee;
+    address public tokenReward;
     address public owner;
 
     mapping(address => address[]) public feePath;
@@ -17,13 +20,14 @@ contract EchodexFactory {
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
 
-    mapping(address => uint) public refundPercent;
+    mapping(address => uint) public rewardPercent; // pair -> percent
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
-    constructor(address _receiveFeeAddress, address _tokenFee) public {
+    constructor(address _receiveFeeAddress, address _tokenFee, address _tokenReward) public {
         receiveFeeAddress = _receiveFeeAddress;
         tokenFee = _tokenFee;
+        tokenReward = _tokenReward;
         owner = msg.sender;
     }
 
@@ -48,14 +52,14 @@ contract EchodexFactory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setRefundPercentPair(address pair, uint _refundPercent) external {
-        require(msg.sender == owner, 'Echodex: FORBIDDEN');
-        refundPercent[pair] = _refundPercent;
-    }
-
     function setTokenFee(address _tokenFee) external {
         require(msg.sender == owner, 'Echodex: FORBIDDEN');
         tokenFee = _tokenFee;
+    }
+
+    function setTokenReward(address _tokenReward) external {
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
+        tokenReward = _tokenReward;
     }
 
     function setReceiveFeeAddress(address _receiveFeeAddress) external {
@@ -69,22 +73,15 @@ contract EchodexFactory {
         feePathLength[tokenOut] = path.length;
     }
 
-    function calcFee(uint amountOut, address tokenOut, address pair, address factory) external view returns (uint fee, uint feeRefund) {
-        uint amountFeeTokenOut = amountOut / 1000;
+    function setRewardPercent(address pair, uint _percent) external {
+        require(msg.sender == owner, 'Echodex: FORBIDDEN');
+        rewardPercent[pair] = _percent;
+    }
 
-        uint amountFeeRefundTokenOut = 0;
-        feeRefund = 0;
-        if (refundPercent[pair] > 0) {
-            amountFeeRefundTokenOut = amountOut * refundPercent[pair]  / (100 * 10 ** 18); // refund (0.05 * 10 **18)% fee
-        }
-
+    function calcFeeOrReward(address tokenOut, uint amountOut, uint percent) external view returns (uint amount) {
+        uint amountFeeTokenOut = amountOut.mul(percent).div(FEE_DENOMINATOR);
         address[] memory path = feePath[tokenOut];
-        uint256[] memory amounts = EchodexLibrary.getAmountsOut(factory, amountFeeTokenOut, path);
-        fee = amounts[amounts.length - 1];
-
-        if (amountFeeRefundTokenOut > 0) {
-            uint256[] memory amountsRefund = EchodexLibrary.getAmountsOut(factory, amountFeeRefundTokenOut, path);
-            feeRefund = amountsRefund[amountsRefund.length - 1];
-        }
+        uint256[] memory amounts = EchodexLibrary.getAmountsOut(address(this), amountFeeTokenOut, path);
+        amount = amounts[amounts.length - 1];
     }
 }

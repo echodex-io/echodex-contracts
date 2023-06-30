@@ -261,7 +261,7 @@ contract EchodexRouterFee {
                 IERC20(tokenFee).transferFrom(msg.sender, address(this), amountsFeeAddMore[i]);
                 IEchodexPair(pair).addFee(amountsFeeAddMore[i]);
             }
-            IEchodexPair(pair).swapPayWithTokenFee(amount0Out, amount1Out, to, msg.sender, new bytes(0));
+            IEchodexPair(pair).swapPayWithTokenFee(amount0Out, amount1Out, to, new bytes(0));
         }
     }
     function swapExactTokensForTokens(
@@ -408,7 +408,7 @@ contract EchodexRouterFee {
                 IEchodexPair(pair).addFee(amountsFeeAddMore[i]);
             }
 
-            pair.swapPayWithTokenFee(amount0Out, amount1Out, to, msg.sender, new bytes(0));
+            pair.swapPayWithTokenFee(amount0Out, amount1Out, to, new bytes(0));
         }
     }
 

@@ -10,6 +10,7 @@ describe("Swap Pay With ECP", () => {
     let btc: Contract;
     let ecp: Contract;
     let weth: Contract;
+    let xecp: Contract;
     // exchange
     let router: Contract;
     let routerFee: Contract;
@@ -31,8 +32,9 @@ describe("Swap Pay With ECP", () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        xecp = tokens.xecp;
 
-        const exchange = await deployExchange(ecp); // erin is receive fee account
+        const exchange = await deployExchange(ecp, xecp); // erin is receive fee account
         router = exchange.routerFee;
         routerFee = exchange.routerFee;
         factory = exchange.factory;
@@ -231,7 +233,6 @@ describe("Swap Pay With ECP", () => {
         await pairBtcUsdt.connect(sender).swapPayWithTokenFee(
             amountToken0Out,
             amountToken1Out,
-            sender.address,
             sender.address,
             "0x"
         )

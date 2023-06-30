@@ -14,6 +14,9 @@ contract EchodexPair is EchodexERC20 {
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+    uint private constant FEE_DENOMINATOR = 10000;
+    uint private constant MAX_PAY_DEFAULT_PERCENT = 30; // 0.3%
+    uint private constant MAX_PAY_WITH_TOKEN_FEE_PERCENT = 10; // 0.1%
 
     address public factory;
     address public token0;
@@ -25,7 +28,7 @@ contract EchodexPair is EchodexERC20 {
 
     uint public price0CumulativeLast;
     uint public price1CumulativeLast;
-    uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
+    uint public kLast; // reserve0 * reserve1, as of immed`iately after the most recent liquidity event
 
     uint public totalFee;
     uint public currentFee;
@@ -68,7 +71,7 @@ contract EchodexPair is EchodexERC20 {
         uint amount1Out,
         address indexed to,
         uint amountTokenFee,
-        uint refundFee
+        uint amountTokenReward
     );
     event Sync(uint112 reserve0, uint112 reserve1);
     event AddFee(uint amount);
@@ -103,16 +106,13 @@ contract EchodexPair is EchodexERC20 {
     }
 
     // pay fee
-    function _payFee(uint fee, uint feeRefund, address refundFeeAddress) private { //payWithTokenFee = true
+    function _payFee(uint fee) private { //payWithTokenFee = true
         address tokenFee = IEchodexFactory(factory).tokenFee();
         address receiveFeeAddress = IEchodexFactory(factory).receiveFeeAddress();
         require(currentFee >= fee, 'Echodex: INSUFFICIENT_FEE_TOKEN');
 
         currentFee = currentFee - fee;
-        _safeTransfer(tokenFee, receiveFeeAddress, fee - feeRefund);
-        if (feeRefund > 0) {
-            _safeTransfer(tokenFee, refundFeeAddress, feeRefund);
-        }
+        _safeTransfer(tokenFee, receiveFeeAddress, fee);
     }
 
     // this low-level function should be called from a contract which performs important safety checks
@@ -182,9 +182,18 @@ contract EchodexPair is EchodexERC20 {
 
         uint amountOut = amount0Out > 0 ? amount0Out : amount1Out;
         address tokenOut = amount0Out > 0 ? token0 : token1;
-        uint fee = amountOut.mul(3) / 1000;
-        amountOut = amountOut.sub(fee);
-        _safeTransfer(tokenOut, to, amountOut);
+        uint fee = amountOut.mul(MAX_PAY_DEFAULT_PERCENT) / FEE_DENOMINATOR;
+
+        // calc reward
+        uint rewardPercent = IEchodexFactory(factory).rewardPercent(address(this));
+        uint amountTokenReward = 0;
+        if(rewardPercent > 0) {
+            amountTokenReward = IEchodexFactory(factory).calcFeeOrReward(tokenOut, amountOut, rewardPercent);
+            require(IERC20(IEchodexFactory(factory).tokenReward()).balanceOf(address(this)) >= amountTokenReward, 'Echodex: INSUFFICIENT_TOKEN_REWARD');
+            _safeTransfer(IEchodexFactory(factory).tokenReward(), to, amountTokenReward);
+        }
+
+        _safeTransfer(tokenOut, to, amountOut.sub(fee));
         _safeTransfer(tokenOut, IEchodexFactory(factory).receiveFeeAddress(), fee);
 
         if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
@@ -199,18 +208,18 @@ contract EchodexPair is EchodexERC20 {
         }
 
         _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
-        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to, 0 ,0);
+        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to, 0, amountTokenReward);
     }
 
-    function swapPayWithTokenFee(uint amount0Out, uint amount1Out, address to, address refundFeeAddress, bytes calldata data) external lock { // payWithTokenFee = true
+    function swapPayWithTokenFee(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock { // payWithTokenFee = true
         SwapState memory state = _preSwap(amount0Out, amount1Out, to);
 
         uint amountOut = amount0Out > 0 ? amount0Out : amount1Out;
         address tokenOut = amount0Out > 0 ? token0 : token1;
 
         //fee
-        (uint fee, uint feeRefund) = IEchodexFactory(factory).calcFee(amountOut, tokenOut, address(this), factory);
-        _payFee(fee, feeRefund, refundFeeAddress);
+        uint fee = IEchodexFactory(factory).calcFeeOrReward(tokenOut, amountOut, MAX_PAY_WITH_TOKEN_FEE_PERCENT); // 0.1%
+        _payFee(fee);
         _safeTransfer(tokenOut, to, amountOut);
 
         if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
@@ -224,7 +233,7 @@ contract EchodexPair is EchodexERC20 {
         require(state.balance0.mul(state.balance1) >= uint(state._reserve0).mul(state._reserve1), 'Echodex: K');
         }
         _update(state.balance0, state.balance1, state._reserve0, state._reserve1);
-        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to, fee, feeRefund);
+        emit Swap(msg.sender, state.amount0In, state.amount1In, amount0Out, amount1Out, to, fee, 0);
     }
 
     function addFee(uint amount) external lock {

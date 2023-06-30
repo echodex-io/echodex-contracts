@@ -1,12 +1,14 @@
 import { Contract } from "ethers";
 import { artifacts, ethers, expect } from "hardhat";
-import { MAX_INT, addLiquidity, calcOutputAmount, deployExchange, deployTokens } from "./prepare";
+import { MAX_INT, addLiquidity, calcAmountFee, calcOutputAmount, deployExchange, deployTokens } from "./prepare";
+import { BigNumber } from "@ethersproject/bignumber";
 
 describe("Default Swap", () => {
     // tokens
     let usdt: Contract;
     let btc: Contract;
     let ecp: Contract;
+    let xecp: Contract;
     let weth: Contract;
     // exchange
     let router: Contract;
@@ -18,8 +20,9 @@ describe("Default Swap", () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        xecp = tokens.xecp;
 
-        const exchange = await deployExchange(ecp); // erin is receive fee account
+        const exchange = await deployExchange(ecp, xecp); // erin is receive fee account
         router = exchange.router;
         factory = exchange.factory;
         weth = exchange.weth;
@@ -115,4 +118,64 @@ describe("Default Swap", () => {
         const receipt = await tx.wait();
         expect(receipt.status).to.equal(1);
     });
+
+    it("swap by router and get reward", async () => {
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+        const sender1 = accounts[1];
+        const amountIn = ethers.utils.parseEther("1");
+        const pairAddress = await factory.getPair(usdt.address, btc.address);
+        const pairABI = (await artifacts.require("EchodexPair")).abi;
+        const pair = new ethers.Contract(pairAddress, pairABI, sender);
+        const exactAmountOut = await calcOutputAmount(pair, btc, amountIn)
+        const deadline = (await ethers.provider.getBlock("latest")).timestamp + 1 * 60 * 60; // 1 hour
+        // transfer 1 btc from sender to sender1 + approve
+        await btc.connect(sender).transfer(sender1.address, amountIn);
+        await btc.connect(sender1).approve(router.address, MAX_INT);
+        // set fee path usdt -> ecp
+        await factory.connect(sender).setFeePath(usdt.address, [usdt.address, ecp.address]);
+        // add liquidity ecp with usdt to get price ecp 100 ecp = 12234.5123 usdt
+        await addLiquidity(sender, router, ecp, usdt, ethers.utils.parseEther("100"), ethers.utils.parseEther("12234.5123"));
+
+        // set reward percent = 0.05%
+        await factory.connect(sender).setRewardPercent(pairAddress, 5);
+
+        // ****** CASE 1 ********
+        // ERROR: don't have enough xECP in pair to transfer reward
+        // ****** CASE 1 ********
+        try {
+            await router.connect(sender1).swapExactTokensForTokens(
+                amountIn,
+                exactAmountOut,
+                [btc.address, usdt.address],
+                sender.address,
+                deadline
+            )
+        } catch (error: any) {
+            expect(error.message).to.include("Echodex: INSUFFICIENT_TOKEN_REWARD");
+        }
+
+        // ****** CASE 2 ********
+        // SUCCESS: transfer reward to sender
+        // ****** CASE 2 ********
+        const amountReward = await calcAmountFee(factory, usdt, exactAmountOut, BigNumber.from(5)); // 0.05%
+
+        // transfer amountReward into pair
+        await xecp.connect(sender).transfer(pairAddress, amountReward);
+
+        await router.connect(sender1).swapExactTokensForTokens(
+            amountIn,
+            exactAmountOut,
+            [btc.address, usdt.address],
+            sender1.address,
+            deadline
+        )
+
+        // check balance xecp of sender1 = amountReward
+        const balanceXecp = await xecp.balanceOf(sender1.address);
+        expect(balanceXecp.toString()).to.equal(amountReward.toString());
+        // check balance xecp of pair = 0
+        const balanceXecpPair = await xecp.balanceOf(pairAddress);
+        expect(balanceXecpPair.toString()).to.equal("0");
+    })
 });

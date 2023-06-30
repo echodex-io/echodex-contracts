@@ -108,10 +108,8 @@ contract EchodexFarm {
         require(block.timestamp <= startDate, "EchodexFarm: WRONG_TIME");
         require(startDate + 30 * 60 <= endDate, "EchodexFarm: WRONG_TIME");
         require(amountReward > 0, "EchodexFarm: AMOUNT_NOT_VALID");
-        
         address pairAddress = IEchodexFactory(factory).getPair(tokenA, tokenB);
         require(pairAddress != address(0), "EchodexFarm: PAIR_NOT_EXIST");
-       
 
         uint256 amountPerSecond = amountReward.div(endDate.sub(startDate));
         pools[currentPoolId] = Pool({

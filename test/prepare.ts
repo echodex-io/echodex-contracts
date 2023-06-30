@@ -4,6 +4,7 @@ import { Contract } from "ethers";
 import { artifacts, ethers } from "hardhat";
 
 export const MAX_INT = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+export const FEE_DENOMINATOR = BigNumber.from("10000")
 
 export async function deployTokens() {
     const accounts = await ethers.getSigners();
@@ -14,21 +15,23 @@ export async function deployTokens() {
     const usdt = await MockERC20.connect(sender).deploy("USDT", "USDT", "100000000000000000000000000");
     const btc = await MockERC20.connect(sender).deploy("BTC", "BTC", "100000000000000000000000000");
     const ecp = await MockERC20.connect(sender).deploy("ECP", "ECP", "100000000000000000000000000");
+    const xecp = await MockERC20.connect(sender).deploy("XECP", "XECP", "100000000000000000000000000");
 
     return {
         usdt,
         btc,
-        ecp
+        ecp,
+        xecp
     }
 }
 
-export async function deployExchange(ecp: Contract) {
+export async function deployExchange(ecp: Contract, xecp: Contract) {
     const accounts = await ethers.getSigners();
     const sender = accounts[0]
     const receiveFeeAddress = accounts[5]
     // Deploy Factory
     const Factory = await ethers.getContractFactory("EchodexFactory");
-    const factory = await Factory.connect(sender).deploy(receiveFeeAddress.address, ecp.address);
+    const factory = await Factory.connect(sender).deploy(receiveFeeAddress.address, ecp.address, xecp.address);
 
     // console.log("INIT_CODE_PAIR_HASH:", await factory.INIT_CODE_PAIR_HASH());
 
@@ -91,9 +94,9 @@ export async function calcOutputAmount(pair: Contract, tokenIn: Contract, amount
     return amountOut;
 }
 
-export async function calcAmountFee(factory: Contract, tokenOut: Contract, amountOut: BigNumber) {
+export async function calcAmountFee(factory: Contract, tokenOut: Contract, amountOut: BigNumber, percent: BigNumber = BigNumber.from("10")) { // default 0.1%
     const feePathLength = await factory.feePathLength(tokenOut.address);
-    let result = amountOut.div(1000); // 0.1% fee of amountOut
+    let result = amountOut.mul(percent).div(FEE_DENOMINATOR);
     for (let i = 0; i < feePathLength.toNumber() - 1; i++) {
         const token0 = await factory.feePath(tokenOut.address, i);
         const token1 = await factory.feePath(tokenOut.address, i + 1);
