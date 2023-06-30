@@ -58,7 +58,7 @@ describe("Farming: 1 user", async () => {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
-        const poolBefore = await echodexFarm.connect(sender).pools(0);
+        const poolBefore = await echodexFarm.connect(sender).poolRewards(0);
         const userBefore = await echodexFarm.connect(sender).users(sender.address, 0);
         const balanceLPBefore = await pair.balanceOf(echodexFarm.address);
         const amountLPIn = ethers.utils.parseEther("100");
@@ -69,7 +69,7 @@ describe("Farming: 1 user", async () => {
         )
 
         const balanceLPAfter = await pair.balanceOf(echodexFarm.address);
-        const poolAfter = await echodexFarm.connect(sender).pools(0);
+        const poolAfter = await echodexFarm.connect(sender).poolRewards(0);
         const userAfter = await echodexFarm.connect(sender).users(sender.address, 0);
 
         expect(balanceLPAfter.toString()).to.equal(balanceLPBefore.add(amountLPIn).toString());
@@ -96,7 +96,7 @@ describe("Farming: 1 user", async () => {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
-        const poolBefore = await echodexFarm.connect(sender).pools(0);
+        const poolBefore = await echodexFarm.connect(sender).poolRewards(0);
         const userBefore = await echodexFarm.connect(sender).users(sender.address, 0);
         const balanceLPBefore = await pair.balanceOf(echodexFarm.address);
         const amountLPIn1 = ethers.utils.parseEther("10");
@@ -114,7 +114,7 @@ describe("Farming: 1 user", async () => {
         )
 
         const balanceLPAfter = await pair.balanceOf(echodexFarm.address);
-        const poolAfter = await echodexFarm.pools(0);
+        const poolAfter = await echodexFarm.poolRewards(0);
         const userAfter = await echodexFarm.users(sender.address, 0);
 
         expect(balanceLPAfter.toString()).to.equal(balanceLPBefore.add(amountLPIn1).add(amountLPIn2).toString());
@@ -141,7 +141,7 @@ describe("Farming: 1 user", async () => {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
-        const poolBefore = await echodexFarm.connect(sender).pools(0);
+        const poolBefore = await echodexFarm.connect(sender).poolRewards(0);
         const userBefore = await echodexFarm.connect(sender).users(sender.address, 0);
         const balanceLPBefore = await pair.balanceOf(echodexFarm.address);
         const amountLPIn = ethers.utils.parseEther("50");
@@ -159,7 +159,7 @@ describe("Farming: 1 user", async () => {
         )
 
         const balanceLPAfter = await pair.balanceOf(echodexFarm.address);
-        const poolAfter = await echodexFarm.connect(sender).pools(0);
+        const poolAfter = await echodexFarm.connect(sender).poolRewards(0);
         const userAfter = await echodexFarm.connect(sender).users(sender.address, 0);
 
         expect(balanceLPAfter.toString()).to.equal(balanceLPBefore.add(amountLPIn.sub(amountLPOut)).toString());
@@ -182,7 +182,7 @@ describe("Farming: 1 user", async () => {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
-        const poolBefore = await echodexFarm.connect(sender).pools(0);
+        const poolBefore = await echodexFarm.connect(sender).poolRewards(0);
         const userBefore = await echodexFarm.connect(sender).users(sender.address, 0);
         const balanceLPBefore = await pair.balanceOf(echodexFarm.address);
         const amountLPIn = ethers.utils.parseEther("100");
@@ -193,7 +193,7 @@ describe("Farming: 1 user", async () => {
         )
 
         const balanceLPAfter = await pair.balanceOf(echodexFarm.address);
-        const poolAfter = await echodexFarm.connect(sender).pools(0);
+        const poolAfter = await echodexFarm.connect(sender).poolRewards(0);
         const userAfter = await echodexFarm.connect(sender).users(sender.address, 0);
 
         expect(balanceLPAfter.toString()).to.equal(balanceLPBefore.add(amountLPIn).toString());
@@ -216,7 +216,7 @@ describe("Farming: 1 user", async () => {
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
-        const poolBefore = await echodexFarm.connect(sender).pools(0);
+        const poolBefore = await echodexFarm.connect(sender).poolRewards(0);
         const userBefore = await echodexFarm.connect(sender).users(sender.address, 0);
         const balanceLPBefore = await pair.balanceOf(echodexFarm.address);
         const amountLPIn = ethers.utils.parseEther("100");
@@ -227,7 +227,7 @@ describe("Farming: 1 user", async () => {
         )
 
         const balanceLPAfter = await pair.balanceOf(echodexFarm.address);
-        const poolAfter = await echodexFarm.connect(sender).pools(0);
+        const poolAfter = await echodexFarm.connect(sender).poolRewards(0);
         const userAfter = await echodexFarm.connect(sender).users(sender.address, 0);
 
         expect(balanceLPAfter.toString()).to.equal(balanceLPBefore.add(amountLPIn).toString());
