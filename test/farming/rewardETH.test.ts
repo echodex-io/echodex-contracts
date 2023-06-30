@@ -54,9 +54,11 @@ describe("Reward ETH", async () => {
         // create pool
         const startDate = await time.latest() + 1
         const before = await ethers.provider.getBalance(echodexFarm.address)
-        await echodexFarm.connect(sender).createPoolRewardETH(
+        await echodexFarm.connect(sender).createPool(
             usdt.address,
             btc.address,
+            ethers.utils.parseEther("5000"),
+            weth.address,
             startDate,
             startDate + 5000, // 5h
             {
@@ -77,8 +79,42 @@ describe("Reward ETH", async () => {
         await time.increase(5000)
 
         const balanceBefore = await ethers.provider.getBalance(sender.address)
-        await echodexFarm.connect(sender).harvestETH(
+        await echodexFarm.connect(sender).harvest(
             0
+        )
+        const balanceAfter = await ethers.provider.getBalance(sender.address)
+
+        expect(Number(balanceAfter.sub(balanceBefore))).to.lessThan(Number(ethers.utils.parseEther("5000")))
+        expect(Number(balanceAfter.sub(balanceBefore))).to.greaterThan(Number(ethers.utils.parseEther("4998")))
+    })
+
+    it("withdrawExcessRewardETH", async function () {
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+
+        // create pool
+        const startDate = await time.latest() + 1
+        const before = await ethers.provider.getBalance(echodexFarm.address)
+        await echodexFarm.connect(sender).createPool(
+            usdt.address,
+            btc.address,
+            ethers.utils.parseEther("5000"),
+            weth.address,
+            startDate,
+            startDate + 5000, // 5h
+            {
+                value: ethers.utils.parseEther("5000")
+            }
+        )
+
+        const after = await ethers.provider.getBalance(echodexFarm.address)
+        expect(Number(after.sub(before))).to.equal(Number(ethers.utils.parseEther("5000")))
+
+        await time.increase(5000)
+
+        const balanceBefore = await ethers.provider.getBalance(sender.address)
+        await echodexFarm.connect(sender).withdrawExcessReward(
+            0,
         )
         const balanceAfter = await ethers.provider.getBalance(sender.address)
 
