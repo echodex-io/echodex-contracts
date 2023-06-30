@@ -8,6 +8,7 @@ describe("Reward ETH", async () => {
     let usdt: Contract;
     let btc: Contract;
     let ecp: Contract;
+    let xecp: Contract;
     let weth: Contract;
     // exchange
     let router: Contract;
@@ -21,8 +22,9 @@ describe("Reward ETH", async () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        xecp = tokens.xecp;
 
-        const exchange = await deployExchange(ecp);
+        const exchange = await deployExchange(ecp, xecp);
         router = exchange.router;
         factory = exchange.factory;
         echodexFarm = exchange.echodexFarm

@@ -8,6 +8,7 @@ describe("Farming: 2 users", async () => {
     let usdt: Contract;
     let btc: Contract;
     let ecp: Contract;
+    let xecp: Contract;
     // exchange
     let router: Contract;
     let factory: Contract;
@@ -20,8 +21,9 @@ describe("Farming: 2 users", async () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        xecp = tokens.xecp;
 
-        const exchange = await deployExchange(ecp);
+        const exchange = await deployExchange(ecp, xecp);
         router = exchange.router;
         factory = exchange.factory;
         echodexFarm = exchange.echodexFarm

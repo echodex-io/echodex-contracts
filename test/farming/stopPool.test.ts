@@ -8,6 +8,7 @@ describe("stopPool", async () => {
     let usdt: Contract;
     let btc: Contract;
     let ecp: Contract;
+    let xecp: Contract;
     // exchange
     let router: Contract;
     let factory: Contract;
@@ -20,8 +21,9 @@ describe("stopPool", async () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        xecp = tokens.xecp;
 
-        const exchange = await deployExchange(ecp);
+        const exchange = await deployExchange(ecp, xecp);
         router = exchange.router;
         factory = exchange.factory;
         echodexFarm = exchange.echodexFarm
@@ -87,32 +89,79 @@ describe("stopPool", async () => {
             expect(error.message).to.include("EchodexFarm: OVER_TIME");
         }
 
+        // harvest
         const balanceEcpBefore = await ecp.balanceOf(sender1.address);
-        const pool = await echodexFarm.poolInfos(0);
-        const poolBefore = await echodexFarm.poolRewards(0);
         await echodexFarm.connect(sender1).harvest(
             0
         )
-        const poolAfter = await echodexFarm.poolRewards(0);
         const balanceEcpAfter = await ecp.balanceOf(sender1.address);
-        const pools = await echodexFarm.poolInfos(0);
-
         expect(Number(balanceEcpAfter)).to.greaterThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("3600"))));
         expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("3604"))));  // tolerance block time
 
-
+        // withdraw
         const balanceTokenRewardBefore = await ecp.balanceOf(sender.address);
         await echodexFarm.connect(sender).withdrawExcessReward(0);
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
 
-        console.log(balanceTokenRewardBefore.toString())
-        console.log(balanceTokenRewardAfter.toString())
-        console.log(balanceTokenRewardAfter.sub(balanceTokenRewardBefore).toString())
-        // 2588400
+        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3603")))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3600"))));
+    })
 
-        // expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3603")))); // tolerance block time
-        // expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3600"))));
-        //2588400
-        //2588397
+    it("stake -> stop -> withdraw -> harvest", async function () {
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+        const sender1 = accounts[0];
+
+        // stake
+        const amountLPIn = ethers.utils.parseEther("100");
+        await echodexFarm.connect(sender1).stake(
+            0,
+            amountLPIn
+        )
+
+        await time.increase(1 * 60 * 60) // 1h
+
+        await echodexFarm.connect(sender).stopPool(0)
+
+        try {
+            await echodexFarm.connect(sender1).stake(
+                0,
+                amountLPIn
+            )
+        } catch (error: any) {
+            expect(error.message).to.include("EchodexFarm: OVER_TIME");
+        }
+
+        //withdraw
+        const balanceTokenRewardBefore = await ecp.balanceOf(sender.address);
+        await echodexFarm.connect(sender).withdrawExcessReward(0);
+        const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
+        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3603")))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3600"))));
+
+        //harvest
+        const balanceEcpBefore = await ecp.balanceOf(sender1.address);
+        await echodexFarm.connect(sender1).harvest(
+            0
+        )
+        const balanceEcpAfter = await ecp.balanceOf(sender1.address);
+        expect(Number(balanceEcpAfter)).to.greaterThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("3600"))));
+        expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.utils.parseEther("3604"))));  // tolerance block time
+    })
+
+    it("no stake -> stop -> withdraw", async function () {
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+
+        await time.increase(1 * 60 * 60) // 1h
+        await echodexFarm.connect(sender).stopPool(0)
+
+        //withdraw
+        const balanceTokenRewardBefore = await ecp.balanceOf(sender.address);
+        await echodexFarm.connect(sender).withdrawExcessReward(0);
+        const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
+
+        expect(Number(balanceTokenRewardAfter)).to.greaterThanOrEqual(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2591999")))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter)).to.lessThanOrEqual(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000"))));
     })
 })

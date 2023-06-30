@@ -9,6 +9,7 @@ describe("test create pool", async () => {
     let usdt: Contract;
     let btc: Contract;
     let ecp: Contract;
+    let xecp: Contract;
     // exchange
     let factory: Contract;
     let echodexFarm: Contract;
@@ -19,8 +20,9 @@ describe("test create pool", async () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        xecp = tokens.xecp;
 
-        const exchange = await deployExchange(ecp);
+        const exchange = await deployExchange(ecp, xecp);
         factory = exchange.factory;
         echodexFarm = exchange.echodexFarm
 

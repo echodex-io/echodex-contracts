@@ -24,7 +24,7 @@ contract EchodexFarm {
         address tokenReward;
         uint256 startDate;  // second timestamp
         uint256 endDate;    // second timestamp
-        uint256 stopEndDate;  // second timestamp
+        uint256 realEndDate;  // second timestamp
         address owner;
     }
 
@@ -136,7 +136,7 @@ contract EchodexFarm {
             tokenReward: tokenReward,
             startDate: startDate,
             endDate: endDate,
-            stopEndDate: endDate,
+            realEndDate: endDate,
             owner: msg.sender
         });
 
@@ -160,7 +160,7 @@ contract EchodexFarm {
 
         PoolInfo storage poolInfo = poolInfos[poolId];
         require(poolInfo.startDate <= block.timestamp, "EchodexFarm: NOT_START");
-        require(block.timestamp <= poolInfo.stopEndDate, "EchodexFarm: OVER_TIME");
+        require(block.timestamp <= poolInfo.endDate, "EchodexFarm: OVER_TIME");
 
         PoolReward storage poolReward = poolRewards[poolId];
         if (poolReward.lastRewardTimestamp == 0) {
@@ -204,7 +204,7 @@ contract EchodexFarm {
         user.amount = user.amount.sub(amountLP);
         user.rewardDebt = user.amount.mul(poolReward.accAmountPerShare).div(1e12);
 
-        if (poolReward.totalLP == 0) {
+        if (poolReward.totalLP == 0 && block.timestamp < poolInfo.endDate) {
             poolReward.startTimeExcess = block.timestamp;
         }
 
@@ -240,14 +240,10 @@ contract EchodexFarm {
         PoolInfo storage poolInfo = poolInfos[poolId];
         PoolReward storage poolReward = poolRewards[poolId];
         require(poolInfo.owner == msg.sender, "EchodexFarm: NO_PERMISSION");
-        require(poolInfo.stopEndDate < block.timestamp, "EchodexFarm: POOL_NOT_END");
+        require(poolInfo.endDate < block.timestamp, "EchodexFarm: POOL_NOT_END");
 
         if (poolReward.startTimeExcess != 0) {
-            if (poolInfo.endDate != poolInfo.stopEndDate) {
-                poolReward.totalExcessReward = poolReward.totalExcessReward.add(poolInfo.endDate.sub(poolReward.startTimeExcess)).sub(100);
-            } else {
-                poolReward.totalExcessReward = poolReward.totalExcessReward.add(poolInfo.endDate.sub(poolReward.startTimeExcess));
-            }
+            poolReward.totalExcessReward = poolReward.totalExcessReward.add(poolInfo.realEndDate.sub(poolReward.startTimeExcess));
             poolReward.startTimeExcess = 0;
         }
 
@@ -275,16 +271,14 @@ contract EchodexFarm {
         PoolReward storage poolReward = poolRewards[poolId];
         require(poolInfo.owner == msg.sender, "EchodexFarm: NO_PERMISSION");
 
-        poolInfo.stopEndDate = block.timestamp;
+        if (poolReward.startTimeExcess != 0) {
+            poolReward.totalExcessReward = poolReward.totalExcessReward.add(poolInfo.endDate.sub(poolReward.startTimeExcess));
+            poolReward.startTimeExcess = 0;
+        } else {
+            poolReward.totalExcessReward = poolReward.totalExcessReward.add(poolInfo.endDate.sub(block.timestamp));
+        }
 
-        // if (poolReward.startTimeExcess != 0) {
-        //     poolReward.totalExcessReward = poolReward.totalExcessReward.add(block.timestamp.sub(poolReward.startTimeExcess));
-        //     poolReward.startTimeExcess = 0;
-
-            
-        // }
-
-        poolReward.startTimeExcess = block.timestamp;
+        poolInfo.endDate = block.timestamp;
 
         emit StopPool(poolId);
     }
