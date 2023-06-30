@@ -43,7 +43,7 @@ export async function deployExchange(ecp: Contract) {
     const routerFee = await EchodexRouterFee.connect(sender).deploy(factory.address, weth.address);
     //Deploy Farm
     const EchodexFarm = await ethers.getContractFactory("EchodexFarm");
-    const echodexFarm = await EchodexFarm.connect(sender).deploy(factory.address);
+    const echodexFarm = await EchodexFarm.connect(sender).deploy(factory.address, weth.address);
     return {
         factory,
         weth,

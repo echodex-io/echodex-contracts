@@ -13,6 +13,8 @@ contract EchodexFarm {
     uint256 public currentPoolId;
     address public factory;
 
+    address public immutable WETH;
+
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
 
     struct Pool {
@@ -96,14 +98,16 @@ contract EchodexFarm {
         bool isBlueCheck
     );
 
-    constructor(address _factory) public {
+    constructor(address _factory, address _WETH) public {
         owner = msg.sender;
         factory = _factory;
+        WETH = _WETH;
     }
 
     function createPool(address tokenA, address tokenB, uint256 amountReward, address tokenReward, uint256 startDate, uint256 endDate) external {
         require(block.timestamp <= startDate, "EchodexFarm: WRONG_TIME");
         require(startDate + 30 * 60 <= endDate, "EchodexFarm: WRONG_TIME");
+        require(amountReward > 0, "EchodexFarm: AMOUNT_NOT_VALID");
         
         address pairAddress = IEchodexFactory(factory).getPair(tokenA, tokenB);
         require(pairAddress != address(0), "EchodexFarm: PAIR_NOT_EXIST");
@@ -129,6 +133,38 @@ contract EchodexFarm {
 
         TransferHelper.safeTransferFrom(tokenReward, msg.sender, address(this), amountReward);
         emit PoolCreated(currentPoolId, pairAddress, tokenA, tokenB, amountReward, tokenReward, startDate, endDate, amountPerSecond);
+
+        currentPoolId++;
+    }
+
+    function createPoolRewardETH(address tokenA, address tokenB, uint256 startDate, uint256 endDate) payable external {
+        require(block.timestamp <= startDate, "EchodexFarm: WRONG_TIME");
+        require(startDate + 30 * 60 <= endDate, "EchodexFarm: WRONG_TIME");
+        require(msg.value > 0, "EchodexFarm: AMOUNT_NOT_VALID");
+        
+        address pairAddress = IEchodexFactory(factory).getPair(tokenA, tokenB);
+        require(pairAddress != address(0), "EchodexFarm: PAIR_NOT_EXIST");
+       
+
+        uint256 amountPerSecond = msg.value.div(endDate.sub(startDate));
+        pools[currentPoolId] = Pool({
+            poolId: currentPoolId,
+            pairAddress: pairAddress,
+            amountReward: msg.value,
+            tokenReward: WETH,
+            startDate: startDate,
+            endDate: endDate,
+            accAmountPerShare: 0,
+            totalLP: 0,
+            totalReward: 0,
+            amountPerSecond: amountPerSecond,
+            lastRewardTimestamp: 0,
+            owner: msg.sender,
+            startTimeExcess: startDate,
+            totalExcessReward: 0
+        });
+
+        emit PoolCreated(currentPoolId, pairAddress, tokenA, tokenB, msg.value, WETH, startDate, endDate, amountPerSecond);
 
         currentPoolId++;
     }
@@ -193,6 +229,8 @@ contract EchodexFarm {
         Pool storage pool = pools[poolId];
         User storage user = users[msg.sender][poolId];
 
+        require(pool.tokenReward != WETH, "EchodexFarm: ERROR");
+
         _update(pool);
         _audit(user, pool);
 
@@ -206,6 +244,27 @@ contract EchodexFarm {
 
         emit UserUpdate(msg.sender, poolId, user.amount, user.rewardDebt, user.rewardEarn);
     }
+
+    function harvestETH(uint256 poolId) external {
+        Pool storage pool = pools[poolId];
+        User storage user = users[msg.sender][poolId];
+
+        require(pool.tokenReward == WETH, "EchodexFarm: ERROR");
+
+        _update(pool);
+        _audit(user, pool);
+
+        require(user.rewardEarn > 0, "EchodexFarm: NO_REWARD");
+
+        msg.sender.transfer(user.rewardEarn);
+
+        emit Harvest(poolId, msg.sender, user.rewardEarn);
+
+        user.rewardEarn = 0;
+
+        emit UserUpdate(msg.sender, poolId, user.amount, user.rewardDebt, user.rewardEarn);
+    }
+
 
     function withdrawExcessReward(uint256 poolId) external {
         Pool storage pool = pools[poolId];
