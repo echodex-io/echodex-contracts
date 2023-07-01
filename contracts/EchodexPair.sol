@@ -245,6 +245,20 @@ contract EchodexPair is EchodexERC20 {
         emit AddFee(amount);
     }
 
+    function withdrawFee(uint amount) external lock {
+        address owner = IEchodexFactory(factory).owner();
+        
+        require(owner == msg.sender, "Echodex: FORBIDDEN");
+        require(amount <= currentFee, "Echodex: INSUFFICIENT_INPUT_AMOUNT");
+
+        address tokenFee = IEchodexFactory(factory).tokenFee();
+        address receiveFeeAddress = IEchodexFactory(factory).receiveFeeAddress();
+        totalFee = totalFee - amount;
+        currentFee = currentFee - amount;
+
+        _safeTransfer(tokenFee, receiveFeeAddress, amount);
+    }
+
     // force balances to match reserves
     function skim(address to) external lock {
         address _token0 = token0; // gas savings

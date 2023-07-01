@@ -9,7 +9,7 @@ async function main() {
         "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", //ECP
         "0x3c0B0A0c42c49b6C34B578B59852f2A2d0d62dA9" //xECP
     );
-    await echodexFactory.deployed({ gasPrice: "2000000000000" });
+    await echodexFactory.deployed({ gasPrice: "4000000000000" });
     console.log(
         `EchodexFactory deployed to ${echodexFactory.address}`
     );
@@ -20,7 +20,7 @@ async function main() {
         echodexFactory.address,
         "0x2c1b868d6596a18e32e61b901e4060c872647b6c" // WETH
     );
-    await echodexRouter.deployed({ gasPrice: "2000000000000" });
+    await echodexRouter.deployed({ gasPrice: "4000000000000" });
     console.log(
         `EchodexRouter deployed to ${echodexRouter.address}`
     );
@@ -31,7 +31,7 @@ async function main() {
         echodexFactory.address,
         "0x2c1b868d6596a18e32e61b901e4060c872647b6c" // WETH
     );
-    await echodexRouterFee.deployed({ gasPrice: "2000000000000" });
+    await echodexRouterFee.deployed({ gasPrice: "4000000000000" });
     console.log(
         `EchodexRouterFee deployed to ${echodexRouterFee.address}`
     );

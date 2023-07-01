@@ -19,6 +19,8 @@ interface IEchodexFactory {
     function tokenFee() external view returns (address);
     function tokenReward() external view returns (address);
 
+    function owner() external view returns (address);
+
     function receiveFeeAddress() external view returns (address);
 
     function setTokenFee(address) external;
