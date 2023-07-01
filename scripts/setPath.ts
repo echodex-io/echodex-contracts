@@ -5,7 +5,7 @@ const Web3 = require('web3')
 const web3 = new Web3("https://rpc.goerli.linea.build/")
 
 async function main() {
-    const FACTORY_ADDRESS = "0x606e751038844115DD8B9d419FA6Cdc71F695526"
+    const FACTORY_ADDRESS = "0x0b841D13226D40BB8a09B6B17168406129F47696"
     const abi = [
         {
             "inputs": [

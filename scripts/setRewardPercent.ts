@@ -5,7 +5,7 @@ const Web3 = require('web3')
 const web3 = new Web3("https://rpc.goerli.linea.build/")
 
 async function main() {
-    const FACTORY_ADDRESS = "0x606e751038844115DD8B9d419FA6Cdc71F695526"
+    const FACTORY_ADDRESS = "0x0b841D13226D40BB8a09B6B17168406129F47696"
     const abi = [
         {
             "inputs": [
@@ -379,7 +379,7 @@ async function main() {
         { from: myAddress });
 
     var data = contract.methods.setRewardPercent(
-        "0x5892FB7d00d833853e6cbD0c4f9d8EC6520cb779", // wETH - eUsdt
+        "0x03f3dd3765cf540cf6c58339cb3a39efd46c7210", // wETH - eUsdt
         "50000000000000000" // 0.05
     )
 
