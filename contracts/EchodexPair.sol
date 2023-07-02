@@ -7,6 +7,7 @@ import './libraries/UQ112x112.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IEchodexFactory.sol';
 import './interfaces/IEchodexCallee.sol';
+import './interfaces/IxECP.sol';
 
 contract EchodexPair is EchodexERC20 {
     using SafeMath  for uint;
@@ -189,8 +190,7 @@ contract EchodexPair is EchodexERC20 {
         uint amountTokenReward = 0;
         if(rewardPercent > 0) {
             amountTokenReward = IEchodexFactory(factory).calcFeeOrReward(tokenOut, amountOut, rewardPercent);
-            require(IERC20(IEchodexFactory(factory).tokenReward()).balanceOf(address(this)) >= amountTokenReward, 'Echodex: INSUFFICIENT_TOKEN_REWARD');
-            _safeTransfer(IEchodexFactory(factory).tokenReward(), to, amountTokenReward);
+            IxECP(IEchodexFactory(factory).tokenReward()).mintReward(to, amountTokenReward);
         }
 
         _safeTransfer(tokenOut, to, amountOut.sub(fee));
@@ -247,7 +247,6 @@ contract EchodexPair is EchodexERC20 {
 
     function withdrawFee(uint amount) external lock {
         address owner = IEchodexFactory(factory).owner();
-        
         require(owner == msg.sender, "Echodex: FORBIDDEN");
         require(amount <= currentFee, "Echodex: INSUFFICIENT_INPUT_AMOUNT");
 
