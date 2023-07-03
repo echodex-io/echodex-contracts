@@ -5,7 +5,7 @@ const Web3 = require('web3')
 const web3 = new Web3("https://rpc.goerli.linea.build/")
 
 async function main() {
-    const FACTORY_ADDRESS = "0x1930b00e116f1dc285e7722a1eb81a396000d1f7"
+    const FACTORY_ADDRESS = "0xb8f42F3CDf449701d3B06E6F73F5c100d784ADae"
     const abi = [
         {
             "inputs": [
@@ -17,6 +17,11 @@ async function main() {
                 {
                     "internalType": "address",
                     "name": "_tokenFee",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_tokenReward",
                     "type": "address"
                 }
             ],
@@ -102,36 +107,26 @@ async function main() {
         {
             "inputs": [
                 {
-                    "internalType": "uint256",
-                    "name": "amountOut",
-                    "type": "uint256"
-                },
-                {
                     "internalType": "address",
                     "name": "tokenOut",
                     "type": "address"
                 },
                 {
-                    "internalType": "address",
-                    "name": "pair",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "factory",
-                    "type": "address"
-                }
-            ],
-            "name": "calcFee",
-            "outputs": [
-                {
                     "internalType": "uint256",
-                    "name": "fee",
+                    "name": "amountOut",
                     "type": "uint256"
                 },
                 {
                     "internalType": "uint256",
-                    "name": "feeRefund",
+                    "name": "percent",
+                    "type": "uint256"
+                }
+            ],
+            "name": "calcFeeOrReward",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "amount",
                     "type": "uint256"
                 }
             ],
@@ -263,7 +258,7 @@ async function main() {
                     "type": "address"
                 }
             ],
-            "name": "refundPercent",
+            "name": "rewardPercent",
             "outputs": [
                 {
                     "internalType": "uint256",
@@ -314,11 +309,11 @@ async function main() {
                 },
                 {
                     "internalType": "uint256",
-                    "name": "_refundPercent",
+                    "name": "_percent",
                     "type": "uint256"
                 }
             ],
-            "name": "setRefundPercentPair",
+            "name": "setRewardPercent",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
@@ -337,8 +332,34 @@ async function main() {
             "type": "function"
         },
         {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_tokenReward",
+                    "type": "address"
+                }
+            ],
+            "name": "setTokenReward",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [],
             "name": "tokenFee",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "tokenReward",
             "outputs": [
                 {
                     "internalType": "address",
@@ -358,7 +379,7 @@ async function main() {
         { from: myAddress });
 
     var data = contract.methods.setTokenFee(
-        "0x3c0b0a0c42c49b6c34b578b59852f2a2d0d62da9", //xECP
+        "0xA76293AD1Dc1F020467e94B330579408b8B7848a", //xECP
     )
 
     var count = await web3.eth.getTransactionCount(myAddress);
