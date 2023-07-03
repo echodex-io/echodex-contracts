@@ -378,8 +378,8 @@ async function main() {
         FACTORY_ADDRESS,
         { from: myAddress });
 
-    var data = contract.methods.setTokenFee(
-        "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", //ECP
+    var data = contract.methods.setTokenReward(
+        "0xA76293AD1Dc1F020467e94B330579408b8B7848a", //xECP
     )
 
     var count = await web3.eth.getTransactionCount(myAddress);
