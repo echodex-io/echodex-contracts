@@ -7,7 +7,7 @@ async function main() {
     const echodexFactory = await EchodexFactory.deploy(
         "0x8be21043E75A280a1feD218b62f117a6881573a2", //_receiveFeeAddress
         "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", //ECP
-        "0x3c0B0A0c42c49b6C34B578B59852f2A2d0d62dA9" //xECP
+        "0x520ecF42C3B6B9BE4c1b8923D405509E8e63ad5f" //xECP
     );
     await echodexFactory.deployed({ gasPrice: "4000000000000" });
     console.log(

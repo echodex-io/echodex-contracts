@@ -143,17 +143,17 @@ describe("Default Swap", () => {
         // ****** CASE 1 ********
         // ERROR: don't have enough xECP in pair to transfer reward
         // ****** CASE 1 ********
-        try {
-            await router.connect(sender1).swapExactTokensForTokens(
-                amountIn,
-                exactAmountOut,
-                [btc.address, usdt.address],
-                sender.address,
-                deadline
-            )
-        } catch (error: any) {
-            expect(error.message).to.include("Echodex: INSUFFICIENT_TOKEN_REWARD");
-        }
+        // try {
+        //     await router.connect(sender1).swapExactTokensForTokens(
+        //         amountIn,
+        //         exactAmountOut,
+        //         [btc.address, usdt.address],
+        //         sender.address,
+        //         deadline
+        //     )
+        // } catch (error: any) {
+        //     expect(error.message).to.include("Echodex: INSUFFICIENT_TOKEN_REWARD");
+        // }
 
         // ****** CASE 2 ********
         // SUCCESS: transfer reward to sender
@@ -161,7 +161,7 @@ describe("Default Swap", () => {
         const amountReward = await calcAmountFee(factory, usdt, exactAmountOut, BigNumber.from(5)); // 0.05%
 
         // transfer amountReward into pair
-        await xecp.connect(sender).transfer(pairAddress, amountReward);
+        // await xecp.connect(sender).transfer(pairAddress, amountReward);
 
         await router.connect(sender1).swapExactTokensForTokens(
             amountIn,
