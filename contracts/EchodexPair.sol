@@ -121,6 +121,15 @@ contract EchodexPair is EchodexERC20 {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));
+
+        if (token0 == IEchodexFactory(factory).tokenFee()) {
+            balance0 = balance0.sub(currentFee);
+        }
+
+        if (token1 == IEchodexFactory(factory).tokenFee()) {
+            balance1 = balance1.sub(currentFee);
+        }
+
         uint amount0 = balance0.sub(_reserve0);
         uint amount1 = balance1.sub(_reserve1);
 
@@ -145,6 +154,14 @@ contract EchodexPair is EchodexERC20 {
         address _token1 = token1;                                // gas savings
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
+        if (token0 == IEchodexFactory(factory).tokenFee()) {
+            balance0 = balance0.sub(currentFee);
+        }
+
+        if (token1 == IEchodexFactory(factory).tokenFee()) {
+            balance1 = balance1.sub(currentFee);
+        }
+
         uint liquidity = balanceOf[address(this)];
 
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
@@ -156,6 +173,13 @@ contract EchodexPair is EchodexERC20 {
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
+        if (token0 == IEchodexFactory(factory).tokenFee()) {
+            balance0 = balance0.sub(currentFee);
+        }
+
+        if (token1 == IEchodexFactory(factory).tokenFee()) {
+            balance1 = balance1.sub(currentFee);
+        }
 
         _update(balance0, balance1, _reserve0, _reserve1);
         emit Burn(msg.sender, amount0, amount1, to);
@@ -200,6 +224,14 @@ contract EchodexPair is EchodexERC20 {
         state.balance0 = IERC20(token0).balanceOf(address(this));
         state.balance1 = IERC20(token1).balanceOf(address(this));
 
+        if (token0 == IEchodexFactory(factory).tokenFee()) {
+            state.balance0 = state.balance0.sub(currentFee);
+        }
+
+        if (token1 == IEchodexFactory(factory).tokenFee()) {
+            state.balance1 = state.balance1.sub(currentFee);
+        }
+
         state.amount0In = state.balance0 > state._reserve0 - amount0Out ? state.balance0 - (state._reserve0 - amount0Out) : 0;
         state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;
         require(state.amount0In > 0 || state.amount1In > 0, 'Echodex: INSUFFICIENT_INPUT_AMOUNT');
@@ -225,6 +257,14 @@ contract EchodexPair is EchodexERC20 {
         if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
         state.balance0 = IERC20(token0).balanceOf(address(this));
         state.balance1 = IERC20(token1).balanceOf(address(this));
+
+        if (token0 == IEchodexFactory(factory).tokenFee()) {
+            state.balance0 = state.balance0.sub(currentFee);
+        }
+
+        if (token1 == IEchodexFactory(factory).tokenFee()) {
+            state.balance1 = state.balance1.sub(currentFee);
+        }
 
         state.amount0In = state.balance0 > state._reserve0 - amount0Out ? state.balance0 - (state._reserve0 - amount0Out) : 0;
         state.amount1In = state.balance1 > state._reserve1 - amount1Out ? state.balance1 - (state._reserve1 - amount1Out) : 0;

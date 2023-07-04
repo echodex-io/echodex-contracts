@@ -178,4 +178,44 @@ describe("Default Swap", () => {
         const balanceXecpPair = await xecp.balanceOf(pairAddress);
         expect(balanceXecpPair.toString()).to.equal("0");
     })
+
+    it("swap by pair (fee pay by pool 100%), addFee -> swap", async () => {
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+
+        // add liquidity ecp with usdt to get price ecp 100 ecp = 12234.5123 usdt
+        await addLiquidity(sender, router, ecp, usdt, ethers.utils.parseEther("100"), ethers.utils.parseEther("12234.5123"));
+
+        var pairAddress = await factory.getPair(usdt.address, ecp.address);
+        var pairABI = (await artifacts.require("EchodexPair")).abi;
+        var pairUsdtECP = new ethers.Contract(pairAddress, pairABI, sender);
+        var amountIn = ethers.utils.parseEther("1");
+        var exactAmountOut = await calcOutputAmount(pairUsdtECP, ecp, amountIn);
+
+        // approve
+        await ecp.connect(sender).approve(pairUsdtECP.address, MAX_INT);
+        // await usdt.connect(sender1).approve(routerFee.address, MAX_INT);
+
+        // add amountFee ecp to pool
+        await pairUsdtECP.connect(sender).addFee(amountIn.toString());
+
+        // pre-swap
+        const token0 = await pairUsdtECP.token0();
+        const amountToken0Out = token0 === ecp.address ? "0" : exactAmountOut;
+        const amountToken1Out = token0 === ecp.address ? exactAmountOut : "0";
+
+        // swap
+        try {
+            await pairUsdtECP.connect(sender).swap(
+                amountToken0Out,
+                amountToken1Out,
+                sender.address,
+                "0x"
+            )
+        } catch (error: any) {
+            expect(error.message).to.include("Echodex: INSUFFICIENT_INPUT_AMOUNT");
+        }
+
+    });
+
 });

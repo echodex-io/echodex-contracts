@@ -74,8 +74,8 @@
       ]
     },
     "D:\\echodex-contracts\\contracts\\EchodexPair.sol": {
-      "lastModificationDate": 1688356216907,
-      "contentHash": "6cf0f583aa0f61dc6f804f7c6de7be2a",
+      "lastModificationDate": 1688480794653,
+      "contentHash": "237fef720a7297f55f9ddb357ac5d70c",
       "sourceName": "contracts/EchodexPair.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -292,8 +292,8 @@
       ]
     },
     "D:\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
-      "lastModificationDate": 1688357420801,
-      "contentHash": "2e2abb35707f53b9b867f30b9df27db7",
+      "lastModificationDate": 1688481752952,
+      "contentHash": "233c5f14d17d5fdc0d8c1339bf6ef78a",
       "sourceName": "contracts/libraries/EchodexLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",

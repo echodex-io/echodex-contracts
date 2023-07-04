@@ -5,10 +5,10 @@ async function main() {
     // Deploy Factory
     const EchodexFarm = await ethers.getContractFactory("EchodexFarm");
     const echodexFarm = await EchodexFarm.deploy(
-        "0xb8f42F3CDf449701d3B06E6F73F5c100d784ADae", // factory
+        "0x77079307DA0551208A173733bf862C49807D0965", // factory
         "0x2c1b868d6596a18e32e61b901e4060c872647b6c" // WETH
     );
-    await echodexFarm.deployed({ gasPrice: "2000000000000" });
+    await echodexFarm.deployed({ gasPrice: "4000000000000" });
     console.log(
         `EchodexFarm deployed to ${echodexFarm.address}`
     );

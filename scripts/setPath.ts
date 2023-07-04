@@ -5,7 +5,7 @@ const Web3 = require('web3')
 const web3 = new Web3("https://rpc.goerli.linea.build/")
 
 async function main() {
-    const FACTORY_ADDRESS = "0xb8f42F3CDf449701d3B06E6F73F5c100d784ADae"
+    const FACTORY_ADDRESS = "0x77079307DA0551208A173733bf862C49807D0965"
     const abi = [
         {
             "inputs": [
@@ -382,10 +382,15 @@ async function main() {
     //     "0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1",
     //     ["0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdc -> ECP
     // )
-    var data = contract.methods.setFeePath(
-        "0x4ccb503a5d792eabeff688010e609d40f9a54148",
-        ["0x4ccb503a5d792eabeff688010e609d40f9a54148", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdt -> ECP
-    )
+    // var data = contract.methods.setFeePath(
+    //     "0x4ccb503a5d792eabeff688010e609d40f9a54148",
+    //     ["0x4ccb503a5d792eabeff688010e609d40f9a54148", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdt -> ECP
+    // )
+
+    // var data = contract.methods.setFeePath(
+    //     "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE",
+    //     ["0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", "0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ECP -> ETH -> ECP
+    // )
 
     var count = await web3.eth.getTransactionCount(myAddress);
     var rawTransaction = {

@@ -5,7 +5,7 @@ const Web3 = require('web3')
 const web3 = new Web3("https://rpc.goerli.linea.build/")
 
 async function main() {
-    const FACTORY_ADDRESS = "0xb8f42F3CDf449701d3B06E6F73F5c100d784ADae"
+    const FACTORY_ADDRESS = "0x77079307DA0551208A173733bf862C49807D0965"
     const abi = [
         {
             "inputs": [
@@ -379,8 +379,8 @@ async function main() {
         { from: myAddress });
 
     var data = contract.methods.setRewardPercent(
-        "0x1af95e5c7da9340c68ba32a2f783c8171bc69295", // wETH - eUsdt
-        "50000000000000000" // 0.05
+        "0xcc4b400f5360b2226fb6af0062e30cfcd8b8fd94", // wETH - eUsdt
+        "5" // 0.05
     )
 
     var count = await web3.eth.getTransactionCount(myAddress);
