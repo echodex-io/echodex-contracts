@@ -16,7 +16,7 @@ async function getFeeData(): Promise<any> {
 async function main() {
     ethers.provider.getFeeData = getFeeData
     // Create the signer for the mnemonic, connected to the provider with hardcoded fee data
-    const signingKey = new ethers.SigningKey(process.env.PRIVATE_KEY || "0x");
+    const signingKey = new ethers.SigningKey("0x" + process.env.PRIVATE_KEY || "0x");
     const signer = new ethers.Wallet(signingKey, ethers.provider);
 
     console.log(process.env.PRIVATE_KEY);
