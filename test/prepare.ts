@@ -94,6 +94,21 @@ export async function calcOutputAmount(pair: Contract, tokenIn: Contract, amount
     return amountOut;
 }
 
+export async function calcInputAmount(pair: Contract, tokenOut: Contract, amountOut: BigNumber) {
+    const reserves = await pair.getReserves();
+    const token0 = await pair.token0();
+
+    const reserveIn = token0 == tokenOut.address ? reserves[1] : reserves[0];
+    const reserveOut = token0 == tokenOut.address ? reserves[0] : reserves[1];
+
+    const numerator = amountOut.mul(reserveIn);
+    const denominator = reserveOut.sub(amountOut);
+
+    const amountIn = numerator.div(denominator).add(1);
+
+    return amountIn;
+}
+
 export async function calcAmountFee(factory: Contract, tokenOut: Contract, amountOut: BigNumber, percent: BigNumber = BigNumber.from("10")) { // default 0.1%
     const feePathLength = await factory.feePathLength(tokenOut.address);
     let result = amountOut.mul(percent).div(FEE_DENOMINATOR);

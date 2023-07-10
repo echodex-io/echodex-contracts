@@ -322,8 +322,10 @@ contract EchodexRouter {
             amounts[0]
         );
         _swap(amounts, path, address(this));
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        // calculate ETH amount out subtracting fee
+        uint256 amountETH = amounts[amounts.length - 1].mul(997).div(1000);
+        IWETH(WETH).withdraw(amountETH);
+        TransferHelper.safeTransferETH(to, amountETH);
     }
 
     function swapExactTokensForETH(
@@ -343,8 +345,10 @@ contract EchodexRouter {
             amounts[0]
         );
         _swap(amounts, path, address(this));
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        // calculate ETH amount out subtracting fee
+        uint256 amountETH = amounts[amounts.length - 1].mul(997).div(1000);
+        IWETH(WETH).withdraw(amountETH);
+        TransferHelper.safeTransferETH(to, amountETH);
     }
 
     function swapETHForExactTokens(

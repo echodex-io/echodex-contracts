@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
 import { artifacts, ethers, expect } from "hardhat";
-import { MAX_INT, addLiquidity, calcAmountFee, calcOutputAmount, deployExchange, deployTokens } from "./prepare";
+import { MAX_INT, addLiquidity, calcAmountFee, calcInputAmount, calcOutputAmount, deployExchange, deployTokens } from "./prepare";
 import { BigNumber } from "@ethersproject/bignumber";
 
 describe("Default Swap", () => {
@@ -218,4 +218,46 @@ describe("Default Swap", () => {
 
     });
 
+    it("swap tokens for ETH", async () => {
+        const reverseETH = "228368726095846032624"
+        const reverseECP = "1554230274242686605332"
+        const amountAddFee = "1234924634903813015670"
+
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+
+        // approve ecp
+        await ecp.connect(sender).approve(router.address, MAX_INT);
+
+        // add liquidity ecp with usdt to get price ecp 100 ecp = 12234.5123 usdt
+        await router.addLiquidityETH(
+            ecp.address,
+            reverseECP,
+            reverseECP,
+            reverseETH,
+            sender.address,
+            (await ethers.provider.getBlock("latest")).timestamp + 1 * 60 * 60 // deadline
+        , {value: reverseETH});
+
+        // addFee
+        const pairAddress = await factory.getPair(ecp.address, weth.address);
+        const pairABI = (await artifacts.require("EchodexPair")).abi;
+        const pair = new ethers.Contract(pairAddress, pairABI, sender);
+        await ecp.connect(sender).approve(pairAddress, MAX_INT);
+        await pair.connect(sender).addFee(amountAddFee);
+
+        // swapTokensForExactETH (need to get 0.1  ETH)
+        const amountOut = ethers.utils.parseEther("0.1");
+        const amountInMax = await calcInputAmount(pair, weth, amountOut);
+
+        await ecp.connect(sender).approve(router.address, MAX_INT);
+
+        await router.connect(sender).swapTokensForExactETH(
+            amountOut,
+            amountInMax,
+            [ecp.address, weth.address],
+            sender.address,
+            (await ethers.provider.getBlock("latest")).timestamp + 1 * 60 * 60 // deadline
+        );
+    });
 });
