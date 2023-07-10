@@ -327,8 +327,8 @@
       ]
     },
     "D:\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
-      "lastModificationDate": 1689000458715,
-      "contentHash": "8855ad79862c095c412ef61de70bf3c2",
+      "lastModificationDate": 1689008571416,
+      "contentHash": "233c5f14d17d5fdc0d8c1339bf6ef78a",
       "sourceName": "contracts/libraries/EchodexLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",

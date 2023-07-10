@@ -26,23 +26,8 @@ async function main() {
         FACTORY_ADDRESS,
         signer);
 
-    // var data = contract.methods.setFeePath(
-    //     "0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1",
-    //     ["0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdc -> ECP
-    // )
-    // var data = contract.methods.setFeePath(
-    //     "0x4ccb503a5d792eabeff688010e609d40f9a54148",
-    //     ["0x4ccb503a5d792eabeff688010e609d40f9a54148", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdt -> ECP
-    // )
-
-    // var data = contract.methods.setFeePath(
-    //     "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE",
-    //     ["0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", "0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ECP -> ETH -> ECP
-    // )
-
-    const result = await contract.setFeePath(
-        "0x2c1b868d6596a18e32e61b901e4060c872647b6c",
-        ["0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ETH -> ECP
+    const result = await contract.setReceiveFeeAddress(
+        "0x94DCfaE29F48aC90b1Cbb1432B598aDB02FCC83a"
     )
 
     console.log(result)
