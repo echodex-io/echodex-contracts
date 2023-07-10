@@ -2,7 +2,7 @@ import { Contract } from "ethers";
 import { artifacts, ethers } from "hardhat";
 import { MAX_INT, addLiquidity, calcAmountFee, calcOutputAmount, deployExchange, deployTokens } from "./prepare";
 import { BigNumber } from "@ethersproject/bignumber";
-import { EchodexFactory, EchodexRouter, EchodexRouterFee, MockERC20, WETH } from "../typechain-types";
+import { EchodexFactory, EchodexPair, EchodexRouter, EchodexRouterFee, MockERC20, WETH } from "../typechain-types";
 import { expect } from "chai";
 
 describe("Swap Pay With ECP", () => {
@@ -24,28 +24,33 @@ describe("Swap Pay With ECP", () => {
 
 
     // global variable
-    let sender: SignerWithAddress;
-    let sender1: SignerWithAddress;
-    let feeReceiver: SignerWithAddress;
+    let sender: any;
+    let sender1: any;
+    let feeReceiver: any;
     let amountIn: bigint;
     let exactAmountOut: bigint;
     let amountFee: bigint;
     let deadline: bigint;
-    let pairBtcUsdt: Contract;
+    let pairBtcUsdt: EchodexPair;
 
     beforeEach(async () => {
         const tokens = await deployTokens();
 
         usdt = tokens.usdt;
+        usdtAddress = await usdt.getAddress()
         btc = tokens.btc;
+        btcAddress = await btc.getAddress()
         ecp = tokens.ecp;
+        ecpAddress = await ecp.getAddress()
         xecp = tokens.xecp;
+        xecpAddress = await xecp.getAddress()
 
         const exchange = await deployExchange(ecpAddress, xecpAddress); // erin is receive fee account
         router = exchange.router;
         routerFee = exchange.routerFee;
         factory = exchange.factory;
         weth = exchange.weth;
+        wethAddress = await weth.getAddress()
 
         const accounts = await ethers.getSigners();
         sender = accounts[0];
@@ -61,9 +66,8 @@ describe("Swap Pay With ECP", () => {
         await factory.connect(sender).setFeePath((await usdt.getAddress()), [(await usdt.getAddress()), ecpAddress]);
 
         const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
-        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        pairBtcUsdt = new ethers.Contract(pairAddress, pairABI, sender);
-        amountIn = 1n;
+        pairBtcUsdt = await ethers.getContractAt("EchodexPair", pairAddress);
+        amountIn = ethers.parseEther("1");
         exactAmountOut = await calcOutputAmount(pairBtcUsdt, btcAddress, amountIn);
         amountFee = await calcAmountFee(factory, usdtAddress, exactAmountOut)
         deadline = BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // 1 hour
@@ -76,7 +80,7 @@ describe("Swap Pay With ECP", () => {
         await ecp.connect(sender).transfer(sender1.address, amountFee);
 
         // approve
-        await ecp.connect(sender1).approve(pairBtc(await usdt.getAddress()), MAX_INT);
+        await ecp.connect(sender1).approve((await pairBtcUsdt.getAddress()), MAX_INT);
         await btc.connect(sender1).approve((await routerFee.getAddress()), MAX_INT);
 
         // ******** CASE 1 ********
@@ -126,7 +130,7 @@ describe("Swap Pay With ECP", () => {
         // check balance usdt of sender1 = exactAmountOut
         expect((await usdt.balanceOf(sender1.address)).toString()).to.equal(exactAmountOut.toString());
         // check balance ecp of pair = 0
-        expect((await ecp.balanceOf(pairBtc(await usdt.getAddress()))).toString()).to.equal("0");
+        expect((await ecp.balanceOf((await pairBtcUsdt.getAddress()))).toString()).to.equal("0");
         // check balance ecp of receiverAddressFee = amountFee
         expect((await ecp.balanceOf(feeReceiver.address)).toString()).to.equal(amountFee.toString());
     });
@@ -193,7 +197,7 @@ describe("Swap Pay With ECP", () => {
         await ecp.connect(sender).transfer(sender1.address, halfAmountFee);
 
         // approve + add 50% amount fee to pool
-        await ecp.connect(sender).approve(pairBtc(await usdt.getAddress()), MAX_INT);
+        await ecp.connect(sender).approve(await pairBtcUsdt.getAddress(), MAX_INT);
         await pairBtcUsdt.connect(sender).addFee(amountFee - halfAmountFee);
 
         // approve
@@ -215,7 +219,7 @@ describe("Swap Pay With ECP", () => {
         // check balance usdt of sender1 = exactAmountOut
         expect((await usdt.balanceOf(sender1.address)).toString()).to.equal(exactAmountOut.toString());
         // check balance ecp of pair = 0
-        expect((await ecp.balanceOf(pairBtc(await usdt.getAddress()))).toString()).to.equal("0");
+        expect((await ecp.balanceOf((await pairBtcUsdt.getAddress()))).toString()).to.equal("0");
         // check balance ecp of sender1 = 0
         expect((await ecp.balanceOf(sender1.address)).toString()).to.equal("0");
         // check balance ecp of receiverAddressFee = amountFee
@@ -224,10 +228,10 @@ describe("Swap Pay With ECP", () => {
 
     it("swap by pair (fee pay by pool 100%)", async () => {
         // transfer 1 BTC from sender to pair address
-        await btc.connect(sender).transfer(pairBtc(await usdt.getAddress()), amountIn);
+        await btc.connect(sender).transfer(await pairBtcUsdt.getAddress(), amountIn);
 
         // approve + add fee to pool
-        await ecp.connect(sender).approve(pairBtc(await usdt.getAddress()), MAX_INT);
+        await ecp.connect(sender).approve(await pairBtcUsdt.getAddress(), MAX_INT);
         await pairBtcUsdt.connect(sender).addFee(amountFee);
 
         // pre-swap
@@ -247,7 +251,7 @@ describe("Swap Pay With ECP", () => {
         // check balance usdt after swap = balance usdt before + exactAmountOut
         expect((await usdt.balanceOf(sender.address)).toString()).to.equal(balanceUsdtBefore + exactAmountOut);
         // check balance ecp of pair = 0
-        expect((await ecp.balanceOf(pairBtc(await usdt.getAddress()))).toString()).to.equal("0");
+        expect((await ecp.balanceOf((await pairBtcUsdt.getAddress()))).toString()).to.equal("0");
         // check balance ecp of feeReceiver = amountFee
         expect((await ecp.balanceOf(feeReceiver.address)).toString()).to.equal(amountFee.toString());
     });
@@ -259,9 +263,9 @@ describe("Swap Pay With ECP", () => {
         // transfer 1 usdt from sender to sender1
         await usdt.connect(sender).transfer(sender1.address, amountIn);
 
-        var pairAddress = await factory.getPair((await usdt.getAddress()), ecpAddress);
-        var pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        var pairUsdtECP = new ethers.Contract(pairAddress, pairABI, sender);
+        const pairAddress = await factory.getPair((await usdt.getAddress()), ecpAddress);
+        const pairUsdtECP = await ethers.getContractAt("EchodexPair", pairAddress);
+
         amountIn = ethers.parseEther("1");
         exactAmountOut = await calcOutputAmount(pairUsdtECP, usdtAddress, amountIn);
         amountFee = await calcAmountFee(factory, ecpAddress, exactAmountOut);
@@ -270,7 +274,7 @@ describe("Swap Pay With ECP", () => {
         await ecp.connect(sender).transfer(sender1.address, amountFee);
 
         // approve
-        await ecp.connect(sender1).approve(pairUsdtECP.address, MAX_INT);
+        await ecp.connect(sender1).approve((await pairUsdtECP.getAddress()), MAX_INT);
         await usdt.connect(sender1).approve((await routerFee.getAddress()), MAX_INT);
 
         // add amountFee ecp to pool (it not enough ecp to pay fee)

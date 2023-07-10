@@ -1,7 +1,7 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { Contract } from "ethers";
 import { artifacts, ethers } from "hardhat";
-import { ERC20, EchodexFactory, EchodexRouter, EchodexRouterFee, MockERC20 } from "../typechain-types";
+import { ERC20, EchodexFactory, EchodexPair, EchodexRouter, EchodexRouterFee, MockERC20 } from "../typechain-types";
 
 export const MAX_INT = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 export const FEE_DENOMINATOR = 10000n
@@ -58,9 +58,9 @@ export async function deployExchange(ecpAddress: string, xecpAddress: string) {
     }
 }
 
-export async function addLiquidity(router: EchodexRouter | EchodexRouterFee, tokenA: ERC20, tokenB: ERC20, amountA: bigint, amountB: bigint) {
+export async function addLiquidity(router: EchodexRouter | EchodexRouterFee, tokenA: ERC20, tokenB: ERC20, amountA: bigint, amountB: bigint, isSender1: boolean = false) {
     const accounts = await ethers.getSigners()
-    const sender = accounts[0]
+    const sender = isSender1 ? accounts[1] : accounts[0]
     const lastBlock = await ethers.provider.getBlock("latest")
     const deadline = BigInt(lastBlock ? lastBlock.timestamp + 1 * 60 * 60 : 0)
     await tokenA.connect(sender).approve((await router.getAddress()), MAX_INT);
@@ -68,7 +68,7 @@ export async function addLiquidity(router: EchodexRouter | EchodexRouterFee, tok
 
     const tx = await router.connect(sender).addLiquidity(
         (await tokenA.getAddress()),
-        (await tokenA.getAddress()),
+        (await tokenB.getAddress()),
         amountA,
         amountB,
         amountA,
@@ -81,7 +81,7 @@ export async function addLiquidity(router: EchodexRouter | EchodexRouterFee, tok
     return receipt;
 }
 
-export async function calcOutputAmount(pair: Contract, tokenInAddress: string, amountIn: bigint) {
+export async function calcOutputAmount(pair: EchodexPair, tokenInAddress: string, amountIn: bigint) {
     // EXAMPLE: reserveIn = 30, reserveOut = 749270.4, amountIn = 1
     // numerator = 1 * 749270.4 = 749270.4
     // denominator = 30 + 1 = 31
@@ -99,7 +99,7 @@ export async function calcOutputAmount(pair: Contract, tokenInAddress: string, a
     return amountOut;
 }
 
-export async function calcInputAmount(pair: Contract, tokenOutAddress: string, amountOut: bigint) {
+export async function calcInputAmount(pair: EchodexPair, tokenOutAddress: string, amountOut: bigint) {
     const reserves = await pair.getReserves();
     const token0 = await pair.token0();
 
@@ -107,7 +107,7 @@ export async function calcInputAmount(pair: Contract, tokenOutAddress: string, a
     const reserveOut = token0 == tokenOutAddress ? reserves[0] : reserves[1];
 
     const numerator = amountOut * reserveIn
-    const denominator = reserveOut.sub(amountOut);
+    const denominator = reserveOut - amountOut;
 
     const amountIn = numerator / denominator + 1n;
 
@@ -121,9 +121,7 @@ export async function calcAmountFee(factory: EchodexFactory, tokenOutAddress: st
         const token0 = await factory.feePath(tokenOutAddress, i);
         const token1 = await factory.feePath(tokenOutAddress, i + 1n);
         const pairAddress = await factory.getPair(token0, token1);
-        const pairArtifact = await artifacts.readArtifact("EchodexPair");
-        const accounts = await ethers.getSigners();
-        const pair = new ethers.Contract(pairAddress, pairArtifact.abi, accounts[0]);
+        const pair = await ethers.getContractAt("EchodexPair", pairAddress);
 
         result = await calcOutputAmount(pair, token0, result);
     }

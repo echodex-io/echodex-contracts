@@ -1,19 +1,26 @@
-import { ethers, artifacts, expect } from "hardhat";
+import { ethers, artifacts } from "hardhat";
 import { Contract } from "ethers";
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { MAX_INT, addLiquidity, deployExchange, deployTokens } from "../prepare";
+import { EchodexFactory, EchodexFarm, EchodexPair, EchodexRouter, MockERC20, WETH } from "../../typechain-types";
+import { expect } from "chai";
 
 describe("Farming: 2 users", async () => {
     // tokens
-    let usdt: Contract;
-    let btc: Contract;
-    let ecp: Contract;
-    let xecp: Contract;
+    let usdt: MockERC20;
+    let btc: MockERC20;
+    let ecp: MockERC20;
+    let ecpAddress: string;
+    let xecp: MockERC20;
+    let xecpAddress: string;
+    let weth: WETH
+    let wethAddress: string;
     // exchange
-    let router: Contract;
-    let factory: Contract;
-    let echodexFarm: Contract;
-    let pair: Contract;
+    let factory: EchodexFactory;
+    let echodexFarm: EchodexFarm;
+    let router: EchodexRouter
+    let pair: EchodexPair
+    let echodexFarmAddress: string;
 
     beforeEach(async () => {
         const tokens = await deployTokens();
@@ -21,12 +28,15 @@ describe("Farming: 2 users", async () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        ecpAddress = await ecp.getAddress()
         xecp = tokens.xecp;
+        xecpAddress = await xecp.getAddress()
 
-        const exchange = await deployExchange(ecp, xecp);
+        const exchange = await deployExchange(ecpAddress, xecpAddress);
         router = exchange.router;
         factory = exchange.factory;
         echodexFarm = exchange.echodexFarm
+        echodexFarmAddress = await echodexFarm.getAddress()
 
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
@@ -36,21 +46,20 @@ describe("Farming: 2 users", async () => {
         await btc.connect(sender).transfer(sender1.address, ethers.parseEther("10000"));
 
         // approve token
-        await ecp.connect(sender).approve(echodexFarm.address, MAX_INT);
+        await ecp.connect(sender).approve(echodexFarmAddress, MAX_INT);
 
         // create pair
         await factory.connect(sender).createPair((await usdt.getAddress()), (await btc.getAddress()));
         const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
-        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        pair = new ethers.Contract(pairAddress, pairABI, sender);
+        pair = await ethers.getContractAt("EchodexPair", pairAddress);
 
         // appro pair
-        await pair.connect(sender).approve(echodexFarm.address, MAX_INT);
-        await pair.connect(sender1).approve(echodexFarm.address, MAX_INT);
+        await pair.connect(sender).approve(echodexFarmAddress, MAX_INT);
+        await pair.connect(sender1).approve(echodexFarmAddress, MAX_INT);
 
         // add liquidity
-        await addLiquidity(sender, router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"));
-        await addLiquidity(sender1, router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"));
+        await addLiquidity(router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"));
+        await addLiquidity(router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"), true);
 
         // create pool
         const startDate = await time.latest() + 1
@@ -58,7 +67,7 @@ describe("Farming: 2 users", async () => {
             (await usdt.getAddress()),
             (await btc.getAddress()),
             ethers.parseEther("2592000"),
-            ecp.address,
+            ecpAddress,
             startDate,
             startDate + 2592000, // 30 day
         )
@@ -104,11 +113,11 @@ describe("Farming: 2 users", async () => {
         const balanceEcpAfter = await ecp.balanceOf(sender.address);
         const balanceEcpAfter1 = await ecp.balanceOf(sender1.address);
 
-        expect(Number(balanceEcpAfter)).to.greaterThan(Number(balanceEcpBefore.add(ethers.parseEther("1200"))));
-        expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.parseEther("1204"))));  // tolerance block time
+        expect(balanceEcpAfter).to.greaterThan(balanceEcpBefore + ethers.parseEther("1200"));
+        expect(balanceEcpAfter).to.lessThan(balanceEcpBefore + ethers.parseEther("1204"));  // tolerance block time
 
-        expect(Number(balanceEcpAfter1)).to.greaterThan(Number(balanceEcpBefore1.add(ethers.parseEther("2400"))));
-        expect(Number(balanceEcpAfter1)).to.lessThan(Number(balanceEcpBefore1.add(ethers.parseEther("2403"))));  // tolerance block time
+        expect(balanceEcpAfter1).to.greaterThan(balanceEcpBefore1 + ethers.parseEther("2400"));
+        expect(balanceEcpAfter1).to.lessThan(balanceEcpBefore1 + ethers.parseEther("2403"));  // tolerance block time
     })
 
     it("user1 stake 1LP + user2 stake 2LP -> user1 harvest after 1h -> user2 harvest after 1h -> harvest all after 1h", async function () {
@@ -154,11 +163,11 @@ describe("Farming: 2 users", async () => {
         const balanceEcpAfter = await ecp.balanceOf(sender.address);
         const balanceEcpAfter1 = await ecp.balanceOf(sender1.address);
 
-        expect(Number(balanceEcpAfter)).to.greaterThan(Number(balanceEcpBefore.add(ethers.parseEther("3600"))));
-        expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.parseEther("3603")))); // tolerance block time
+        expect(balanceEcpAfter).to.greaterThan(balanceEcpBefore + ethers.parseEther("3600"));
+        expect(balanceEcpAfter).to.lessThan(balanceEcpBefore + ethers.parseEther("3603")); // tolerance block time
 
-        expect(Number(balanceEcpAfter1)).to.greaterThan(Number(balanceEcpBefore1.add(ethers.parseEther("7199")))); // tolerance block time
-        expect(Number(balanceEcpAfter1)).to.lessThan(Number(balanceEcpBefore1.add(ethers.parseEther("7200"))));
+        expect(balanceEcpAfter1).to.greaterThan(balanceEcpBefore1 + ethers.parseEther("7199")); // tolerance block time
+        expect(balanceEcpAfter1).to.lessThan(balanceEcpBefore1 + ethers.parseEther("7200"));
     })
 
     it("user1 stake 1LP + user2 stake 2LP -> user1 unstake after 1h -> user2 harvest after 1h -> user1 harvest after 1h", async function () {
@@ -207,11 +216,11 @@ describe("Farming: 2 users", async () => {
         const balanceEcpAfter = await ecp.balanceOf(sender.address);
         const balanceEcpAfter1 = await ecp.balanceOf(sender1.address);
 
-        expect(Number(balanceEcpAfter)).to.greaterThan(Number(balanceEcpBefore.add(ethers.parseEther("1200"))));
-        expect(Number(balanceEcpAfter)).to.lessThan(Number(balanceEcpBefore.add(ethers.parseEther("1203")))); // tolerance block time
+        expect(balanceEcpAfter).to.greaterThan(balanceEcpBefore + ethers.parseEther("1200"));
+        expect(balanceEcpAfter).to.lessThan(balanceEcpBefore + ethers.parseEther("1203")); // tolerance block time
 
-        expect(Number(balanceEcpAfter1)).to.greaterThan(Number(balanceEcpBefore1.add(ethers.parseEther("5998")))); // tolerance block time
-        expect(Number(balanceEcpAfter1)).to.lessThan(Number(balanceEcpBefore1.add(ethers.parseEther("6000"))));
+        expect(balanceEcpAfter1).to.greaterThan(balanceEcpBefore1 + ethers.parseEther("5998")); // tolerance block time
+        expect(balanceEcpAfter1).to.lessThan(balanceEcpBefore1 + ethers.parseEther("6000"));
 
         // 1h first : sender: 1200 + sender1: 2400
         // 1h later: sender1: 3600

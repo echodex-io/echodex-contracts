@@ -1,18 +1,19 @@
 import { ethers } from "hardhat";
-import { parseEther } from "ethers/lib/utils";
 import { assert } from "chai";
-import { Contract } from "ethers";
 import { MAX_INT, deployExchange, deployTokens } from "../prepare";
+import { EchodexFactory, EchodexFarm, MockERC20 } from "../../typechain-types";
 
 describe("test create pool", async () => {
     // tokens
-    let usdt: Contract;
-    let btc: Contract;
-    let ecp: Contract;
-    let xecp: Contract;
+    let usdt: MockERC20;
+    let btc: MockERC20;
+    let ecp: MockERC20;
+    let ecpAddress: string;
+    let xecp: MockERC20;
+    let xecpAddress: string;
     // exchange
-    let factory: Contract;
-    let echodexFarm: Contract;
+    let factory: EchodexFactory;
+    let echodexFarm: EchodexFarm;
 
     beforeEach(async () => {
         const tokens = await deployTokens();
@@ -20,9 +21,11 @@ describe("test create pool", async () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        ecpAddress = await ecp.getAddress()
         xecp = tokens.xecp;
+        xecpAddress = await xecp.getAddress()
 
-        const exchange = await deployExchange(ecp, xecp);
+        const exchange = await deployExchange(ecpAddress, xecpAddress);
         factory = exchange.factory;
         echodexFarm = exchange.echodexFarm
 
@@ -30,7 +33,7 @@ describe("test create pool", async () => {
         const sender = accounts[0];
 
         // approve 
-        await ecp.connect(sender).approve(echodexFarm.address, MAX_INT);
+        await ecp.connect(sender).approve((await echodexFarm.getAddress()), MAX_INT);
 
         // create pair
         await factory.connect(sender).createPair((await usdt.getAddress()), (await btc.getAddress()));
@@ -43,12 +46,12 @@ describe("test create pool", async () => {
         await echodexFarm.connect(sender).createPool(
             (await usdt.getAddress()),
             (await btc.getAddress()),
-            parseEther("30"),
-            ecp.address,
-            parseEther("30"),
-            parseEther("31"),
+            ethers.parseEther("30"),
+            ecpAddress,
+            ethers.parseEther("30"),
+            ethers.parseEther("31"),
         )
 
-        assert.equal(String(await ecp.balanceOf(echodexFarm.address)), parseEther("30").toString());
+        assert.equal(String(await ecp.balanceOf((await echodexFarm.getAddress()))), ethers.parseEther("30").toString());
     })
 })

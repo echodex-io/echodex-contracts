@@ -1,20 +1,26 @@
-import { ethers, artifacts, expect } from "hardhat";
+import { ethers, artifacts } from "hardhat";
 import { Contract } from "ethers";
 import { MAX_INT, addLiquidity, deployExchange, deployTokens } from "../prepare";
 import { time } from '@nomicfoundation/hardhat-network-helpers'
+import { EchodexFactory, EchodexFarm, EchodexPair, EchodexRouter, MockERC20, WETH } from "../../typechain-types";
+import { expect } from "chai";
 
 describe("Reward ETH", async () => {
     // tokens
-    let usdt: Contract;
-    let btc: Contract;
-    let ecp: Contract;
-    let xecp: Contract;
-    let weth: Contract;
+    let usdt: MockERC20;
+    let btc: MockERC20;
+    let ecp: MockERC20;
+    let ecpAddress: string;
+    let xecp: MockERC20;
+    let xecpAddress: string;
+    let weth: WETH
+    let wethAddress: string;
     // exchange
-    let router: Contract;
-    let factory: Contract;
-    let echodexFarm: Contract;
-    let pair: Contract;
+    let factory: EchodexFactory;
+    let echodexFarm: EchodexFarm;
+    let router: EchodexRouter
+    let pair: EchodexPair
+    let echodexFarmAddress: string;
 
     beforeEach(async () => {
         const tokens = await deployTokens();
@@ -22,29 +28,33 @@ describe("Reward ETH", async () => {
         usdt = tokens.usdt;
         btc = tokens.btc;
         ecp = tokens.ecp;
+        ecpAddress = await ecp.getAddress()
         xecp = tokens.xecp;
+        xecpAddress = await xecp.getAddress()
 
-        const exchange = await deployExchange(ecp, xecp);
+        const exchange = await deployExchange(ecpAddress, xecpAddress);
         router = exchange.router;
         factory = exchange.factory;
         echodexFarm = exchange.echodexFarm
+        echodexFarmAddress = await echodexFarm.getAddress()
         weth = exchange.weth;
+        wethAddress = await weth.getAddress();
 
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
         // approve
-        // await ecp.connect(sender).approve(echodexFarm.address, MAX_INT);
+        // await ecp.connect(sender).approve(echodexFarmAddress, MAX_INT);
 
         // create pair and appro
         await factory.connect(sender).createPair((await usdt.getAddress()), (await btc.getAddress()));
         const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
-        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        pair = new ethers.Contract(pairAddress, pairABI, sender);
-        await pair.connect(sender).approve(echodexFarm.address, MAX_INT);
+        pair = await ethers.getContractAt("EchodexPair", pairAddress);
+
+        await pair.connect(sender).approve((await echodexFarm.getAddress()), MAX_INT);
 
         // add liquidity
-        await addLiquidity(sender, router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"));
+        await addLiquidity(router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"));
 
 
     });
@@ -55,12 +65,12 @@ describe("Reward ETH", async () => {
 
         // create pool
         const startDate = await time.latest() + 1
-        const before = await ethers.provider.getBalance(echodexFarm.address)
+        const before = await ethers.provider.getBalance((await echodexFarm.getAddress()))
         await echodexFarm.connect(sender).createPool(
             (await usdt.getAddress()),
             (await btc.getAddress()),
             ethers.parseEther("5000"),
-            weth.address,
+            wethAddress,
             startDate,
             startDate + 5000, // 5h
             {
@@ -68,8 +78,8 @@ describe("Reward ETH", async () => {
             }
         )
 
-        const after = await ethers.provider.getBalance(echodexFarm.address)
-        expect(Number(after.sub(before))).to.equal(Number(ethers.parseEther("5000")))
+        const after = await ethers.provider.getBalance((await echodexFarm.getAddress()))
+        expect(after - before).to.equal(ethers.parseEther("5000"))
 
         // stake
         const amountLPIn = ethers.parseEther("100");
@@ -86,8 +96,8 @@ describe("Reward ETH", async () => {
         )
         const balanceAfter = await ethers.provider.getBalance(sender.address)
 
-        expect(Number(balanceAfter.sub(balanceBefore))).to.lessThan(Number(ethers.parseEther("5000")))
-        expect(Number(balanceAfter.sub(balanceBefore))).to.greaterThan(Number(ethers.parseEther("4998")))
+        expect(balanceAfter - balanceBefore).to.lessThan(ethers.parseEther("5000"))
+        expect(balanceAfter - balanceBefore).to.greaterThan(ethers.parseEther("4998"))
     })
 
     it("withdrawExcessRewardETH", async function () {
@@ -96,12 +106,12 @@ describe("Reward ETH", async () => {
 
         // create pool
         const startDate = await time.latest() + 1
-        const before = await ethers.provider.getBalance(echodexFarm.address)
+        const before = await ethers.provider.getBalance(echodexFarmAddress)
         await echodexFarm.connect(sender).createPool(
             (await usdt.getAddress()),
             (await btc.getAddress()),
             ethers.parseEther("5000"),
-            weth.address,
+            wethAddress,
             startDate,
             startDate + 5000, // 5h
             {
@@ -109,8 +119,8 @@ describe("Reward ETH", async () => {
             }
         )
 
-        const after = await ethers.provider.getBalance(echodexFarm.address)
-        expect(Number(after.sub(before))).to.equal(Number(ethers.parseEther("5000")))
+        const after = await ethers.provider.getBalance(echodexFarmAddress)
+        expect(after - before).to.equal(ethers.parseEther("5000"))
 
         await time.increase(5000)
 
@@ -120,7 +130,7 @@ describe("Reward ETH", async () => {
         )
         const balanceAfter = await ethers.provider.getBalance(sender.address)
 
-        expect(Number(balanceAfter.sub(balanceBefore))).to.lessThan(Number(ethers.parseEther("5000")))
-        expect(Number(balanceAfter.sub(balanceBefore))).to.greaterThan(Number(ethers.parseEther("4998")))
+        expect(balanceAfter - balanceBefore).to.lessThan(ethers.parseEther("5000"))
+        expect(balanceAfter - balanceBefore).to.greaterThan(ethers.parseEther("4998"))
     })
 })

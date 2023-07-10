@@ -54,8 +54,7 @@ describe("Default Swap", () => {
         // swap btc -> usdt
         const amountIn = ethers.parseEther("1");
         const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
-        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        const pair = new ethers.Contract(pairAddress, pairABI, sender);
+        const pair = await ethers.getContractAt("EchodexPair", pairAddress);
         const exactAmountOut = await calcOutputAmount(pair, (await btc.getAddress()), amountIn)
 
         await usdt.connect(sender).approve((await router.getAddress()), MAX_INT);
@@ -93,7 +92,7 @@ describe("Default Swap", () => {
         // swap btc -> usdt
         const amountIn = ethers.parseEther("1");
         const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
-        const pair = await ethers.getContractFactory("EchodexPair")
+        const pair = await ethers.getContractAt("EchodexPair", pairAddress);
         const exactAmountOut = await calcOutputAmount(pair, (await btc.getAddress()), amountIn)
         const token0 = await pair.token0();
         const amountToken0Out = token0 === (await btc.getAddress()) ? "0" : exactAmountOut;
@@ -113,7 +112,7 @@ describe("Default Swap", () => {
                 "0x"
             );
         } catch (error: any) {
-            expect(error.error.message).to.include("Echodex: K");
+            expect(error.message).to.include("Echodex: K");
         }
 
         // ****** CASE 2 ********
@@ -128,7 +127,7 @@ describe("Default Swap", () => {
         );
 
         const receipt = await tx.wait();
-        expect(receipt.status).to.equal(1);
+        expect(receipt?.status).to.equal(1);
     });
 
     it("swap by router and get reward", async () => {
@@ -137,8 +136,7 @@ describe("Default Swap", () => {
         const sender1 = accounts[1];
         const amountIn = ethers.parseEther("1");
         const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
-        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        const pair = new ethers.Contract(pairAddress, pairABI, sender);
+        const pair = await ethers.getContractAt("EchodexPair", pairAddress);
         const exactAmountOut = await calcOutputAmount(pair, btcAddress, amountIn)
         const lastBlock = await ethers.provider.getBlock("latest")
         const deadline = BigInt(lastBlock ? lastBlock.timestamp + 1 * 60 * 60 : 0)
@@ -199,14 +197,13 @@ describe("Default Swap", () => {
         // add liquidity ecp with usdt to get price ecp 100 ecp = 12234.5123 usdt
         await addLiquidity(router, ecp, usdt, ethers.parseEther("100"), ethers.parseEther("12234.5123"));
 
-        var pairAddress = await factory.getPair((await usdt.getAddress()), ecpAddress);
-        var pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        var pairUsdtECP = new ethers.Contract(pairAddress, pairABI, sender);
+        const pairAddress = await factory.getPair((await usdt.getAddress()), ecpAddress);
+        const pairUsdtECP = await ethers.getContractAt("EchodexPair", pairAddress);
         var amountIn = ethers.parseEther("1");
         var exactAmountOut = await calcOutputAmount(pairUsdtECP, ecpAddress, amountIn);
 
         // approve
-        await ecp.connect(sender).approve(pairUsdtECP.address, MAX_INT);
+        await ecp.connect(sender).approve((await pairUsdtECP.getAddress()), MAX_INT);
         // await usdt.connect(sender1).approve(routerFee.address, MAX_INT);
 
         // add amountFee ecp to pool
@@ -256,8 +253,7 @@ describe("Default Swap", () => {
 
         // addFee
         const pairAddress = await factory.getPair(ecpAddress, wethAddress);
-        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        const pair = new ethers.Contract(pairAddress, pairABI, sender);
+        const pair = await ethers.getContractAt("EchodexPair", pairAddress);
         await ecp.connect(sender).approve(pairAddress, MAX_INT);
         await pair.connect(sender).addFee(amountAddFee);
 
@@ -299,8 +295,7 @@ describe("Default Swap", () => {
 
         // addFee
         const pairAddress = await factory.getPair((await usdt.getAddress()), wethAddress);
-        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
-        const pair = new ethers.Contract(pairAddress, pairABI, sender);
+        const pair = await ethers.getContractAt("EchodexPair", pairAddress);
         await ecp.connect(sender).approve(pairAddress, MAX_INT);
         await pair.connect(sender).addFee(amountAddFee);
 

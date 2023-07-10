@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "npx hardhat compile",
+    "deploy:testnet": "npx hardhat run --network testnet scripts/deployRouter.ts",
+    "test": "npx hardhat test",
+    "test:coverage": "npx hardhat coverage",
+    "test:size-contracts": "npx hardhat size-contracts",
+    "build-contracts": "sol-merger \"./contracts/*.sol\" ./build"
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +18,8 @@
     "hardhat": "^2.16.1"
   },
   "dependencies": {
-    "chai": "^4.3.7"
+    "chai": "^4.3.7",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.6.2"
   }
 }

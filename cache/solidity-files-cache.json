@@ -1,8 +1,8 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "G:\\project\\echodex-contracts\\contracts\\EchodexERC20.sol": {
-      "lastModificationDate": 1687253876458,
+    "D:\\echodex-contracts\\contracts\\EchodexERC20.sol": {
+      "lastModificationDate": 1683873049882,
       "contentHash": "29203de5e6d1f6a3bb09c720dfbdeac3",
       "sourceName": "contracts/EchodexERC20.sol",
       "solcConfig": {
@@ -38,8 +38,8 @@
         "EchodexERC20"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\SafeMath.sol": {
-      "lastModificationDate": 1687495491003,
+    "D:\\echodex-contracts\\contracts\\libraries\\SafeMath.sol": {
+      "lastModificationDate": 1687529930666,
       "contentHash": "80e53c5947e09a694653a9bacf8cbb8a",
       "sourceName": "contracts/libraries/SafeMath.sol",
       "solcConfig": {
@@ -73,8 +73,8 @@
         "SafeMath"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\EchodexPair.sol": {
-      "lastModificationDate": 1688975184490,
+    "D:\\echodex-contracts\\contracts\\EchodexPair.sol": {
+      "lastModificationDate": 1689000458665,
       "contentHash": "1b0b6c7f8cca60b9cf8048996af7a4c4",
       "sourceName": "contracts/EchodexPair.sol",
       "solcConfig": {
@@ -116,43 +116,8 @@
         "EchodexPair"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\UQ112x112.sol": {
-      "lastModificationDate": 1687253876479,
-      "contentHash": "d160e1317488048b95c834d9f56c4bbc",
-      "sourceName": "contracts/libraries/UQ112x112.sol",
-      "solcConfig": {
-        "version": "0.6.6",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "=0.6.6"
-      ],
-      "artifacts": [
-        "UQ112x112"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\Math.sol": {
-      "lastModificationDate": 1687253876477,
+    "D:\\echodex-contracts\\contracts\\libraries\\Math.sol": {
+      "lastModificationDate": 1688378077984,
       "contentHash": "6595fdb234b3573bb80368d370d3db6f",
       "sourceName": "contracts/libraries/Math.sol",
       "solcConfig": {
@@ -186,8 +151,43 @@
         "Math"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IERC20.sol": {
-      "lastModificationDate": 1687253876460,
+    "D:\\echodex-contracts\\contracts\\libraries\\UQ112x112.sol": {
+      "lastModificationDate": 1683873049886,
+      "contentHash": "d160e1317488048b95c834d9f56c4bbc",
+      "sourceName": "contracts/libraries/UQ112x112.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "=0.6.6"
+      ],
+      "artifacts": [
+        "UQ112x112"
+      ]
+    },
+    "D:\\echodex-contracts\\contracts\\interfaces\\IERC20.sol": {
+      "lastModificationDate": 1683873049884,
       "contentHash": "df275bb600d868caf64b4305a414a99e",
       "sourceName": "contracts/interfaces/IERC20.sol",
       "solcConfig": {
@@ -221,43 +221,8 @@
         "IERC20"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexFactory.sol": {
-      "lastModificationDate": 1688974889341,
-      "contentHash": "099c452d6b13128fe2841dcba4b7df62",
-      "sourceName": "contracts/interfaces/IEchodexFactory.sol",
-      "solcConfig": {
-        "version": "0.6.6",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.6"
-      ],
-      "artifacts": [
-        "IEchodexFactory"
-      ]
-    },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexCallee.sol": {
-      "lastModificationDate": 1687253876461,
+    "D:\\echodex-contracts\\contracts\\interfaces\\IEchodexCallee.sol": {
+      "lastModificationDate": 1683873049884,
       "contentHash": "518016179e625fc439920eed14988039",
       "sourceName": "contracts/interfaces/IEchodexCallee.sol",
       "solcConfig": {
@@ -291,8 +256,8 @@
         "IEchodexCallee"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IxECP.sol": {
-      "lastModificationDate": 1688533305214,
+    "D:\\echodex-contracts\\contracts\\interfaces\\IxECP.sol": {
+      "lastModificationDate": 1688386634783,
       "contentHash": "8b2f311ea53e861e43d0833b94824d64",
       "sourceName": "contracts/interfaces/IxECP.sol",
       "solcConfig": {
@@ -326,8 +291,43 @@
         "IxECP"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
-      "lastModificationDate": 1688975206302,
+    "D:\\echodex-contracts\\contracts\\interfaces\\IEchodexFactory.sol": {
+      "lastModificationDate": 1689000458709,
+      "contentHash": "099c452d6b13128fe2841dcba4b7df62",
+      "sourceName": "contracts/interfaces/IEchodexFactory.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.6"
+      ],
+      "artifacts": [
+        "IEchodexFactory"
+      ]
+    },
+    "D:\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
+      "lastModificationDate": 1689000458715,
       "contentHash": "8855ad79862c095c412ef61de70bf3c2",
       "sourceName": "contracts/libraries/EchodexLibrary.sol",
       "solcConfig": {
@@ -365,8 +365,8 @@
         "EchodexLibrary"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexPair.sol": {
-      "lastModificationDate": 1688533305214,
+    "D:\\echodex-contracts\\contracts\\interfaces\\IEchodexPair.sol": {
+      "lastModificationDate": 1688135792106,
       "contentHash": "9cda222b191398e3902a566bfcd253f0",
       "sourceName": "contracts/interfaces/IEchodexPair.sol",
       "solcConfig": {
@@ -400,8 +400,8 @@
         "IEchodexPair"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\utils\\ERC20.sol": {
-      "lastModificationDate": 1687253876479,
+    "D:\\echodex-contracts\\contracts\\utils\\ERC20.sol": {
+      "lastModificationDate": 1688378085883,
       "contentHash": "22208dc061aef08cb0d5c2897b64c164",
       "sourceName": "contracts/utils/ERC20.sol",
       "solcConfig": {
@@ -439,8 +439,8 @@
         "ERC20"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\utils\\Context.sol": {
-      "lastModificationDate": 1687253876479,
+    "D:\\echodex-contracts\\contracts\\utils\\Context.sol": {
+      "lastModificationDate": 1686841436649,
       "contentHash": "b64c8bb50745d7fe3ead6adb98ea6b14",
       "sourceName": "contracts/utils/Context.sol",
       "solcConfig": {
@@ -474,8 +474,8 @@
         "Context"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\utils\\MockERC20.sol": {
-      "lastModificationDate": 1688533305214,
+    "D:\\echodex-contracts\\contracts\\utils\\MockERC20.sol": {
+      "lastModificationDate": 1688378045646,
       "contentHash": "7fa98842c1e4acf37a991c776e29593f",
       "sourceName": "contracts/utils/MockERC20.sol",
       "solcConfig": {
@@ -511,8 +511,8 @@
         "MockERC20"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\EchodexRouterFee.sol": {
-      "lastModificationDate": 1688971448221,
+    "D:\\echodex-contracts\\contracts\\EchodexRouterFee.sol": {
+      "lastModificationDate": 1689000458680,
       "contentHash": "5d36cb29a4bb7f638507f3a1c0b652f2",
       "sourceName": "contracts/EchodexRouterFee.sol",
       "solcConfig": {
@@ -553,8 +553,8 @@
         "EchodexRouterFee"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\TransferHelper.sol": {
-      "lastModificationDate": 1687253876477,
+    "D:\\echodex-contracts\\contracts\\libraries\\TransferHelper.sol": {
+      "lastModificationDate": 1686841436640,
       "contentHash": "32a78820ff08368a2a2d7c18d69b4060",
       "sourceName": "contracts/libraries/TransferHelper.sol",
       "solcConfig": {
@@ -588,8 +588,8 @@
         "TransferHelper"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IWETH.sol": {
-      "lastModificationDate": 1687253876476,
+    "D:\\echodex-contracts\\contracts\\interfaces\\IWETH.sol": {
+      "lastModificationDate": 1683873049885,
       "contentHash": "ffe18621b695f98da24e3302e98136e8",
       "sourceName": "contracts/interfaces/IWETH.sol",
       "solcConfig": {
@@ -623,8 +623,8 @@
         "IWETH"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\EchodexRouter.sol": {
-      "lastModificationDate": 1688980446744,
+    "D:\\echodex-contracts\\contracts\\EchodexRouter.sol": {
+      "lastModificationDate": 1689000458673,
       "contentHash": "9fec0e8d2071e288c8b89ffd0e0b7d58",
       "sourceName": "contracts/EchodexRouter.sol",
       "solcConfig": {
@@ -665,8 +665,8 @@
         "EchodexRouter"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\EchodexFarm.sol": {
-      "lastModificationDate": 1688717025603,
+    "D:\\echodex-contracts\\contracts\\EchodexFarm.sol": {
+      "lastModificationDate": 1688141248678,
       "contentHash": "f666a064d4aa8ad21713822b4c461893",
       "sourceName": "contracts/EchodexFarm.sol",
       "solcConfig": {
@@ -705,8 +705,8 @@
         "EchodexFarm"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\EchodexFactory.sol": {
-      "lastModificationDate": 1688533305211,
+    "D:\\echodex-contracts\\contracts\\EchodexFactory.sol": {
+      "lastModificationDate": 1688378338585,
       "contentHash": "038623c129e8810bd13b001291e7a0fc",
       "sourceName": "contracts/EchodexFactory.sol",
       "solcConfig": {
@@ -743,8 +743,8 @@
         "EchodexFactory"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexERC20.sol": {
-      "lastModificationDate": 1687253876464,
+    "D:\\echodex-contracts\\contracts\\interfaces\\IEchodexERC20.sol": {
+      "lastModificationDate": 1683873049884,
       "contentHash": "651b0c51e6dee88b088ee3309b1c75fa",
       "sourceName": "contracts/interfaces/IEchodexERC20.sol",
       "solcConfig": {
@@ -778,8 +778,8 @@
         "IEchodexERC20"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\libraries\\WETH.sol": {
-      "lastModificationDate": 1687253876479,
+    "D:\\echodex-contracts\\contracts\\libraries\\WETH.sol": {
+      "lastModificationDate": 1686841436644,
       "contentHash": "462fadaa02f7f702118ddd222b6d25c0",
       "sourceName": "contracts/libraries/WETH.sol",
       "solcConfig": {
@@ -813,8 +813,8 @@
         "WETH"
       ]
     },
-    "G:\\project\\echodex-contracts\\contracts\\utils\\IERC20.sol": {
-      "lastModificationDate": 1687253876479,
+    "D:\\echodex-contracts\\contracts\\utils\\IERC20.sol": {
+      "lastModificationDate": 1686841436657,
       "contentHash": "d3491e81fe502a14e4492834eb13cecf",
       "sourceName": "contracts/utils/IERC20.sol",
       "solcConfig": {
