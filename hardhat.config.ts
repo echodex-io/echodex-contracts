@@ -1,11 +1,7 @@
-import type { HardhatUserConfig, NetworkUserConfig } from "hardhat/types";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-web3";
-import "@nomiclabs/hardhat-truffle5";
-import "hardhat-abi-exporter";
-import "hardhat-contract-sizer";
-import "solidity-coverage";
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
 import "dotenv/config";
+import { NetworkUserConfig } from "hardhat/types/config";
 
 const testnet: NetworkUserConfig = {
     url: "https://rpc.goerli.linea.build/",
@@ -38,11 +34,6 @@ const config: HardhatUserConfig = {
         cache: "./cache",
         artifacts: "./artifacts",
     },
-    abiExporter: {
-        path: "./data/abi",
-        clear: true,
-        flat: false,
-    },
 };
 
-export default config;
+export default config

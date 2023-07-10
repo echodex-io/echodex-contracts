@@ -33,7 +33,7 @@ describe("test create pool", async () => {
         await ecp.connect(sender).approve(echodexFarm.address, MAX_INT);
 
         // create pair
-        await factory.connect(sender).createPair(usdt.address, btc.address);
+        await factory.connect(sender).createPair((await usdt.getAddress()), (await btc.getAddress()));
     });
 
     it("create pool", async function () {
@@ -41,8 +41,8 @@ describe("test create pool", async () => {
         const sender = accounts[0];
 
         await echodexFarm.connect(sender).createPool(
-            usdt.address,
-            btc.address,
+            (await usdt.getAddress()),
+            (await btc.getAddress()),
             parseEther("30"),
             ecp.address,
             parseEther("30"),

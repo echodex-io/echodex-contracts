@@ -1,6 +1,11 @@
-build/
-node_modules/
+node_modules
 .env
-artifacts/
-cache/
-cache/solidity-files-cache.json
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+

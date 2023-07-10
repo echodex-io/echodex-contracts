@@ -212,7 +212,7 @@ contract EchodexPair is EchodexERC20 {
         // calc reward
         uint rewardPercent = IEchodexFactory(factory).rewardPercent(address(this));
         uint amountTokenReward = 0;
-        if(rewardPercent > 0) {
+        if(rewardPercent > 0 && IEchodexFactory(factory).feePathLength(tokenOut) > 0) {
             amountTokenReward = IEchodexFactory(factory).calcFeeOrReward(tokenOut, amountOut, rewardPercent);
             IxECP(IEchodexFactory(factory).tokenReward()).mintReward(to, amountTokenReward);
         }

@@ -32,16 +32,16 @@ describe("Withdraw Excess", async () => {
         const sender = accounts[0];
         const sender1 = accounts[1];
 
-        await usdt.connect(sender).transfer(sender1.address, ethers.utils.parseEther("1000"));
-        await btc.connect(sender).transfer(sender1.address, ethers.utils.parseEther("10000"));
+        await usdt.connect(sender).transfer(sender1.address, ethers.parseEther("1000"));
+        await btc.connect(sender).transfer(sender1.address, ethers.parseEther("10000"));
 
         // approve
         await ecp.connect(sender).approve(echodexFarm.address, MAX_INT);
 
         // create pair and appro
-        await factory.connect(sender).createPair(usdt.address, btc.address);
-        const pairAddress = await factory.getPair(usdt.address, btc.address);
-        const pairABI = (await artifacts.require("EchodexPair")).abi;
+        await factory.connect(sender).createPair((await usdt.getAddress()), (await btc.getAddress()));
+        const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
+        const pairABI = (await artifacts.readArtifact("EchodexPair")).abi;
         pair = new ethers.Contract(pairAddress, pairABI, sender);
 
         // appro pair
@@ -49,15 +49,15 @@ describe("Withdraw Excess", async () => {
         await pair.connect(sender1).approve(echodexFarm.address, MAX_INT);
 
         // add liquidity
-        await addLiquidity(sender, router, usdt, btc, ethers.utils.parseEther("100"), ethers.utils.parseEther("1000"));
-        await addLiquidity(sender1, router, usdt, btc, ethers.utils.parseEther("100"), ethers.utils.parseEther("1000"));
+        await addLiquidity(sender, router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"));
+        await addLiquidity(sender1, router, usdt, btc, ethers.parseEther("100"), ethers.parseEther("1000"));
 
         // create pool
         const startDate = await time.latest() + 1
         await echodexFarm.connect(sender).createPool(
-            usdt.address,
-            btc.address,
-            ethers.utils.parseEther("2592000"),
+            (await usdt.getAddress()),
+            (await btc.getAddress()),
+            ethers.parseEther("2592000"),
             ecp.address,
             startDate,
             await time.latest() + 2592000, // 30 day
@@ -80,8 +80,8 @@ describe("Withdraw Excess", async () => {
         await echodexFarm.connect(sender).withdrawExcessReward(0);
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
 
-        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.lessThanOrEqual(Number(ethers.utils.parseEther("2592000")));
-        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.greaterThan(Number(ethers.utils.parseEther("2591998"))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.lessThanOrEqual(Number(ethers.parseEther("2592000")));
+        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.greaterThan(Number(ethers.parseEther("2591998"))); // tolerance block time
 
     })
 
@@ -90,7 +90,7 @@ describe("Withdraw Excess", async () => {
         const sender = accounts[0];
         const sender1 = accounts[0];
 
-        const amountLP = ethers.utils.parseEther("10");
+        const amountLP = ethers.parseEther("10");
 
         await echodexFarm.connect(sender1).stake(
             0,
@@ -110,8 +110,8 @@ describe("Withdraw Excess", async () => {
         await echodexFarm.connect(sender).withdrawExcessReward(0);
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
 
-        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3603")))); // tolerance block time
-        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("3600"))));
+        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("2592000")).sub(ethers.parseEther("3603")))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("2592000")).sub(ethers.parseEther("3600"))));
 
     })
 
@@ -120,7 +120,7 @@ describe("Withdraw Excess", async () => {
         const sender = accounts[0];
         const sender1 = accounts[0];
 
-        const amountLP = ethers.utils.parseEther("10");
+        const amountLP = ethers.parseEther("10");
 
         await echodexFarm.connect(sender1).stake(
             0,
@@ -133,8 +133,8 @@ describe("Withdraw Excess", async () => {
         await echodexFarm.connect(sender).withdrawExcessReward(0);
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
 
-        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.lessThan(Number(ethers.utils.parseEther("2"))); // tolerance block time
-        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.greaterThan(Number(ethers.utils.parseEther("1")));
+        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.lessThan(Number(ethers.parseEther("2"))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter.sub(balanceTokenRewardBefore))).to.greaterThan(Number(ethers.parseEther("1")));
     })
 
     it("harvest after end, then withdraw", async function () {
@@ -142,7 +142,7 @@ describe("Withdraw Excess", async () => {
         const sender = accounts[0];
         const sender1 = accounts[0];
 
-        const amountLP = ethers.utils.parseEther("10");
+        const amountLP = ethers.parseEther("10");
 
         await time.increase(1 * 60 * 60)
 
@@ -160,16 +160,16 @@ describe("Withdraw Excess", async () => {
         )
         const after = await ecp.balanceOf(sender1.address);
 
-        expect(Number(after)).to.greaterThan(Number(before.add(ethers.utils.parseEther("2592000").sub(ethers.utils.parseEther("3605"))))); // tolerance block time
-        expect(Number(after)).to.lessThan(Number(before.add(ethers.utils.parseEther("2592000").sub(ethers.utils.parseEther("3600")))));
+        expect(Number(after)).to.greaterThan(Number(before.add(ethers.parseEther("2592000").sub(ethers.parseEther("3605"))))); // tolerance block time
+        expect(Number(after)).to.lessThan(Number(before.add(ethers.parseEther("2592000").sub(ethers.parseEther("3600")))));
 
         // withdraw
         const balanceTokenRewardBefore = await ecp.balanceOf(sender.address);
         await echodexFarm.connect(sender).withdrawExcessReward(0);
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
 
-        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("3600"))));
-        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("3605")))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("3600"))));
+        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("3605")))); // tolerance block time
 
     })
 
@@ -178,7 +178,7 @@ describe("Withdraw Excess", async () => {
         const sender = accounts[0];
         const sender1 = accounts[0];
 
-        const amountLP = ethers.utils.parseEther("10");
+        const amountLP = ethers.parseEther("10");
 
         await time.increase(1 * 60 * 60)
 
@@ -195,8 +195,8 @@ describe("Withdraw Excess", async () => {
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
 
 
-        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("3600"))));
-        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("3605")))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("3600"))));
+        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("3605")))); // tolerance block time
 
         // harvest
         const before = await ecp.balanceOf(sender1.address);
@@ -205,8 +205,8 @@ describe("Withdraw Excess", async () => {
         )
         const after = await ecp.balanceOf(sender1.address);
 
-        expect(Number(after)).to.greaterThan(Number(before.add(ethers.utils.parseEther("2592000").sub(ethers.utils.parseEther("3605"))))); // tolerance block time
-        expect(Number(after)).to.lessThan(Number(before.add(ethers.utils.parseEther("2592000").sub(ethers.utils.parseEther("3600")))));
+        expect(Number(after)).to.greaterThan(Number(before.add(ethers.parseEther("2592000").sub(ethers.parseEther("3605"))))); // tolerance block time
+        expect(Number(after)).to.lessThan(Number(before.add(ethers.parseEther("2592000").sub(ethers.parseEther("3600")))));
     })
 
     it("stake -> unstake -> [...] -> stake -> unstake", async function () {
@@ -214,7 +214,7 @@ describe("Withdraw Excess", async () => {
         const sender = accounts[0];
         const sender1 = accounts[0];
 
-        const amountLP = ethers.utils.parseEther("10");
+        const amountLP = ethers.parseEther("10");
 
         await echodexFarm.connect(sender1).stake(
             0,
@@ -248,8 +248,8 @@ describe("Withdraw Excess", async () => {
         await echodexFarm.connect(sender).withdrawExcessReward(0);
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
 
-        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("7203")))); // tolerance block time
-        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.utils.parseEther("2592000")).sub(ethers.utils.parseEther("7200"))));
+        expect(Number(balanceTokenRewardAfter)).to.greaterThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("2592000")).sub(ethers.parseEther("7203")))); // tolerance block time
+        expect(Number(balanceTokenRewardAfter)).to.lessThan(Number(balanceTokenRewardBefore.add(ethers.parseEther("2592000")).sub(ethers.parseEther("7200"))));
 
     })
 })

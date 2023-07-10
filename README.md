@@ -1,21 +1,13 @@
-# Echodex Core Smart Contracts
+# Sample Hardhat Project
 
-Smart contracts of echodex exchange
+This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
 
-Try testnet: [testnet.echodex.io](https://testnet.echodex.io).
+Try running some of the following tasks:
 
-# Local Development
-
-The following assumes the use of `node@>=10`.
-
-## Install Dependencies
-
-`npm`
-
-## Compile Contracts
-
-`npm compile`
-
-## Run Tests
-
-`npm test`
+```shell
+npx hardhat help
+npx hardhat test
+REPORT_GAS=true npx hardhat test
+npx hardhat node
+npx hardhat run scripts/deploy.ts
+```

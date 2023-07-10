@@ -33,5 +33,5 @@ interface IEchodexFactory {
 
     function setFeePath(address, address[] calldata) external;
 
-    function feePathLength(address, uint) external;
+    function feePathLength(address) external view returns(uint);
 }

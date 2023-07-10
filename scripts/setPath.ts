@@ -392,6 +392,11 @@ async function main() {
     //     ["0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", "0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ECP -> ETH -> ECP
     // )
 
+    var data = contract.methods.setFeePath(
+        "0x2c1b868d6596a18e32e61b901e4060c872647b6c",
+        ["0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ETH -> ECP
+    )
+
     var count = await web3.eth.getTransactionCount(myAddress);
     var rawTransaction = {
         "from": myAddress,
