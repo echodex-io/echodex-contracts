@@ -252,9 +252,9 @@ describe("Default Swap", () => {
 
         await ecp.connect(sender).approve(router.address, MAX_INT);
 
-        await router.connect(sender).swapTokensForExactETH(
-            amountOut,
+        await router.connect(sender).swapExactTokensForETHSupportingFeeOnTransferTokens(
             amountInMax,
+            amountOut,
             [ecp.address, weth.address],
             sender.address,
             (await ethers.provider.getBlock("latest")).timestamp + 1 * 60 * 60 // deadline
