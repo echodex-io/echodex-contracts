@@ -272,7 +272,7 @@ contract EchodexRouterFee {
         uint256 deadline,
         uint[] calldata amountsFeeAddMore
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
+        amounts = EchodexLibrary.getAmountsOutRouterFee(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
@@ -291,7 +291,7 @@ contract EchodexRouterFee {
         uint256 deadline,
         uint[] calldata amountsFeeAddMore
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        amounts = EchodexLibrary.getAmountsInRouterFee(factory, amountOut, path);
         require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
@@ -310,7 +310,7 @@ contract EchodexRouterFee {
         uint[] calldata amountsFeeAddMore
     ) external payable virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
-        amounts = EchodexLibrary.getAmountsOut(factory, msg.value, path);
+        amounts = EchodexLibrary.getAmountsOutRouterFee(factory, msg.value, path);
         require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
@@ -326,7 +326,7 @@ contract EchodexRouterFee {
         uint[] calldata amountsFeeAddMore
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
-        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        amounts = EchodexLibrary.getAmountsInRouterFee(factory, amountOut, path);
         require(amounts[0] <= amountInMax, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
@@ -348,7 +348,7 @@ contract EchodexRouterFee {
         uint[] calldata amountsFeeAddMore
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, "EchodexRouter: INVALID_PATH");
-        amounts = EchodexLibrary.getAmountsOut(factory, amountIn, path);
+        amounts = EchodexLibrary.getAmountsOutRouterFee(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
@@ -369,7 +369,7 @@ contract EchodexRouterFee {
         uint[] calldata amountsFeeAddMore
     ) external payable virtual ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, "EchodexRouter: INVALID_PATH");
-        amounts = EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        amounts = EchodexLibrary.getAmountsInRouterFee(factory, amountOut, path);
         require(amounts[0] <= msg.value, "EchodexRouter: EXCESSIVE_INPUT_AMOUNT");
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(EchodexLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
@@ -397,7 +397,7 @@ contract EchodexRouterFee {
                     balanceInput = balanceInput.sub(IEchodexPair(pair).currentFee());
                 }
                 amountInput = balanceInput.sub(reserveInput);
-                amountOutput = EchodexLibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
+                amountOutput = EchodexLibrary.getAmountOutRouterFee(amountInput, reserveInput, reserveOutput);
             }
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
@@ -493,7 +493,7 @@ contract EchodexRouterFee {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure virtual returns (uint256 amountOut) {
-        return EchodexLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
+        return EchodexLibrary.getAmountOutRouterFee(amountIn, reserveIn, reserveOut);
     }
 
     function getAmountIn(
@@ -501,7 +501,7 @@ contract EchodexRouterFee {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure virtual returns (uint256 amountIn) {
-        return EchodexLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
+        return EchodexLibrary.getAmountInRouterFee(amountOut, reserveIn, reserveOut);
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)
@@ -510,7 +510,7 @@ contract EchodexRouterFee {
         virtual
         returns (uint256[] memory amounts)
     {
-        return EchodexLibrary.getAmountsOut(factory, amountIn, path);
+        return EchodexLibrary.getAmountsOutRouterFee(factory, amountIn, path);
     }
 
     function getAmountsIn(uint256 amountOut, address[] memory path)
@@ -519,6 +519,6 @@ contract EchodexRouterFee {
         virtual
         returns (uint256[] memory amounts)
     {
-        return EchodexLibrary.getAmountsIn(factory, amountOut, path);
+        return EchodexLibrary.getAmountsInRouterFee(factory, amountOut, path);
     }
 }

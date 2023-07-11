@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
 import { artifacts, ethers } from "hardhat";
-import { MAX_INT, addLiquidity, calcAmountFee, calcOutputAmount, deployExchange, deployTokens } from "./prepare";
+import { MAX_INT, addLiquidity, calcAmountFee, calcOutputAmountRouterFee, deployExchange, deployTokens } from "./prepare";
 import { BigNumber } from "@ethersproject/bignumber";
 import { EchodexFactory, EchodexPair, EchodexRouter, EchodexRouterFee, MockERC20, WETH } from "../typechain-types";
 import { expect } from "chai";
@@ -68,7 +68,7 @@ describe("Swap Pay With ECP", () => {
         const pairAddress = await factory.getPair((await usdt.getAddress()), (await btc.getAddress()));
         pairBtcUsdt = await ethers.getContractAt("EchodexPair", pairAddress);
         amountIn = ethers.parseEther("1");
-        exactAmountOut = await calcOutputAmount(pairBtcUsdt, btcAddress, amountIn);
+        exactAmountOut = await calcOutputAmountRouterFee(pairBtcUsdt, btcAddress, amountIn);
         amountFee = await calcAmountFee(factory, usdtAddress, exactAmountOut)
         deadline = BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // 1 hour
     });
@@ -267,7 +267,7 @@ describe("Swap Pay With ECP", () => {
         const pairUsdtECP = await ethers.getContractAt("EchodexPair", pairAddress);
 
         amountIn = ethers.parseEther("1");
-        exactAmountOut = await calcOutputAmount(pairUsdtECP, usdtAddress, amountIn);
+        exactAmountOut = await calcOutputAmountRouterFee(pairUsdtECP, usdtAddress, amountIn);
         amountFee = await calcAmountFee(factory, ecpAddress, exactAmountOut);
 
         // transfer amountFee ecp from sender to sender1

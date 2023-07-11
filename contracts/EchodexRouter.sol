@@ -247,11 +247,19 @@ contract EchodexRouter {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = EchodexLibrary.sortTokens(input, output);
-            uint256 amountOut = amounts[i + 1];
+            uint256 amountOut = amounts[i + 1].mul(1000).div(997);
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
             address to = i < path.length - 2 ? EchodexLibrary.pairFor(factory, output, path[i + 2]) : _to;
             IEchodexPair(EchodexLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
+        }
+    }
+
+    function _receiveReward(address to) internal virtual {
+        address tokenReward = IEchodexFactory(factory).tokenReward();
+        uint balanceReward = IERC20(tokenReward).balanceOf(address(this));
+        if (balanceReward > 0) {
+            TransferHelper.safeTransfer(tokenReward, to, balanceReward);
         }
     }
 
@@ -322,10 +330,10 @@ contract EchodexRouter {
             amounts[0]
         );
         _swap(amounts, path, address(this));
-        // calculate ETH amount out subtracting fee
-        uint256 amountETH = amounts[amounts.length - 1].mul(997).div(1000);
-        IWETH(WETH).withdraw(amountETH);
-        TransferHelper.safeTransferETH(to, amountETH);
+
+        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
+        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        _receiveReward(to);
     }
 
     function swapExactTokensForETH(
@@ -345,10 +353,9 @@ contract EchodexRouter {
             amounts[0]
         );
         _swap(amounts, path, address(this));
-        // calculate ETH amount out subtracting fee
-        uint256 amountETH = amounts[amounts.length - 1].mul(997).div(1000);
-        IWETH(WETH).withdraw(amountETH);
-        TransferHelper.safeTransferETH(to, amountETH);
+        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
+        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        _receiveReward(to);
     }
 
     function swapETHForExactTokens(
@@ -450,9 +457,11 @@ contract EchodexRouter {
         );
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint256 amountOut = IERC20(WETH).balanceOf(address(this));
-        require(amountOut >= amountOutMin.mul(997).div(1000), "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        // require(amountOut >= amountOutMin.mul(997).div(1000), "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(amountOut >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         IWETH(WETH).withdraw(amountOut);
         TransferHelper.safeTransferETH(to, amountOut);
+        _receiveReward(to);
     }
 
     // **** LIBRARY FUNCTIONS ****
