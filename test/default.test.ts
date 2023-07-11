@@ -169,7 +169,7 @@ describe("Default Swap", () => {
         // ****** CASE 2 ********
         // SUCCESS: transfer reward to sender
         // ****** CASE 2 ********
-        const amountReward = await calcAmountFee(factory, usdtAddress, exactAmountOut, 5n); // 0.05%
+        const amountReward = await calcAmountFee(factory, usdtAddress, exactAmountOut * 1000n / 997n, 5n); // 0.05%
 
         // transfer amountReward into pair
         // await xecp.connect(sender).transfer(pairAddress, amountReward);
@@ -336,8 +336,11 @@ describe("Default Swap", () => {
 
         const balanceRewardAfter = await xecp.balanceOf(sender.address);
 
-        expect(balanceRewardAfter - balanceReward).to.greaterThan(ethers.parseEther("0.2"));
-        expect(balanceRewardAfter - balanceReward).to.lessThan(ethers.parseEther("0.3"));
+        const pairECP_ETH_Address = await factory.getPair(ecpAddress, wethAddress);
+        const pairECP_ETH = await ethers.getContractAt("EchodexPair", pairECP_ETH_Address);
+        const reward = await calcOutputAmountRouterFee(pairECP_ETH, wethAddress, amountOutMin * 5n / 9970n) // no fee
+
+        expect(balanceRewardAfter - balanceReward).to.equal(reward);
     });
 
     it("swapExactTokensForTokens test reward", async () => {
@@ -388,6 +391,8 @@ describe("Default Swap", () => {
         await factory.setFeePath(usdtAddress, [usdtAddress, wethAddress, ecpAddress]);
 
         const balanceReward = await xecp.balanceOf(sender.address);
+        const balancePairBefore = await xecp.balanceOf(pairETH_USDT);
+
 
         await router.connect(sender).swapExactTokensForTokens(
             amountIn,
@@ -399,11 +404,19 @@ describe("Default Swap", () => {
 
         const balanceRewardAfter = await xecp.balanceOf(sender.address);
 
-        // console.log((balanceRewardAfter - balanceReward).toString()) // 0.005104326049935066
-        // console.log((amountOutMin * 5n / 10000n).toString()) // 0.003032399584400281
-        // console.log((amountInMedial * 5n / 10000n).toString()) // 0.002266527234700372 -> xecp
+        console.log((balanceRewardAfter - balanceReward).toString()) // 0.005104326049935066
 
-        expect(balanceRewardAfter - balanceReward).to.equal((amountOutMin * 5n / 10000n) + (amountInMedial * 5n / 10000n));
+
+        const reward1 = await calcAmountFee(factory, wethAddress, amountInMedial * 1000n / 997n, 5n)
+        const reward2 = await calcAmountFee(factory, usdtAddress, amountOutMin * 1000n / 997n, 5n);
+
+        const balancePairAfter = await xecp.balanceOf(pairETH_USDT);
+
+        console.log(reward1.toString())
+        console.log(reward2.toString())
+        console.log((balancePairAfter - balancePairBefore).toString())
+
+        expect(balanceRewardAfter - balanceReward).to.equal(reward1 + reward2);
         // expect(balanceRewardAfter - balanceReward).to.greaterThan((amountOutMin * 5n / 10000n) + (amountInMedial * 5n / 10000n) - ethers.parseEther("0.001"));
     });
 });

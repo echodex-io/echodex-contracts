@@ -393,7 +393,7 @@ contract EchodexRouter {
                     balanceInput = balanceInput.sub(IEchodexPair(pair).currentFee());
                 }
                 amountInput = balanceInput.sub(reserveInput);
-                amountOutput = EchodexLibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
+                amountOutput = EchodexLibrary.getAmountOutRouterFee(amountInput, reserveInput, reserveOutput); // no fee
             }
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
@@ -457,7 +457,6 @@ contract EchodexRouter {
         );
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint256 amountOut = IERC20(WETH).balanceOf(address(this));
-        // require(amountOut >= amountOutMin.mul(997).div(1000), "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         require(amountOut >= amountOutMin, "EchodexRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         IWETH(WETH).withdraw(amountOut);
         TransferHelper.safeTransferETH(to, amountOut);
