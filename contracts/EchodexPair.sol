@@ -15,11 +15,11 @@ contract EchodexPair is EchodexERC20 {
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
-    uint private constant FEE_DENOMINATOR = 10000;
+    uint private constant  FEE_DENOMINATOR = 10000;
     uint private constant MAX_PAY_DEFAULT_PERCENT = 30; // 0.3%
     uint private constant MAX_PAY_WITH_TOKEN_FEE_PERCENT = 10; // 0.1%
 
-    address public factory;
+    address public immutable factory;
     address public token0;
     address public token1;
 
@@ -29,7 +29,6 @@ contract EchodexPair is EchodexERC20 {
 
     uint public price0CumulativeLast;
     uint public price1CumulativeLast;
-    uint public kLast; // reserve0 * reserve1, as of immed`iately after the most recent liquidity event
 
     uint public totalFee;
     uint public currentFee;
@@ -119,12 +118,13 @@ contract EchodexPair is EchodexERC20 {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));
+        address tokenFee = IEchodexFactory(factory).tokenFee();
 
-        if (token0 == IEchodexFactory(factory).tokenFee()) {
+        if (token0 == tokenFee) {
             balance0 = balance0.sub(currentFee);
         }
 
-        if (token1 == IEchodexFactory(factory).tokenFee()) {
+        if (token1 == tokenFee) {
             balance1 = balance1.sub(currentFee);
         }
 
@@ -152,11 +152,12 @@ contract EchodexPair is EchodexERC20 {
         address _token1 = token1;                                // gas savings
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
-        if (token0 == IEchodexFactory(factory).tokenFee()) {
+        address tokenFee = IEchodexFactory(factory).tokenFee();
+        if (token0 == tokenFee) {
             balance0 = balance0.sub(currentFee);
         }
 
-        if (token1 == IEchodexFactory(factory).tokenFee()) {
+        if (token1 == tokenFee) {
             balance1 = balance1.sub(currentFee);
         }
 
@@ -171,11 +172,11 @@ contract EchodexPair is EchodexERC20 {
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
-        if (token0 == IEchodexFactory(factory).tokenFee()) {
+        if (token0 == tokenFee) {
             balance0 = balance0.sub(currentFee);
         }
 
-        if (token1 == IEchodexFactory(factory).tokenFee()) {
+        if (token1 == tokenFee) {
             balance1 = balance1.sub(currentFee);
         }
 
@@ -222,12 +223,15 @@ contract EchodexPair is EchodexERC20 {
         state.balance0 = IERC20(token0).balanceOf(address(this));
         state.balance1 = IERC20(token1).balanceOf(address(this));
 
-        if (token0 == IEchodexFactory(factory).tokenFee()) {
+        {   // avoids stack too deep errors
+            address tokenFee = IEchodexFactory(factory).tokenFee();
+            if (token0 == tokenFee) {
             state.balance0 = state.balance0.sub(currentFee);
-        }
+            }
 
-        if (token1 == IEchodexFactory(factory).tokenFee()) {
-            state.balance1 = state.balance1.sub(currentFee);
+            if (token1 == tokenFee) {
+                state.balance1 = state.balance1.sub(currentFee);
+            }
         }
 
         state.amount0In = state.balance0 > state._reserve0 - amount0Out ? state.balance0 - (state._reserve0 - amount0Out) : 0;
@@ -256,11 +260,12 @@ contract EchodexPair is EchodexERC20 {
         state.balance0 = IERC20(token0).balanceOf(address(this));
         state.balance1 = IERC20(token1).balanceOf(address(this));
 
-        if (token0 == IEchodexFactory(factory).tokenFee()) {
+        address tokenFee = IEchodexFactory(factory).tokenFee();
+        if (token0 == tokenFee) {
             state.balance0 = state.balance0.sub(currentFee);
         }
 
-        if (token1 == IEchodexFactory(factory).tokenFee()) {
+        if (token1 == tokenFee) {
             state.balance1 = state.balance1.sub(currentFee);
         }
 
@@ -302,11 +307,12 @@ contract EchodexPair is EchodexERC20 {
         address _token1 = token1; // gas savings
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
-        if (_token0 == IEchodexFactory(factory).tokenFee()) {
+        address tokenFee = IEchodexFactory(factory).tokenFee();
+        if (_token0 == tokenFee) {
             balance0 = balance0.sub(currentFee);
         }
 
-        if (_token1 == IEchodexFactory(factory).tokenFee()) {
+        if (_token1 == tokenFee) {
             balance1 = balance1.sub(currentFee);
         }
 
@@ -318,11 +324,12 @@ contract EchodexPair is EchodexERC20 {
     function sync() external lock {
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));
-        if (token0 == IEchodexFactory(factory).tokenFee()) {
+        address tokenFee = IEchodexFactory(factory).tokenFee();
+        if (token0 == tokenFee) {
             balance0 = balance0.sub(currentFee);
         }
 
-        if (token1 == IEchodexFactory(factory).tokenFee()) {
+        if (token1 == tokenFee) {
             balance1 = balance1.sub(currentFee);
         }
 

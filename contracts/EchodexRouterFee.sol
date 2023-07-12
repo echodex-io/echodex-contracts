@@ -245,6 +245,7 @@ contract EchodexRouterFee {
         address _to,
         uint[] memory amountsFeeAddMore
     ) internal virtual {
+        address tokenFee = IEchodexFactory(factory).tokenFee(); // gas savings
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = EchodexLibrary.sortTokens(input, output);
@@ -254,7 +255,6 @@ contract EchodexRouterFee {
             address to = i < path.length - 2 ? EchodexLibrary.pairFor(factory, output, path[i + 2]) : _to;
             address pair = EchodexLibrary.pairFor(factory, input, output);
             if (amountsFeeAddMore[i] > 0) {
-                address tokenFee = IEchodexFactory(factory).tokenFee();
                 if (IERC20(tokenFee).allowance(address(this), pair) == 0) {
                     IERC20(tokenFee).approve(pair, uint256(-1));
                 }

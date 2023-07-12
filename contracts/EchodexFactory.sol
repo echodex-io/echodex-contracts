@@ -6,13 +6,13 @@ import './libraries/EchodexLibrary.sol';
 
 contract EchodexFactory {
     using SafeMath  for uint;
-    bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(EchodexPair).creationCode));
+    bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(type(EchodexPair).creationCode);
     uint private constant FEE_DENOMINATOR = 10000;
 
     address public receiveFeeAddress;
     address public tokenFee;
     address public tokenReward;
-    address public owner;
+    address public immutable owner;
 
     mapping(address => address[]) public feePath;
     mapping(address => uint) public feePathLength;

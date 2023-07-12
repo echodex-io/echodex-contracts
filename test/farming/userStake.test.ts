@@ -295,7 +295,6 @@ describe("Farming: 1 user", async () => {
             0
         )
         const balanceEcpAfter = await ecp.balanceOf(sender.address);
-        console.log((balanceEcpAfter - balanceEcpBefore).toString())
         expect(balanceEcpAfter).to.greaterThan(balanceEcpBefore + ethers.parseEther("7200"));
         expect(balanceEcpAfter).to.lessThan(balanceEcpBefore + ethers.parseEther("7204")); // tolerance block time
 
@@ -310,8 +309,6 @@ describe("Farming: 1 user", async () => {
         const balanceTokenRewardBefore = await ecp.balanceOf(sender.address);
         await echodexFarm.connect(sender).withdrawExcessReward(0);
         const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
-
-        console.log((balanceTokenRewardAfter - balanceTokenRewardBefore).toString())
 
         expect(balanceTokenRewardAfter - balanceTokenRewardBefore).to.lessThan(ethers.parseEther("2592000") - ethers.parseEther("7200") - ethers.parseEther("3600"));
         expect(balanceTokenRewardAfter - balanceTokenRewardBefore).to.greaterThan(ethers.parseEther("2592000") - ethers.parseEther("7204") - ethers.parseEther("3604")); // tolerance block time

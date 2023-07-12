@@ -2,7 +2,6 @@
 pragma solidity =0.6.6;
 
 import "./SafeMath.sol";
-import "../interfaces/IEchodexFactory.sol";
 import "../interfaces/IEchodexPair.sol";
 
 library EchodexLibrary {
@@ -29,7 +28,7 @@ library EchodexLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        hex"2079681f5687f572f9a518909a5cad718e0b8701d28816c682668618c8c95c2e" // init code hash
+                        hex"b169c51a99b1096be94111187f6659cfac2a0981da4b42870c4fa4ed2aa71f88" // init code hash
                     )
                 )
             )
@@ -80,11 +79,6 @@ library EchodexLibrary {
         require(amountIn > 0, "EchodexLibrary: INSUFFICIENT_INPUT_AMOUNT");
         require(reserveIn > 0 && reserveOut > 0, "EchodexLibrary: INSUFFICIENT_LIQUIDITY");
 
-        // uint256 amountInWithFee = amountIn.mul(997);
-        // uint256 numerator = amountInWithFee.mul(reserveOut);
-        // uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
-        // amountOut = numerator / denominator;
-
         uint256 numerator = amountIn.mul(reserveOut);
         uint256 denominator = reserveIn.add(amountIn);
         amountOut = numerator / denominator;
@@ -112,10 +106,7 @@ library EchodexLibrary {
     ) internal pure returns (uint256 amountIn) {
         require(amountOut > 0, "EchodexLibrary: INSUFFICIENT_OUTPUT_AMOUNT");
         require(reserveIn > 0 && reserveOut > 0, "EchodexLibrary: INSUFFICIENT_LIQUIDITY");
-        // uint256 numerator = reserveIn.mul(amountOut).mul(1000);
-        // uint256 denominator = reserveOut.sub(amountOut).mul(997);
-        // amountIn = (numerator / denominator).add(1);
-
+        
         uint256 numerator = reserveIn.mul(amountOut);
         uint256 denominator = reserveOut.sub(amountOut);
         amountIn = (numerator / denominator);
