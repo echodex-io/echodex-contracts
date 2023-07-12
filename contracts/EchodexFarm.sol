@@ -156,9 +156,10 @@ contract EchodexFarm {
         PoolInfo storage poolInfo = poolInfos[poolId];
         require(poolInfo.startDate <= block.timestamp, "EchodexFarm: NOT_START");
         require(block.timestamp <= poolInfo.endDate, "EchodexFarm: OVER_TIME");
+        require(amountLP <= IERC20(poolInfo.pairAddress).balanceOf(msg.sender), "EchodexFarm: BALANCE_NOT_ENOUGH");
 
         PoolReward storage poolReward = poolRewards[poolId];
-        if (poolReward.lastRewardTimestamp == 0) {
+        if (poolReward.totalLP == 0) {
             poolReward.lastRewardTimestamp = block.timestamp;
         }
 

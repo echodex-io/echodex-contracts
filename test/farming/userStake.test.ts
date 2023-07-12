@@ -265,4 +265,55 @@ describe("Farming: 1 user", async () => {
         expect(balanceEcpAfter).to.greaterThan(balanceEcpBefore + ethers.parseEther("3600"));
         expect(balanceEcpAfter).to.lessThan(balanceEcpBefore + ethers.parseEther("3604"));  // tolerance block time
     })
+
+    it("stake -> 1h unstake -> 1h stake -> harvest", async function () {
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+
+        const amountLPIn = ethers.parseEther("100");
+
+        await echodexFarm.connect(sender).stake(
+            0,
+            amountLPIn
+        )
+
+        await time.increase(1 * 60 * 60) // after 1h
+        await echodexFarm.connect(sender).unstake(
+            0,
+            amountLPIn
+        )
+
+        await time.increase(1 * 60 * 60) // after 1h
+        await echodexFarm.connect(sender).stake(
+            0,
+            amountLPIn
+        )
+
+        await time.increase(1 * 60 * 60) // after 1h
+        const balanceEcpBefore = await ecp.balanceOf(sender.address);
+        await echodexFarm.connect(sender).harvest(
+            0
+        )
+        const balanceEcpAfter = await ecp.balanceOf(sender.address);
+        console.log((balanceEcpAfter - balanceEcpBefore).toString())
+        expect(balanceEcpAfter).to.greaterThan(balanceEcpBefore + ethers.parseEther("7200"));
+        expect(balanceEcpAfter).to.lessThan(balanceEcpBefore + ethers.parseEther("7204")); // tolerance block time
+
+        await time.increase(1 * 60 * 60) // after 1h
+        await echodexFarm.connect(sender).unstake(
+            0,
+            amountLPIn
+        )
+
+        await time.increase(2592000)
+        // withdraw
+        const balanceTokenRewardBefore = await ecp.balanceOf(sender.address);
+        await echodexFarm.connect(sender).withdrawExcessReward(0);
+        const balanceTokenRewardAfter = await ecp.balanceOf(sender.address);
+
+        console.log((balanceTokenRewardAfter - balanceTokenRewardBefore).toString())
+
+        expect(balanceTokenRewardAfter - balanceTokenRewardBefore).to.lessThan(ethers.parseEther("2592000") - ethers.parseEther("7200") - ethers.parseEther("3600"));
+        expect(balanceTokenRewardAfter - balanceTokenRewardBefore).to.greaterThan(ethers.parseEther("2592000") - ethers.parseEther("7204") - ethers.parseEther("3604")); // tolerance block time
+    })
 })
