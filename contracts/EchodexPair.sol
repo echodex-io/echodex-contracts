@@ -79,8 +79,6 @@ contract EchodexPair is EchodexERC20 {
 
     constructor() public {
         factory = msg.sender;
-        totalFee = 0;
-        currentFee = 0;
     }
 
     // called once by the factory at time of deployment
