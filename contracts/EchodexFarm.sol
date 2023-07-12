@@ -117,6 +117,7 @@ contract EchodexFarm {
         require(amountReward > 0, "EchodexFarm: AMOUNT_NOT_VALID");
         address pairAddress = IEchodexFactory(factory).getPair(tokenA, tokenB);
         require(pairAddress != address(0), "EchodexFarm: PAIR_NOT_EXIST");
+        require(tokenReward != address(0), "EchodexFarm: TOKEN_REWARD_NOT_VALID");
 
         if (tokenReward == WETH) {
             require(msg.value == amountReward, "EchodexFarm: AMOUNT_NOT_VALID");
