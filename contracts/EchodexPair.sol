@@ -300,12 +300,32 @@ contract EchodexPair is EchodexERC20 {
     function skim(address to) external lock {
         address _token0 = token0; // gas savings
         address _token1 = token1; // gas savings
-        _safeTransfer(_token0, to, IERC20(_token0).balanceOf(address(this)).sub(reserve0));
-        _safeTransfer(_token1, to, IERC20(_token1).balanceOf(address(this)).sub(reserve1));
+        uint balance0 = IERC20(_token0).balanceOf(address(this));
+        uint balance1 = IERC20(_token1).balanceOf(address(this));
+        if (_token0 == IEchodexFactory(factory).tokenFee()) {
+            balance0 = balance0.sub(currentFee);
+        }
+
+        if (_token1 == IEchodexFactory(factory).tokenFee()) {
+            balance1 = balance1.sub(currentFee);
+        }
+
+        _safeTransfer(_token0, to, balance0.sub(reserve0));
+        _safeTransfer(_token1, to, balance1.sub(reserve1));
     }
 
     // force reserves to match balances
     function sync() external lock {
-        _update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)), reserve0, reserve1);
+        uint balance0 = IERC20(token0).balanceOf(address(this));
+        uint balance1 = IERC20(token1).balanceOf(address(this));
+        if (token0 == IEchodexFactory(factory).tokenFee()) {
+            balance0 = balance0.sub(currentFee);
+        }
+
+        if (token1 == IEchodexFactory(factory).tokenFee()) {
+            balance1 = balance1.sub(currentFee);
+        }
+
+        _update(balance0, balance1, reserve0, reserve1);
     }
 }
