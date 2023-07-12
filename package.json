@@ -9,7 +9,7 @@
     "test": "npx hardhat test",
     "test:coverage": "npx hardhat coverage",
     "test:size-contracts": "npx hardhat size-contracts",
-    "build-contracts": "sol-merger \"./contracts/*.sol\" ./build"
+    "build": "sol-merger \"./contracts/*.sol\" ./build"
   },
   "author": "",
   "license": "ISC",
