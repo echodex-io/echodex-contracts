@@ -59,7 +59,7 @@ library EchodexLibrary {
     }
 
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
-    function getAmountOut(
+    function getAmountOutRouterFee(
         uint256 amountIn,
         uint256 reserveIn,
         uint256 reserveOut
@@ -72,8 +72,28 @@ library EchodexLibrary {
         amountOut = numerator / denominator;
     }
 
+    function getAmountOut(
+        uint256 amountIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) internal pure returns (uint256 amountOut) {
+        require(amountIn > 0, "EchodexLibrary: INSUFFICIENT_INPUT_AMOUNT");
+        require(reserveIn > 0 && reserveOut > 0, "EchodexLibrary: INSUFFICIENT_LIQUIDITY");
+
+        // uint256 amountInWithFee = amountIn.mul(997);
+        // uint256 numerator = amountInWithFee.mul(reserveOut);
+        // uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
+        // amountOut = numerator / denominator;
+
+        uint256 numerator = amountIn.mul(reserveOut);
+        uint256 denominator = reserveIn.add(amountIn);
+        amountOut = numerator / denominator;
+
+        amountOut = amountOut.mul(997) / 1000;
+    }
+
     // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
-    function getAmountIn(
+    function getAmountInRouterFee(
         uint256 amountOut,
         uint256 reserveIn,
         uint256 reserveOut
@@ -85,7 +105,39 @@ library EchodexLibrary {
         amountIn = (numerator / denominator).add(1);
     }
 
+    function getAmountIn(
+        uint256 amountOut,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) internal pure returns (uint256 amountIn) {
+        require(amountOut > 0, "EchodexLibrary: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(reserveIn > 0 && reserveOut > 0, "EchodexLibrary: INSUFFICIENT_LIQUIDITY");
+        // uint256 numerator = reserveIn.mul(amountOut).mul(1000);
+        // uint256 denominator = reserveOut.sub(amountOut).mul(997);
+        // amountIn = (numerator / denominator).add(1);
+
+        uint256 numerator = reserveIn.mul(amountOut);
+        uint256 denominator = reserveOut.sub(amountOut);
+        amountIn = (numerator / denominator);
+
+        amountIn = (amountIn.mul(997) / 1000).add(1);
+    }
+
     // performs chained getAmountOut calculations on any number of pairs
+    function getAmountsOutRouterFee(
+        address factory,
+        uint256 amountIn,
+        address[] memory path
+    ) internal view returns (uint256[] memory amounts) {
+        require(path.length >= 2, "EchodexLibrary: INVALID_PATH");
+        amounts = new uint256[](path.length);
+        amounts[0] = amountIn;
+        for (uint256 i; i < path.length - 1; i++) {
+            (uint256 reserveIn, uint256 reserveOut) = getReserves(factory, path[i], path[i + 1]);
+            amounts[i + 1] = getAmountOutRouterFee(amounts[i], reserveIn, reserveOut);
+        }
+    }
+
     function getAmountsOut(
         address factory,
         uint256 amountIn,
@@ -101,7 +153,21 @@ library EchodexLibrary {
     }
 
     // performs chained getAmountIn calculations on any number of pairs
-    function getAmountsIn(
+    function getAmountsInRouterFee(
+        address factory,
+        uint256 amountOut,
+        address[] memory path
+    ) internal view returns (uint256[] memory amounts) {
+        require(path.length >= 2, "EchodexLibrary: INVALID_PATH");
+        amounts = new uint256[](path.length);
+        amounts[amounts.length - 1] = amountOut;
+        for (uint256 i = path.length - 1; i > 0; i--) {
+            (uint256 reserveIn, uint256 reserveOut) = getReserves(factory, path[i - 1], path[i]);
+            amounts[i - 1] = getAmountInRouterFee(amounts[i], reserveIn, reserveOut);
+        }
+    }
+
+     function getAmountsIn(
         address factory,
         uint256 amountOut,
         address[] memory path

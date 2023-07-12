@@ -81,7 +81,7 @@ export async function addLiquidity(router: EchodexRouter | EchodexRouterFee, tok
     return receipt;
 }
 
-export async function calcOutputAmount(pair: EchodexPair, tokenInAddress: string, amountIn: bigint) {
+export async function calcOutputAmountRouterFee(pair: EchodexPair, tokenInAddress: string, amountIn: bigint) {
     // EXAMPLE: reserveIn = 30, reserveOut = 749270.4, amountIn = 1
     // numerator = 1 * 749270.4 = 749270.4
     // denominator = 30 + 1 = 31
@@ -99,7 +99,26 @@ export async function calcOutputAmount(pair: EchodexPair, tokenInAddress: string
     return amountOut;
 }
 
-export async function calcInputAmount(pair: EchodexPair, tokenOutAddress: string, amountOut: bigint) {
+export async function calcOutputAmount(pair: EchodexPair, tokenInAddress: string, amountIn: bigint) {
+    // EXAMPLE: reserveIn = 30, reserveOut = 749270.4, amountIn = 1
+    // numerator = 1 * 749270.4 = 749270.4
+    // denominator = 30 + 1 = 31
+    // amountOut = 749270.4 / 31 = 24140.97
+
+    const reserves = await pair.getReserves();
+    const token0 = await pair.token0();
+
+    const reserveIn = token0 == tokenInAddress ? reserves[0] : reserves[1];
+    const reserveOut = token0 == tokenInAddress ? reserves[1] : reserves[0];
+
+    const numerator = amountIn * reserveOut
+    const denominator = reserveIn + amountIn;
+    const amountOut = (numerator / denominator) * 997n / 1000n;
+
+    return amountOut;
+}
+
+export async function calcInputAmountRouterFee(pair: EchodexPair, tokenOutAddress: string, amountOut: bigint) {
     const reserves = await pair.getReserves();
     const token0 = await pair.token0();
 
@@ -114,6 +133,21 @@ export async function calcInputAmount(pair: EchodexPair, tokenOutAddress: string
     return amountIn;
 }
 
+export async function calcInputAmount(pair: EchodexPair, tokenOutAddress: string, amountOut: bigint) {
+    const reserves = await pair.getReserves();
+    const token0 = await pair.token0();
+
+    const reserveIn = token0 == tokenOutAddress ? reserves[1] : reserves[0];
+    const reserveOut = token0 == tokenOutAddress ? reserves[0] : reserves[1];
+
+    const numerator = amountOut * reserveIn
+    const denominator = reserveOut - amountOut;
+
+    const amountIn = (numerator / denominator) * 997n / 1000n + 1n;
+
+    return amountIn;
+}
+
 export async function calcAmountFee(factory: EchodexFactory, tokenOutAddress: string, amountOut: bigint, percent: bigint = 10n) { // default 0.1%
     const feePathLength = await factory.feePathLength(tokenOutAddress);
     let result = amountOut * percent / FEE_DENOMINATOR
@@ -123,7 +157,7 @@ export async function calcAmountFee(factory: EchodexFactory, tokenOutAddress: st
         const pairAddress = await factory.getPair(token0, token1);
         const pair = await ethers.getContractAt("EchodexPair", pairAddress);
 
-        result = await calcOutputAmount(pair, token0, result);
+        result = await calcOutputAmountRouterFee(pair, token0, result);
     }
 
     return result;

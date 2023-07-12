@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
 import { artifacts, ethers } from "hardhat";
-import { MAX_INT, addLiquidity, calcAmountFee, calcInputAmount, calcOutputAmount, deployExchange, deployTokens } from "./prepare";
+import { MAX_INT, addLiquidity, calcAmountFee, calcInputAmount, calcOutputAmount, calcOutputAmountRouterFee, deployExchange, deployTokens } from "./prepare";
 import { BigNumber } from "@ethersproject/bignumber";
 import { ERC20, EchodexFactory, EchodexRouter, MockERC20, WETH } from "../typechain-types";
 import { expect } from "chai";
@@ -41,7 +41,7 @@ describe("Default Swap", () => {
 
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
-        // add liquidity 30 btc = 749,270.4 usdt (1 btc = 24,975.68 usdt)
+        // add liquidity 30 btc = 749,270.4 usdt
         const amountBTC = ethers.parseEther("30");
         const amountUSDT = ethers.parseEther("749270.4");
 
@@ -77,12 +77,12 @@ describe("Default Swap", () => {
         // check balances
         const usdtBalance = await usdt.balanceOf(sender.address);
         const btcBalance = await btc.balanceOf(sender.address);
-        const amountUsdtFee = exactAmountOut * 3n / 1000n
+        const amountUsdtFee = exactAmountOut * 3n / 997n
         const receiveFeeAddress = accounts[5];
         const balanceUsdtReceiveFeeAddress = await usdt.balanceOf(receiveFeeAddress.address);
 
         expect(btcBalance).to.equal(balanceBtcBefore - amountIn);
-        expect(usdtBalance).to.equal(balanceUsdtBefore + (exactAmountOut) - (amountUsdtFee));
+        expect(usdtBalance).to.equal(balanceUsdtBefore + (exactAmountOut));
         expect(balanceUsdtReceiveFeeAddress.toString()).to.equal(amountUsdtFee.toString());
     });
 
@@ -169,7 +169,7 @@ describe("Default Swap", () => {
         // ****** CASE 2 ********
         // SUCCESS: transfer reward to sender
         // ****** CASE 2 ********
-        const amountReward = await calcAmountFee(factory, usdtAddress, exactAmountOut, 5n); // 0.05%
+        const amountReward = await calcAmountFee(factory, usdtAddress, exactAmountOut * 1000n / 997n, 5n); // 0.05%
 
         // transfer amountReward into pair
         // await xecp.connect(sender).transfer(pairAddress, amountReward);
@@ -228,7 +228,7 @@ describe("Default Swap", () => {
 
     });
 
-    it("swap tokens for ETH", async () => {
+    it("swapExactTokensForETHSupportingFeeOnTransferTokens", async () => {
         const reverseETH = "228368726095846032624"
         const reverseECP = "1554230274242686605332"
         const amountAddFee = "1234924634903813015670"
@@ -258,36 +258,49 @@ describe("Default Swap", () => {
         await pair.connect(sender).addFee(amountAddFee);
 
         // swapTokensForExactETH (need to get 0.1  ETH)
-        const amountOut = ethers.parseEther("0.1");
-        const amountInMax = await calcInputAmount(pair, wethAddress, amountOut);
+        // const amountOut = ethers.parseEther("0.1");
+        // const amountInMax = await calcInputAmount(pair, wethAddress, amountOut);
+
+        const amountIn = ethers.parseEther("0.1")
+        const amountOutMint = await calcOutputAmount(pair, ecpAddress, amountIn)
 
         await ecp.connect(sender).approve((await router.getAddress()), MAX_INT);
 
         await router.connect(sender).swapExactTokensForETHSupportingFeeOnTransferTokens(
-            amountInMax,
-            amountOut,
+            amountIn,
+            amountOutMint,
             [ecpAddress, wethAddress],
             sender.address,
             BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // deadline
         );
     });
 
-    it("swap eusdt for ETH", async () => {
-        const reverseETH = "2849230152618297216904"
-        const reverseUSDT = "1554230274242686605332"
+    it("swapExactTokensForETH", async () => {
+        const reverseETH = "284923015261829721690"
         const amountAddFee = "3159565255111224308"
 
         const accounts = await ethers.getSigners();
         const sender = accounts[0];
 
         // approve ecp
+        await ecp.connect(sender).approve((await router.getAddress()), MAX_INT);
         await usdt.connect(sender).approve((await router.getAddress()), MAX_INT);
 
-        // add liquidity ecp with usdt to get price ecp 100 ecp = 12234.5123 usdt
+        // add liquidity ecp - eth
+        await router.addLiquidityETH(
+            ecpAddress,
+            ethers.parseEther("1000"),
+            ethers.parseEther("1000"),
+            reverseETH,
+            sender.address,
+            BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // deadline
+            , { value: reverseETH });
+
+        // add pool weth - usdt
         await router.addLiquidityETH(
             (await usdt.getAddress()),
-            reverseUSDT,
-            reverseUSDT,
+            ethers.parseEther("100"),
+            ethers.parseEther("100"),
             reverseETH,
             sender.address,
             BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // deadline
@@ -300,7 +313,7 @@ describe("Default Swap", () => {
         await pair.connect(sender).addFee(amountAddFee);
 
         // swapTokensForExactETH (need to get 0.1  ETH)
-        const amountIn = ethers.parseEther("0.1");
+        const amountIn = ethers.parseEther("10");
         const amountOutMin = await calcOutputAmount(pair, usdtAddress, amountIn)
 
         await usdt.connect(sender).approve((await router.getAddress()), MAX_INT);
@@ -308,12 +321,25 @@ describe("Default Swap", () => {
         // set reward
         await factory.setRewardPercent(pairAddress, "5");
 
+        // set path
+        await factory.setFeePath(wethAddress, [wethAddress, ecpAddress]);
+
+        const balanceReward = await xecp.balanceOf(sender.address);
+
         await router.connect(sender).swapExactTokensForETH(
-            "100000000000000000",//"0x16345785d8a0000",
-            "3227318491989957",//"0xb773aa44ac7c5",
-            [(await usdt.getAddress()), wethAddress], // ['0x4CCb503a5d792eabEFF688010e609d40f9a54148', '0x2C1b868d6596a18e32E61B901E4060C872647b6C'],
+            amountIn,
+            amountOutMin,
+            [(await usdt.getAddress()), wethAddress],
             sender.address,
             BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // deadline
         );
+
+        const balanceRewardAfter = await xecp.balanceOf(sender.address);
+
+        const pairECP_ETH_Address = await factory.getPair(ecpAddress, wethAddress);
+        const pairECP_ETH = await ethers.getContractAt("EchodexPair", pairECP_ETH_Address);
+        const reward = await calcOutputAmountRouterFee(pairECP_ETH, wethAddress, amountOutMin * 5n / 9970n) // no fee
+
+        expect(balanceRewardAfter - balanceReward).to.equal(reward);
     });
 });
