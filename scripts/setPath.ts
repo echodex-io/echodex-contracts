@@ -16,7 +16,7 @@ async function getFeeData(): Promise<any> {
 async function main() {
     ethers.provider.getFeeData = getFeeData
     // Create the signer for the mnemonic, connected to the provider with hardcoded fee data
-    const FACTORY_ADDRESS = "0x77079307DA0551208A173733bf862C49807D0965"
+    const FACTORY_ADDRESS = "0x985Aa0607a4ab865fdB8FaB3dc821f4c773f33e5"
 
     const signingKey = new ethers.SigningKey("0x" + process.env.PRIVATE_KEY || "0x");
     const signer = new ethers.Wallet(signingKey, ethers.provider);
@@ -30,20 +30,21 @@ async function main() {
     //     "0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1",
     //     ["0xBE12703A2321fB5be67c1cfe5c5675671BCb94f1", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdc -> ECP
     // )
-    // var data = contract.methods.setFeePath(
+
+    const result = await contract.setFeePath(
+        "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE",
+        ["0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", "0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ECP -> ETH -> ECP
+    )
+
+    // const result = await contract.setFeePath(
     //     "0x4ccb503a5d792eabeff688010e609d40f9a54148",
     //     ["0x4ccb503a5d792eabeff688010e609d40f9a54148", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] //eUsdt -> ECP
     // )
 
-    // var data = contract.methods.setFeePath(
-    //     "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE",
-    //     ["0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", "0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ECP -> ETH -> ECP
+    // const result = await contract.setFeePath(
+    //     "0x2c1b868d6596a18e32e61b901e4060c872647b6c",
+    //     ["0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ETH -> ECP
     // )
-
-    const result = await contract.setFeePath(
-        "0x2c1b868d6596a18e32e61b901e4060c872647b6c",
-        ["0x2c1b868d6596a18e32e61b901e4060c872647b6c", "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE"] // ETH -> ECP
-    )
 
     console.log(result)
 }
