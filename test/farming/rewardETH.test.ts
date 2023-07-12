@@ -91,9 +91,7 @@ describe("Reward ETH", async () => {
         await time.increase(5000)
 
         const balanceBefore = await ethers.provider.getBalance(sender.address)
-        await echodexFarm.connect(sender).harvest(
-            0
-        )
+        await echodexFarm.connect(sender).harvest(0)
         const balanceAfter = await ethers.provider.getBalance(sender.address)
 
         expect(balanceAfter - balanceBefore).to.lessThan(ethers.parseEther("5000"))
@@ -125,9 +123,7 @@ describe("Reward ETH", async () => {
         await time.increase(5000)
 
         const balanceBefore = await ethers.provider.getBalance(sender.address)
-        await echodexFarm.connect(sender).withdrawExcessReward(
-            0,
-        )
+        await echodexFarm.connect(sender).withdrawExcessReward(0)
         const balanceAfter = await ethers.provider.getBalance(sender.address)
 
         expect(balanceAfter - balanceBefore).to.lessThan(ethers.parseEther("5000"))

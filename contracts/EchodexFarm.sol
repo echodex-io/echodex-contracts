@@ -219,15 +219,16 @@ contract EchodexFarm {
         require(user.rewardEarn > 0, "EchodexFarm: NO_REWARD");
 
         // set user rewardEarn to 0 before transfer to prevent reentrancy attack
+        uint rewardEarn = user.rewardEarn;
         user.rewardEarn = 0;
 
         if (poolInfo.tokenReward == WETH) {
-            TransferHelper.safeTransferETH(msg.sender, user.rewardEarn);
+            TransferHelper.safeTransferETH(msg.sender, rewardEarn);
         } else {
-            TransferHelper.safeTransfer(poolInfo.tokenReward, msg.sender, user.rewardEarn);
+            TransferHelper.safeTransfer(poolInfo.tokenReward, msg.sender, rewardEarn);
         }
-        emit Harvest(poolId, msg.sender, user.rewardEarn);
-        emit UserUpdate(msg.sender, poolId, user.amount, user.rewardDebt, user.rewardEarn);
+        emit Harvest(poolId, msg.sender, rewardEarn);
+        emit UserUpdate(msg.sender, poolId, user.amount, user.rewardDebt, rewardEarn);
     }
 
     function withdrawExcessReward(uint256 poolId) external {
@@ -244,15 +245,16 @@ contract EchodexFarm {
         require(poolReward.totalExcessReward > 0, "EchodexFarm: NO_EXCESS");
 
         // set user rewardEarn to 0 before transfer to prevent reentrancy attack
+        uint totalExcessReward = poolReward.totalExcessReward;
         poolReward.totalExcessReward = 0;
 
         if (poolInfo.tokenReward == WETH) {
-            TransferHelper.safeTransferETH(msg.sender, poolReward.totalExcessReward.mul(poolReward.amountPerSecond));
+            TransferHelper.safeTransferETH(msg.sender, totalExcessReward.mul(poolReward.amountPerSecond));
         } else {
-            TransferHelper.safeTransfer(poolInfo.tokenReward, msg.sender, poolReward.totalExcessReward.mul(poolReward.amountPerSecond));
+            TransferHelper.safeTransfer(poolInfo.tokenReward, msg.sender, totalExcessReward.mul(poolReward.amountPerSecond));
         }
 
-        emit WithdrawExcess(poolId, poolReward.totalExcessReward);
+        emit WithdrawExcess(poolId, totalExcessReward);
     }
 
     function setBlueCheck(uint256 poolId, bool isBlueCheck) external {

@@ -13,6 +13,9 @@ const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
+            accounts: {
+                accountsBalance: "1000000000000000000000000000" // 1,000,000 ETH
+            }
         },
         // testnet
     },
