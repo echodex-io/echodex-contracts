@@ -15,10 +15,8 @@ contract EchodexFarm {
 
     address public immutable WETH;
 
-    bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
-
     struct PoolInfo {
-        uint256 poolId; 
+        uint256 poolId;
         address pairAddress;
         uint256 amountReward;
         address tokenReward;
@@ -121,14 +119,11 @@ contract EchodexFarm {
         require(pairAddress != address(0), "EchodexFarm: PAIR_NOT_EXIST");
 
         if (tokenReward == WETH) {
-            require(msg.value > 0, "EchodexFarm: AMOUNT_NOT_VALID");
             require(msg.value == amountReward, "EchodexFarm: AMOUNT_NOT_VALID");
         } else {
             TransferHelper.safeTransferFrom(tokenReward, msg.sender, address(this), amountReward);
         }
-       
         uint256 amountPerSecond = amountReward.div(endDate.sub(startDate));
-       
         poolInfos[currentPoolId] = PoolInfo({
             poolId: currentPoolId,
             pairAddress: pairAddress,
@@ -198,7 +193,7 @@ contract EchodexFarm {
         _update(poolInfo, poolReward);
         _audit(user, poolReward);
 
-        _safeTransfer(poolInfo.pairAddress, msg.sender, amountLP);
+        TransferHelper.safeTransfer(poolInfo.pairAddress, msg.sender, amountLP);
 
         poolReward.totalLP = poolReward.totalLP.sub(amountLP);
         user.amount = user.amount.sub(amountLP);
@@ -223,16 +218,15 @@ contract EchodexFarm {
 
         require(user.rewardEarn > 0, "EchodexFarm: NO_REWARD");
 
-        if (poolInfo.tokenReward == WETH) {
-            msg.sender.transfer(user.rewardEarn);
-        } else {
-            _safeTransfer(poolInfo.tokenReward, msg.sender, user.rewardEarn);
-        }
-      
-        emit Harvest(poolId, msg.sender, user.rewardEarn);
-
+        // set user rewardEarn to 0 before transfer to prevent reentrancy attack
         user.rewardEarn = 0;
 
+        if (poolInfo.tokenReward == WETH) {
+            TransferHelper.safeTransferETH(msg.sender, user.rewardEarn);
+        } else {
+            TransferHelper.safeTransfer(poolInfo.tokenReward, msg.sender, user.rewardEarn);
+        }
+        emit Harvest(poolId, msg.sender, user.rewardEarn);
         emit UserUpdate(msg.sender, poolId, user.amount, user.rewardDebt, user.rewardEarn);
     }
 
@@ -249,14 +243,16 @@ contract EchodexFarm {
 
         require(poolReward.totalExcessReward > 0, "EchodexFarm: NO_EXCESS");
 
+        // set user rewardEarn to 0 before transfer to prevent reentrancy attack
+        poolReward.totalExcessReward = 0;
+
         if (poolInfo.tokenReward == WETH) {
-            msg.sender.transfer(poolReward.totalExcessReward.mul(poolReward.amountPerSecond));
+            TransferHelper.safeTransferETH(msg.sender, poolReward.totalExcessReward.mul(poolReward.amountPerSecond));
         } else {
-            _safeTransfer(poolInfo.tokenReward, msg.sender, poolReward.totalExcessReward.mul(poolReward.amountPerSecond));
+            TransferHelper.safeTransfer(poolInfo.tokenReward, msg.sender, poolReward.totalExcessReward.mul(poolReward.amountPerSecond));
         }
 
         emit WithdrawExcess(poolId, poolReward.totalExcessReward);
-        poolReward.totalExcessReward = 0;
     }
 
     function setBlueCheck(uint256 poolId, bool isBlueCheck) external {
@@ -281,11 +277,6 @@ contract EchodexFarm {
         poolInfo.endDate = block.timestamp;
 
         emit StopPool(poolId);
-    }
-
-    function _safeTransfer(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'EchodexFarm: TRANSFER_FAILED');
     }
 
     function _update(PoolInfo storage poolInfo, PoolReward storage poolReward) private {

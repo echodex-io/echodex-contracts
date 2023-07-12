@@ -12,8 +12,9 @@ const testnet: NetworkUserConfig = {
 const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     networks: {
-        hardhat: {},
-        testnet
+        hardhat: {
+        },
+        // testnet
     },
     solidity: {
         compilers: [
