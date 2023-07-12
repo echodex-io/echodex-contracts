@@ -9,11 +9,11 @@ import "./libraries/SafeMath.sol";
 contract EchodexFarm {
     using SafeMath  for uint;
 
-    address public owner;
-    uint256 public currentPoolId;
-    address public factory;
-
+    address public immutable owner;
+    address public immutable factory;
     address public immutable WETH;
+
+    uint256 public currentPoolId;
 
     struct PoolInfo {
         uint256 poolId;
@@ -47,18 +47,18 @@ contract EchodexFarm {
 
     event PoolCreated(
         uint256 poolId,
-        address pairAddress,
+        address indexed pairAddress,
         address tokenA,
         address tokenB,
         uint256 amountReward,
-        address tokenReward,
+        address indexed tokenReward,
         uint256 startDate,
         uint256 endDate,
         uint256 amountPerSecond
     );
 
     event PoolUpdate(
-        uint256 poolId,
+        uint256 indexed poolId,
         uint256 accAmountPerShare,
         uint256 totalLP,
         uint256 totalReward,
@@ -66,43 +66,43 @@ contract EchodexFarm {
     );
 
     event UserUpdate(
-        address user,
-        uint256 poolId,
+        address indexed user,
+        uint256 indexed poolId,
         uint256 amount,
         uint256 rewardDebt,
         uint256 rewardEarn
     );
 
     event Stake(
-        uint256 poolId,
-        address user,
+        uint256 indexed poolId,
+        address indexed user,
         uint256 amount
     );
 
     event Unstake(
-        uint256 poolId,
-        address user,
+        uint256 indexed poolId,
+        address indexed user,
         uint256 amount
     );
 
     event Harvest(
-        uint256 poolId,
-        address user,
+        uint256 indexed poolId,
+        address indexed user,
         uint256 amountHarvested
     );
 
     event WithdrawExcess(
-        uint256 poolId,
+        uint256 indexed poolId,
         uint256 amount
     );
 
     event BlueCheck(
-        uint256 poolId,
+        uint256 indexed poolId,
         bool isBlueCheck
     );
 
     event StopPool(
-        uint256 poolId
+        uint256 indexed poolId
     );
 
     constructor(address _factory, address _WETH) public {
