@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "compile": "npx hardhat compile",
-    "deploy:testnet": "npx hardhat run --network testnet scripts/deployRouter.ts",
+    "deploy:testnet": "npx hardhat run --network testnet scripts/deploy.ts",
     "test": "npx hardhat test",
     "test:coverage": "npx hardhat coverage",
     "test:size-contracts": "npx hardhat size-contracts",

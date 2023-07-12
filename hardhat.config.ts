@@ -17,7 +17,7 @@ const config: HardhatUserConfig = {
                 accountsBalance: "1000000000000000000000000000" // 1,000,000 ETH
             }
         },
-        // testnet
+        testnet
     },
     solidity: {
         compilers: [

@@ -1,41 +1,65 @@
 import { ethers } from "hardhat";
 
+// custom gas price
+async function getFeeData(): Promise<any> {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const FEE_DATA = {
+                maxFeePerGas: ethers.parseUnits('20', 'gwei'),
+                maxPriorityFeePerGas: ethers.parseUnits('20', 'gwei'),
+            };
+            resolve(FEE_DATA);
+        }, 1000);
+    })
+}
+
 async function main() {
+    ethers.provider.getFeeData = getFeeData
+    // Create the signer for the mnemonic, connected to the provider with hardcoded fee data
+    const signingKey = new ethers.SigningKey("0x" + process.env.PRIVATE_KEY || "0x");
+    const signer = new ethers.Wallet(signingKey, ethers.provider);
+
+    console.log(process.env.PRIVATE_KEY);
 
     // Deploy Factory
-    // const EchodexFactory = await ethers.getContractFactory("EchodexFactory");
-    // const echodexFactory = await EchodexFactory.deploy(
-    //     "0x8be21043E75A280a1feD218b62f117a6881573a2", //_receiveFeeAddress
-    //     "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", //ECP
-    //     "0xa76293ad1dc1f020467e94b330579408b8b7848a" //xECP
-    // );
-    // await echodexFactory.deployed({ gasPrice: "4000000000000" });
-    // console.log(
-    //     `EchodexFactory deployed to ${echodexFactory.address}`
-    // );
-
-    // Deploy Router
-    const EchodexRouter = await ethers.getContractFactory("EchodexRouter");
-    const echodexRouter = await EchodexRouter.deploy(
-        "0x77079307DA0551208A173733bf862C49807D0965",// echodexFactory.address,
-        "0x2c1b868d6596a18e32e61b901e4060c872647b6c", // WETH
-        { gasPrice: "2000000000000" }
-    );
-    await echodexRouter.deployed();
+    const EchodexFactory = await ethers.deployContract("EchodexFactory", [
+        "0x94DCfaE29F48aC90b1Cbb1432B598aDB02FCC83a", //_receiveFeeAddress
+        "0x72038bbaF749F4b10E525C9E2bB8ae987288a8BE", //ECP
+        "0xa76293ad1dc1f020467e94b330579408b8b7848a" //xECP
+    ], signer);
+    const addressFactory = await EchodexFactory.getAddress()
     console.log(
-        `EchodexRouter deployed to ${echodex(await router.getAddress())}`
+        `EchodexFactory deployed to ${addressFactory}`
     );
 
-    // Deploy Router Fee
-    const EchodexRouterFee = await ethers.getContractFactory("EchodexRouterFee");
-    const echodexRouterFee = await EchodexRouterFee.deploy(
-        "0x77079307DA0551208A173733bf862C49807D0965", //echodexFactory.address,
-        "0x2c1b868d6596a18e32e61b901e4060c872647b6c", // WETH
-        { gasPrice: "2000000000000" }
-    );
-    await echodexRouterFee.deployed();
+    // deploy router
+    const EchodexRouter = await ethers.deployContract("EchodexRouter", [
+        addressFactory,
+        "0x2c1b868d6596a18e32e61b901e4060c872647b6c"
+    ], signer);
+    const address = await EchodexRouter.getAddress()
     console.log(
-        `EchodexRouterFee deployed to ${echodexRouterFee.address}`
+        `EchodexRouter deployed to ${address}`
+    );
+
+    // deploy router fee
+    const EchodexRouterFee = await ethers.deployContract("EchodexRouterFee", [
+        addressFactory,
+        "0x2c1b868d6596a18e32e61b901e4060c872647b6c"
+    ], signer);
+    const address1 = await EchodexRouterFee.getAddress()
+    console.log(
+        `EchodexRouterFee deployed to ${address1}`
+    );
+
+    // Deploy farming
+    const EchodexFarm = await ethers.deployContract("EchodexFarm", [
+        addressFactory,
+        "0x2c1b868d6596a18e32e61b901e4060c872647b6c" // WETH
+    ], signer);
+    const addressFarm = await EchodexFarm.getAddress()
+    console.log(
+        `EchodexFarm deployed to ${addressFarm}`
     );
 }
 
