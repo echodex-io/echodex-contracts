@@ -39,8 +39,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\SafeMath.sol": {
-      "lastModificationDate": 1687495491003,
-      "contentHash": "80e53c5947e09a694653a9bacf8cbb8a",
+      "lastModificationDate": 1689136516178,
+      "contentHash": "aa5f9fdde1e035c96c0378941ce2bc96",
       "sourceName": "contracts/libraries/SafeMath.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -67,15 +67,15 @@
       },
       "imports": [],
       "versionPragmas": [
-        ">=0.6.0 <0.8.0"
+        "=0.6.6"
       ],
       "artifacts": [
         "SafeMath"
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexPair.sol": {
-      "lastModificationDate": 1689073549828,
-      "contentHash": "1b0b6c7f8cca60b9cf8048996af7a4c4",
+      "lastModificationDate": 1689151871524,
+      "contentHash": "07a6387aebf8777b54bd472f34611eb7",
       "sourceName": "contracts/EchodexPair.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -327,8 +327,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\EchodexLibrary.sol": {
-      "lastModificationDate": 1689075281992,
-      "contentHash": "7169af683bb37f4f44c7dd407f4f12d5",
+      "lastModificationDate": 1689151893961,
+      "contentHash": "340396e3fac6cf5bf4160058775112a5",
       "sourceName": "contracts/libraries/EchodexLibrary.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -355,19 +355,18 @@
       },
       "imports": [
         "./SafeMath.sol",
-        "../interfaces/IEchodexFactory.sol",
         "../interfaces/IEchodexPair.sol"
       ],
       "versionPragmas": [
-        ">=0.5.0"
+        "=0.6.6"
       ],
       "artifacts": [
         "EchodexLibrary"
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexPair.sol": {
-      "lastModificationDate": 1688533305214,
-      "contentHash": "9cda222b191398e3902a566bfcd253f0",
+      "lastModificationDate": 1689151393441,
+      "contentHash": "c0cd884bc11f592b7b5c3a00724e8b86",
       "sourceName": "contracts/interfaces/IEchodexPair.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -512,8 +511,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexRouterFee.sol": {
-      "lastModificationDate": 1689062686799,
-      "contentHash": "0c0ac5628fb6eeef3019321c14257645",
+      "lastModificationDate": 1689152006186,
+      "contentHash": "2acfa3b112b7070331ce8949c7d1aedd",
       "sourceName": "contracts/EchodexRouterFee.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -554,8 +553,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\libraries\\TransferHelper.sol": {
-      "lastModificationDate": 1687253876477,
-      "contentHash": "32a78820ff08368a2a2d7c18d69b4060",
+      "lastModificationDate": 1689136516178,
+      "contentHash": "11f06828969d47bf9dc1235440adf71e",
       "sourceName": "contracts/libraries/TransferHelper.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -582,7 +581,7 @@
       },
       "imports": [],
       "versionPragmas": [
-        ">=0.6.6"
+        "=0.6.6"
       ],
       "artifacts": [
         "TransferHelper"
@@ -624,8 +623,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexRouter.sol": {
-      "lastModificationDate": 1689133770044,
-      "contentHash": "87981c4b7398e5726b35e146d07d796d",
+      "lastModificationDate": 1689136523005,
+      "contentHash": "35a67648257b302c7a9edb0ef097ac50",
       "sourceName": "contracts/EchodexRouter.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -666,8 +665,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexFarm.sol": {
-      "lastModificationDate": 1688717025603,
-      "contentHash": "f666a064d4aa8ad21713822b4c461893",
+      "lastModificationDate": 1689150828822,
+      "contentHash": "ea77a6a7629df6e0555317a26fb9e3ef",
       "sourceName": "contracts/EchodexFarm.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -706,8 +705,8 @@
       ]
     },
     "G:\\project\\echodex-contracts\\contracts\\EchodexFactory.sol": {
-      "lastModificationDate": 1689074186332,
-      "contentHash": "ef1742a16f5db8971f9474e62779f1a2",
+      "lastModificationDate": 1689241479998,
+      "contentHash": "60b50940807470496587b1a07b28b510",
       "sourceName": "contracts/EchodexFactory.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -846,6 +845,79 @@
       ],
       "artifacts": [
         "IERC20"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\tests\\reentrancyHarvest.sol": {
+      "lastModificationDate": 1689136516178,
+      "contentHash": "2eabf9b970e2758fb6905f88fb26ad6a",
+      "sourceName": "contracts/tests/reentrancyHarvest.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/IEchodexFarm.sol",
+        "../interfaces/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "^0.6.6"
+      ],
+      "artifacts": [
+        "ReentrantHarvestTest"
+      ]
+    },
+    "G:\\project\\echodex-contracts\\contracts\\interfaces\\IEchodexFarm.sol": {
+      "lastModificationDate": 1689136516177,
+      "contentHash": "0ed122ecd73713eae4826d628ff04e31",
+      "sourceName": "contracts/interfaces/IEchodexFarm.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.6"
+      ],
+      "artifacts": [
+        "IEchodexFarm"
       ]
     }
   }

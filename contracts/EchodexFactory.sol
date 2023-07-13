@@ -79,9 +79,11 @@ contract EchodexFactory {
     }
 
     function calcFeeOrReward(address tokenOut, uint amountOut, uint percent) external view returns (uint amount) {
-        uint amountFeeTokenOut = amountOut.mul(percent).div(FEE_DENOMINATOR);
-        address[] memory path = feePath[tokenOut];
-        uint256[] memory amounts = EchodexLibrary.getAmountsOutRouterFee(address(this), amountFeeTokenOut, path);
-        amount = amounts[amounts.length - 1];
+        amount = amountOut.mul(percent).div(FEE_DENOMINATOR);
+        if(tokenOut != tokenFee) {
+            address[] memory path = feePath[tokenOut];
+            uint256[] memory amounts = EchodexLibrary.getAmountsOutRouterFee(address(this), amount, path);
+            amount = amounts[amounts.length - 1];
+        }
     }
 }
