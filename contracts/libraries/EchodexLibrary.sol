@@ -106,14 +106,13 @@ library EchodexLibrary {
     ) internal pure returns (uint256 amountIn) {
         require(amountOut > 0, "EchodexLibrary: INSUFFICIENT_OUTPUT_AMOUNT");
         require(reserveIn > 0 && reserveOut > 0, "EchodexLibrary: INSUFFICIENT_LIQUIDITY");
-        
+
+        amountOut = amountOut.mul(1000) / 997;
         uint256 numerator = reserveIn.mul(amountOut);
         uint256 denominator = reserveOut.sub(amountOut);
-        amountIn = (numerator / denominator);
-
-        amountIn = (amountIn.mul(997) / 1000).add(1);
+        amountIn = (numerator / denominator).add(1);
     }
-
+   
     // performs chained getAmountOut calculations on any number of pairs
     function getAmountsOutRouterFee(
         address factory,

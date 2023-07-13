@@ -140,10 +140,12 @@ export async function calcInputAmount(pair: EchodexPair, tokenOutAddress: string
     const reserveIn = token0 == tokenOutAddress ? reserves[1] : reserves[0];
     const reserveOut = token0 == tokenOutAddress ? reserves[0] : reserves[1];
 
+    amountOut = amountOut * 1000n / 997n;
+
     const numerator = amountOut * reserveIn
     const denominator = reserveOut - amountOut;
 
-    const amountIn = (numerator / denominator) * 997n / 1000n + 1n;
+    const amountIn = (numerator / denominator) + 1n;
 
     return amountIn;
 }
