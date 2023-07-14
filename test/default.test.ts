@@ -342,4 +342,69 @@ describe("Default Swap", () => {
 
         expect(balanceRewardAfter - balanceReward).to.equal(reward);
     });
+
+    it("swapETHForExactTokens", async () => {
+        const reverseETH = "284923015261829721690"
+        const amountAddFee = "3159565255111224308"
+
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+
+        // approve ecp
+        await ecp.connect(sender).approve((await router.getAddress()), MAX_INT);
+        await usdt.connect(sender).approve((await router.getAddress()), MAX_INT);
+
+        // add liquidity ecp - eth
+        await router.addLiquidityETH(
+            ecpAddress,
+            ethers.parseEther("1000"),
+            ethers.parseEther("1000"),
+            reverseETH,
+            sender.address,
+            BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // deadline
+            , { value: reverseETH });
+
+        // add pool weth - usdt
+        await router.addLiquidityETH(
+            (await usdt.getAddress()),
+            ethers.parseEther("100"),
+            ethers.parseEther("100"),
+            reverseETH,
+            sender.address,
+            BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60) // deadline
+            , { value: reverseETH });
+
+        // addFee
+        const pairAddress = await factory.getPair((await usdt.getAddress()), wethAddress);
+        const pair = await ethers.getContractAt("EchodexPair", pairAddress);
+        await ecp.connect(sender).approve(pairAddress, MAX_INT);
+        await pair.connect(sender).addFee(amountAddFee);
+
+        // swapTokensForExactETH (need to get 0.1  ETH)
+        const amountOut = ethers.parseEther("10");
+        const amountIn = await calcInputAmount(pair, usdtAddress, amountOut)
+
+        await usdt.connect(sender).approve((await router.getAddress()), MAX_INT);
+
+        // set reward
+        await factory.setRewardPercent(pairAddress, "5");
+
+        // set path
+        await factory.setFeePath(wethAddress, [wethAddress, ecpAddress]);
+
+        const balanceBefore = await usdt.balanceOf(sender.address);
+
+        await router.connect(sender).swapETHForExactTokens(
+            amountOut,
+            [wethAddress, (await usdt.getAddress())],
+            sender.address,
+            BigInt(((await ethers.provider.getBlock("latest"))?.timestamp || 0) + 1 * 60 * 60), // deadline
+            {
+                value: amountIn
+            }
+        );
+
+        const balanceAfter = await usdt.balanceOf(sender.address);
+        expect(balanceAfter - balanceBefore).to.equal(amountOut);
+    });
 });
