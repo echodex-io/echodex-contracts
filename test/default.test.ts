@@ -407,4 +407,51 @@ describe("Default Swap", () => {
         const balanceAfter = await usdt.balanceOf(sender.address);
         expect(balanceAfter - balanceBefore).to.equal(amountOut);
     });
+
+    it("swapTokensForExactTokens ", async () => {
+        const accounts = await ethers.getSigners();
+        const sender = accounts[0];
+        const sender1 = accounts[1];
+
+
+        // add liquidity ecp with usdt to get price ecp 100 ecp = 12234.5123 usdt
+        await addLiquidity(router, ecp, usdt, ethers.parseEther("100"), ethers.parseEther("12234.5123"));
+
+        const pairAddress = await factory.getPair(usdtAddress, btcAddress);
+        const pairBTC_USDT = await ethers.getContractAt("EchodexPair", pairAddress);
+        const pairAddress1 = await factory.getPair(usdtAddress, ecpAddress);
+        const pairUSDT_ECP = await ethers.getContractAt("EchodexPair", pairAddress1);
+
+        const amountOut = ethers.parseEther("10");
+        const amountInUSDT = await calcInputAmount(pairUSDT_ECP, ecpAddress, amountOut)
+        const amountInMax = await calcInputAmount(pairBTC_USDT, usdtAddress, amountInUSDT)
+        const lastBlock = await ethers.provider.getBlock("latest")
+        const deadline = BigInt(lastBlock ? lastBlock.timestamp + 1 * 60 * 60 : 0)
+        // transfer 1 btc from sender to sender1 + approve
+        await btc.connect(sender).transfer(sender1.address, amountInMax);
+        await btc.connect(sender1).approve((await router.getAddress()), MAX_INT);
+        // set fee path usdt -> ecp
+        await factory.connect(sender).setFeePath((await usdt.getAddress()), [(await usdt.getAddress()), ecpAddress]);
+
+        // // set reward percent = 0.05%
+        // await factory.connect(sender).setRewardPercent(pairAddress, 5);
+
+        // transfer amountReward into pair
+        // await xecp.connect(sender).transfer(pairAddress, amountReward);
+
+        const balanceInBefore = await btc.balanceOf(sender1.address)
+        const balanceOutBefore = await ecp.balanceOf(sender1.address)
+        await router.connect(sender1).swapTokensForExactTokens(
+            amountOut,
+            amountInMax,
+            [btcAddress, usdtAddress, ecpAddress],
+            sender1.address,
+            deadline
+        )
+        const balanceInAfter = await btc.balanceOf(sender1.address)
+        const balanceOutAfter = await ecp.balanceOf(sender1.address)
+
+        expect(balanceInBefore - balanceInAfter).to.equal(amountInMax);
+        expect(balanceOutAfter - balanceOutBefore).to.equal(amountOut);
+    })
 });
