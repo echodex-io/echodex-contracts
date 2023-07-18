@@ -28,7 +28,7 @@ library EchodexLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        hex"f22fa5fa950b550847c2a8c11c0adf9beb8f780abd316fd3c0442e508735c4bb" // init code hash
+                        hex"0b8162ee38463c04a0629406af3b667364e4487dca66c5c7485a4a5e997811ea" // init code hash
                     )
                 )
             )
@@ -41,7 +41,6 @@ library EchodexLibrary {
         address tokenB
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        pairFor(factory, tokenA, tokenB);
         (uint256 reserve0, uint256 reserve1, ) = IEchodexPair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }

@@ -219,7 +219,13 @@ contract EchodexPair is EchodexERC20 {
         _safeTransfer(tokenOut, to, amountOut.sub(fee));
         _safeTransfer(tokenOut, IEchodexFactory(factory).receiveFeeAddress(), fee);
 
-        if (data.length > 0) IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amount1Out, data);
+        if (data.length > 0){
+            if(amount0Out>0){
+                IEchodexCallee(to).echodexCall(msg.sender, amountOut.sub(fee), amount1Out, data);
+            }else if(amount1Out>0){
+                IEchodexCallee(to).echodexCall(msg.sender, amount0Out, amountOut.sub(fee), data);
+            }
+        }
         state.balance0 = IERC20(token0).balanceOf(address(this));
         state.balance1 = IERC20(token1).balanceOf(address(this));
 
