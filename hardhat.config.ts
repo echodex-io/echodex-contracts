@@ -9,6 +9,12 @@ const testnet: NetworkUserConfig = {
     accounts: [process.env.PRIVATE_KEY as string],
 };
 
+const mainnet: NetworkUserConfig = {
+    url: "https://rpc.linea.build/",
+    chainId: 59144,
+    accounts: [process.env.PRIVATE_KEY as string],
+};
+
 const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     networks: {
@@ -17,7 +23,8 @@ const config: HardhatUserConfig = {
                 accountsBalance: "1000000000000000000000000000" // 1,000,000 ETH
             }
         },
-        testnet
+        testnet,
+        mainnet
     },
     solidity: {
         compilers: [

@@ -19,7 +19,7 @@ async function main() {
     const signingKey = new ethers.SigningKey("0x" + process.env.PRIVATE_KEY || "0x");
     const signer = new ethers.Wallet(signingKey, ethers.provider);
 
-    console.log(process.env.PRIVATE_KEY);
+    const WETH = "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f"
 
     // Deploy Factory
     const EchodexFactory = await ethers.deployContract("EchodexFactory", [
@@ -35,7 +35,7 @@ async function main() {
     // deploy router
     const EchodexRouter = await ethers.deployContract("EchodexRouter", [
         addressFactory,
-        "0x2c1b868d6596a18e32e61b901e4060c872647b6c"
+        WETH
     ], signer);
     const address = await EchodexRouter.getAddress()
     console.log(
@@ -43,24 +43,24 @@ async function main() {
     );
 
     // deploy router fee
-    // const EchodexRouterFee = await ethers.deployContract("EchodexRouterFee", [
-    //     addressFactory,
-    //     "0x2c1b868d6596a18e32e61b901e4060c872647b6c"
-    // ], signer);
-    // const address1 = await EchodexRouterFee.getAddress()
-    // console.log(
-    //     `EchodexRouterFee deployed to ${address1}`
-    // );
+    const EchodexRouterFee = await ethers.deployContract("EchodexRouterFee", [
+        addressFactory,
+        WETH
+    ], signer);
+    const address1 = await EchodexRouterFee.getAddress()
+    console.log(
+        `EchodexRouterFee deployed to ${address1}`
+    );
 
     // Deploy farming
-    // const EchodexFarm = await ethers.deployContract("EchodexFarm", [
-    //     addressFactory,
-    //     "0x2c1b868d6596a18e32e61b901e4060c872647b6c" // WETH
-    // ], signer);
-    // const addressFarm = await EchodexFarm.getAddress()
-    // console.log(
-    //     `EchodexFarm deployed to ${addressFarm}`
-    // );
+    const EchodexFarm = await ethers.deployContract("EchodexFarm", [
+        addressFactory,
+        WETH
+    ], signer);
+    const addressFarm = await EchodexFarm.getAddress()
+    console.log(
+        `EchodexFarm deployed to ${addressFarm}`
+    );
 }
 
 // We recommend this pattern to be able to use async/await everywhere
