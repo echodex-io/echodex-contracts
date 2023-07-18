@@ -28,7 +28,7 @@ library EchodexLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        hex"0b8162ee38463c04a0629406af3b667364e4487dca66c5c7485a4a5e997811ea" // init code hash
+                        hex"0405f2fbc6441397fa3e1b52227bb7e202d0a191cb3b1d46aaacc2390927c65d" // init code hash
                     )
                 )
             )
