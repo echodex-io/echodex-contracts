@@ -1,13 +1,11 @@
-# Sample Hardhat Project
+# Echodex V3
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
 
-Try running some of the following tasks:
+## Deployments
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+1. Add Key in `.env` file. It's a private key of the account that will deploy the contracts and should be gitignored.
+2. bscTestnet `KEY_TESTNET` or bsc `KEY_MAINNET`
+3. add `ETHERSCAN_API_KEY` in `.env` file. It's an API key for etherscan.
+4. `yarn` in root directory
+5. `NETWORK=$NETWORK yarn zx v3-deploy.mjs` where `$NETWORK` is either `eth`, `goerli`, `bscMainnet`, `bscTestnet` or `hardhat` (for local testing)
+6. `NETWORK=$NETWORK yarn zx v3-verify.mjs` where `$NETWORK` is either `eth`, `goerli`, `bscMainnet`, `bscTestnet` or `hardhat` (for local testing)
