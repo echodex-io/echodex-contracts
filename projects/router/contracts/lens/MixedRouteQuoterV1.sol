@@ -13,7 +13,6 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 
 import '../base/ImmutableState.sol';
 import '../interfaces/IMixedRouteQuoterV1.sol';
-import '../interfaces/IStableSwap.sol';
 import '../libraries/PoolTicksCounter.sol';
 import '../libraries/SmartRouterHelper.sol';
 
@@ -28,7 +27,6 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IEchodexV3SwapCallback, Peri
     using PoolTicksCounter for IEchodexV3Pool;
 
     address public immutable factoryV2;
-    address public immutable factoryStable;
 
     /**
     /// @dev Value to bit mask with path fee to determine if V2 or V3 route
@@ -44,14 +42,10 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IEchodexV3SwapCallback, Peri
         address _deployer,
         address _factory,
         address _factoryV2,
-        address _factoryStable,
         address _WETH9
     ) PeripheryImmutableState(_deployer, _factory, _WETH9) {
         factoryV2 = _factoryV2;
-        factoryStable = _factoryStable;
     }
-
-
 
     /************************************************** V3 **************************************************/
 
@@ -177,30 +171,13 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IEchodexV3SwapCallback, Peri
         amountOut = SmartRouterHelper.getAmountOut(params.amountIn, reserveIn, reserveOut);
     }
 
-
-
-    /************************************************** Stable **************************************************/
-
-    /// @dev Fetch an exactIn quote for a Stable pair on chain
-    function quoteExactInputSingleStable(QuoteExactInputSingleStableParams memory params)
-        public
-        view
-        override
-        returns (uint256 amountOut)
-    {
-        (uint256 i, uint256 j, address swapContract) = SmartRouterHelper.getStableInfo(factoryStable, params.tokenIn, params.tokenOut, params.flag);
-        amountOut = IStableSwap(swapContract).get_dy(i, j, params.amountIn);
-    }
-
-
-
     /************************************************** Mixed **************************************************/
 
     /// @dev Get the quote for an exactIn swap between an array of Stable, V2 and/or V3 pools
     /// @param flag 0 for V3, 1 for V2, 2 for 2pool, 3 for 3pool
     function quoteExactInput(
         bytes memory path,
-        uint256[] memory flag, 
+        uint256[] memory flag,
         uint256 amountIn
     )
         public
@@ -222,12 +199,12 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IEchodexV3SwapCallback, Peri
             if (flag[i] == 1) {
                 amountIn = quoteExactInputSingleV2(
                     QuoteExactInputSingleV2Params({
-                        tokenIn: tokenIn, 
-                        tokenOut: tokenOut, 
+                        tokenIn: tokenIn,
+                        tokenOut: tokenOut,
                         amountIn: amountIn
                     })
                 );
-            } else if (flag[i] == 0) {
+            } else {
                 /// the outputs of prior swaps become the inputs to subsequent ones
                 (
                     uint256 _amountOut,
@@ -248,15 +225,6 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IEchodexV3SwapCallback, Peri
                 v3InitializedTicksCrossedList[i] = _initializedTicksCrossed;
                 v3SwapGasEstimate += _gasEstimate;
                 amountIn = _amountOut;
-            } else {
-                amountIn = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn, 
-                        tokenOut: tokenOut, 
-                        amountIn: amountIn, 
-                        flag: flag[i]
-                    })
-                );
             }
 
             i++;

@@ -39,13 +39,6 @@ interface IMixedRouteQuoterV1 {
         uint256 amountIn;
     }
 
-    struct QuoteExactInputSingleStableParams {
-        address tokenIn;
-        address tokenOut;
-        uint256 amountIn;
-        uint256 flag;
-    }
-
     /// @notice Returns the amount out received for a given exact input but for a swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactInputSingleParams`
     /// tokenIn The token being swapped in
@@ -73,15 +66,6 @@ interface IMixedRouteQuoterV1 {
     /// amountIn The desired input amount
     /// @return amountOut The amount of `tokenOut` that would be received
     function quoteExactInputSingleV2(QuoteExactInputSingleV2Params memory params) external returns (uint256 amountOut);
-
-    /// @notice Returns the amount out received for a given exact input but for a swap of a single Stable pool
-    /// @param params The params for the quote, encoded as `QuoteExactInputSingleStableParams`
-    /// tokenIn The token being swapped in
-    /// tokenOut The token being swapped out
-    /// amountIn The desired input amount
-    /// flag The token amount in a single Stable pool. 2 for 2pool, 3 for 3pool
-    /// @return amountOut The amount of `tokenOut` that would be received
-    function quoteExactInputSingleStable(QuoteExactInputSingleStableParams memory params) external returns (uint256 amountOut);
 
     /// @dev ExactOutput swaps are not supported by this new Quoter which is specialized for supporting routes
     ///      crossing Stable, V2 liquidity pairs and V3 pools.

@@ -2,79 +2,30 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '../interfaces/IStableSwapFactory.sol';
-import '../interfaces/IStableSwapInfo.sol';
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
-import '@echodex/v3-core/contracts/libraries/LowGasSafeMath.sol';
-import '@echodex/v3-core/contracts/interfaces/IEchodexV3Pool.sol';
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "@echodex/v3-core/contracts/libraries/LowGasSafeMath.sol";
+import "@echodex/v3-core/contracts/interfaces/IEchodexV3Pool.sol";
 
 library SmartRouterHelper {
     using LowGasSafeMath for uint256;
-
-    /************************************************** Stable **************************************************/
-
-    // get the pool info in stable swap
-    function getStableInfo(
-        address stableSwapFactory,
-        address input,
-        address output,
-        uint256 flag
-    ) public view returns (uint256 i, uint256 j, address swapContract) {
-        if (flag == 2) {
-            IStableSwapFactory.StableSwapPairInfo memory info = IStableSwapFactory(stableSwapFactory).getPairInfo(input, output);
-            i = input == info.token0 ? 0 : 1;
-            j = (i == 0) ? 1 : 0;
-            swapContract = info.swapContract;
-        } else if (flag == 3) {
-            IStableSwapFactory.StableSwapThreePoolPairInfo memory info = IStableSwapFactory(stableSwapFactory).getThreePoolPairInfo(input, output);
-
-            if (input == info.token0) i = 0;
-            else if (input == info.token1) i = 1;
-            else if (input == info.token2) i = 2;
-
-            if (output == info.token0) j = 0;
-            else if (output == info.token1) j = 1;
-            else if (output == info.token2) j = 2;
-
-            swapContract = info.swapContract;
-        }
-
-        require(swapContract != address(0), "getStableInfo: invalid pool address");
-    }
-
-    function getStableAmountsIn(
-        address stableSwapFactory,
-        address stableSwapInfo,
-        address[] memory path,
-        uint256[] memory flag,
-        uint256 amountOut
-    ) public view returns (uint256[] memory amounts) {
-        uint256 length = path.length;
-        require(length >= 2, "getStableAmountsIn: incorrect length");
-
-        amounts = new uint256[](length);
-        amounts[length - 1] = amountOut;
-
-        for (uint256 i = length - 1; i > 0; i--) {
-            uint256 last = i - 1;
-            (uint256 k, uint256 j, address swapContract) = getStableInfo(stableSwapFactory, path[last], path[i], flag[last]);
-            amounts[last] = IStableSwapInfo(stableSwapInfo).get_dx(swapContract, k, j, amounts[i], type(uint256).max);
-        }
-    }
-
-
 
     /************************************************** V2 **************************************************/
 
     // bytes32 internal constant V2_INIT_CODE_HASH = 0xd0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66; // BSC TESTNET
     // bytes32 internal constant V2_INIT_CODE_HASH = 0x00fb7f630766e6a796048ea87d01acd3068e8ff67d078148a3fa3f4a84f69bd5; // BSC
     // bytes32 internal constant V2_INIT_CODE_HASH = 0x57224589c67f3f30a6b0d7a1b54cf3153ab84563bc609ef41dfb34f8b2974d2d; // ETH, GOERLI
-    bytes32 internal constant V2_INIT_CODE_HASH = 0xd0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66;
+    bytes32 internal constant V2_INIT_CODE_HASH =
+        0xb169c51a99b1096be94111187f6659cfac2a0981da4b42870c4fa4ed2aa71f88;
 
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
-    function sortTokens(address tokenA, address tokenB) public pure returns (address token0, address token1) {
+    function sortTokens(
+        address tokenA,
+        address tokenB
+    ) public pure returns (address token0, address token1) {
         require(tokenA != tokenB);
-        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        (token0, token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         require(token0 != address(0));
     }
 
@@ -89,7 +40,7 @@ library SmartRouterHelper {
             uint256(
                 keccak256(
                     abi.encodePacked(
-                        hex'ff',
+                        hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
                         V2_INIT_CODE_HASH
@@ -106,8 +57,12 @@ library SmartRouterHelper {
         address tokenB
     ) public view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        (uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).getReserves();
-        (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
+        (uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(
+            pairFor(factory, tokenA, tokenB)
+        ).getReserves();
+        (reserveA, reserveB) = tokenA == token0
+            ? (reserve0, reserve1)
+            : (reserve1, reserve0);
     }
 
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
@@ -116,12 +71,12 @@ library SmartRouterHelper {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure returns (uint256 amountOut) {
-        require(amountIn > 0, 'INSUFFICIENT_INPUT_AMOUNT');
+        require(amountIn > 0, "INSUFFICIENT_INPUT_AMOUNT");
         require(reserveIn > 0 && reserveOut > 0);
-        uint256 amountInWithFee = amountIn.mul(9975);
-        uint256 numerator = amountInWithFee.mul(reserveOut);
-        uint256 denominator = reserveIn.mul(10000).add(amountInWithFee);
+        uint256 numerator = amountIn.mul(reserveOut);
+        uint256 denominator = reserveIn.add(amountIn);
         amountOut = numerator / denominator;
+        amountOut = amountOut.mul(997) / 1000;
     }
 
     // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
@@ -130,10 +85,11 @@ library SmartRouterHelper {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure returns (uint256 amountIn) {
-        require(amountOut > 0, 'INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amountOut > 0, "INSUFFICIENT_OUTPUT_AMOUNT");
         require(reserveIn > 0 && reserveOut > 0);
-        uint256 numerator = reserveIn.mul(amountOut).mul(10000);
-        uint256 denominator = reserveOut.sub(amountOut).mul(9975);
+        amountOut = amountOut.mul(1000) / 997;
+        uint256 numerator = reserveIn.mul(amountOut);
+        uint256 denominator = reserveOut.sub(amountOut);
         amountIn = (numerator / denominator).add(1);
     }
 
@@ -147,16 +103,19 @@ library SmartRouterHelper {
         amounts = new uint256[](path.length);
         amounts[amounts.length - 1] = amountOut;
         for (uint256 i = path.length - 1; i > 0; i--) {
-            (uint256 reserveIn, uint256 reserveOut) = getReserves(factory, path[i - 1], path[i]);
+            (uint256 reserveIn, uint256 reserveOut) = getReserves(
+                factory,
+                path[i - 1],
+                path[i]
+            );
             amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);
         }
     }
 
-
-
     /************************************************** V3 **************************************************/
 
-    bytes32 internal constant V3_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
+    bytes32 internal constant V3_INIT_CODE_HASH =
+        0x93c48372fd5821b5ee4d7a091b26fbe2ce06fca048fe3a6af3ed7dd890a700c2;
 
     /// @notice The identifying key of the pool
     struct PoolKey {
@@ -183,13 +142,16 @@ library SmartRouterHelper {
     /// @param deployer The EchodexSwap V3 deployer contract address
     /// @param key The PoolKey
     /// @return pool The contract address of the V3 pool
-    function computeAddress(address deployer, PoolKey memory key) public pure returns (address pool) {
+    function computeAddress(
+        address deployer,
+        PoolKey memory key
+    ) public pure returns (address pool) {
         require(key.token0 < key.token1);
         pool = address(
             uint256(
                 keccak256(
                     abi.encodePacked(
-                        hex'ff',
+                        hex"ff",
                         deployer,
                         keccak256(abi.encode(key.token0, key.token1, key.fee)),
                         V3_INIT_CODE_HASH
@@ -206,7 +168,10 @@ library SmartRouterHelper {
         address tokenB,
         uint24 fee
     ) public pure returns (IEchodexV3Pool) {
-        return IEchodexV3Pool(computeAddress(deployer, getPoolKey(tokenA, tokenB, fee)));
+        return
+            IEchodexV3Pool(
+                computeAddress(deployer, getPoolKey(tokenA, tokenB, fee))
+            );
     }
 
     /// @notice Returns the address of a valid EchodexSwap V3 Pool
@@ -228,11 +193,10 @@ library SmartRouterHelper {
     /// @param deployer The contract address of the EchodexSwap V3 deployer
     /// @param poolKey The identifying key of the V3 pool
     /// @return pool The V3 pool contract address
-    function verifyCallback(address deployer, PoolKey memory poolKey)
-        public
-        view
-        returns (IEchodexV3Pool pool)
-    {
+    function verifyCallback(
+        address deployer,
+        PoolKey memory poolKey
+    ) public view returns (IEchodexV3Pool pool) {
         pool = IEchodexV3Pool(computeAddress(deployer, poolKey));
         require(msg.sender == address(pool));
     }

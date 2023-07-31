@@ -34,6 +34,7 @@ abstract contract V2SwapRouter is IV2SwapRouter, ImmutableState, PeripheryPaymen
                     input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
                 amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
                 amountOutput = SmartRouterHelper.getAmountOut(amountInput, reserveInput, reserveOutput);
+                amountOutput = amountOutput.mul(1000) / 997;
             }
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));

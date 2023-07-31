@@ -1,5 +1,5 @@
 import { ethers, network } from 'hardhat'
-import { configs } from '@echodex/common/config'
+import configs from '../config'
 import { tryVerify } from '@echodex/common/verify'
 import { writeFileSync } from 'fs'
 
@@ -33,13 +33,11 @@ async function main() {
     },
   })
   const smartRouter = await SmartRouter.deploy(
-    config.v2Factory,
+    config.factoryV2,
     echodexV3PoolDeployer_address,
     echodexV3Factory_address,
     positionManager_address,
-    config.stableFactory,
-    config.stableInfo,
-    config.WNATIVE
+    config.WETH
   )
   console.log('SmartRouter deployed to:', smartRouter.address)
 
@@ -62,9 +60,8 @@ async function main() {
   const mixedRouteQuoterV1 = await MixedRouteQuoterV1.deploy(
     echodexV3PoolDeployer_address,
     echodexV3Factory_address,
-    config.v2Factory,
-    config.stableFactory,
-    config.WNATIVE
+    config.factoryV2,
+    config.WETH
   )
   console.log('MixedRouteQuoterV1 deployed to:', mixedRouteQuoterV1.address)
 
@@ -82,7 +79,7 @@ async function main() {
       SmartRouterHelper: smartRouterHelper.address,
     },
   })
-  const quoterV2 = await QuoterV2.deploy(echodexV3PoolDeployer_address, echodexV3Factory_address, config.WNATIVE)
+  const quoterV2 = await QuoterV2.deploy(echodexV3PoolDeployer_address, echodexV3Factory_address, config.WETH)
   console.log('QuoterV2 deployed to:', quoterV2.address)
 
   // await tryVerify(quoterV2, [echodexV3PoolDeployer_address, echodexV3Factory_address, config.WNATIVE])
@@ -93,7 +90,7 @@ async function main() {
       SmartRouterHelper: smartRouterHelper.address,
     },
   })
-  const tokenValidator = await TokenValidator.deploy(config.v2Factory, positionManager_address)
+  const tokenValidator = await TokenValidator.deploy(config.factoryV2, positionManager_address)
   console.log('TokenValidator deployed to:', tokenValidator.address)
 
   // await tryVerify(tokenValidator, [config.v2Factory, positionManager_address])

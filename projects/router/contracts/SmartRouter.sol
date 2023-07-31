@@ -8,19 +8,16 @@ import '@echodex/v3-periphery/contracts/base/PeripheryImmutableState.sol';
 import './interfaces/ISmartRouter.sol';
 import './V2SwapRouter.sol';
 import './V3SwapRouter.sol';
-import './StableSwapRouter.sol';
 import './base/ApproveAndCall.sol';
 import './base/MulticallExtended.sol';
 
 /// @title Echodex Smart Router
-contract SmartRouter is ISmartRouter, V2SwapRouter, V3SwapRouter, StableSwapRouter, ApproveAndCall, MulticallExtended, SelfPermit {
+contract SmartRouter is ISmartRouter, V2SwapRouter, V3SwapRouter, ApproveAndCall, MulticallExtended, SelfPermit {
     constructor(
         address _factoryV2,
         address _deployer,
         address _factoryV3,
         address _positionManager,
-        address _stableFactory,
-        address _stableInfo,
         address _WETH9
-    ) ImmutableState(_factoryV2, _positionManager) PeripheryImmutableState(_deployer, _factoryV3, _WETH9) StableSwapRouter(_stableFactory, _stableInfo) {}
+    ) ImmutableState(_factoryV2, _positionManager) PeripheryImmutableState(_deployer, _factoryV3, _WETH9) {}
 }
