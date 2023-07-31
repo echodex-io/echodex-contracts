@@ -9,4 +9,7 @@ interface IImmutableState {
 
     /// @return Returns the address of EchodexSwap V3 NFT position manager
     function positionManager() external view returns (address);
+
+    /// @return Returns the address of the reward token
+    function rewardToken() external view returns (address);
 }

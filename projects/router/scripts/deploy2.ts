@@ -37,7 +37,8 @@ async function main() {
     echodexV3PoolDeployer_address,
     echodexV3Factory_address,
     positionManager_address,
-    config.WETH
+    config.WETH,
+    config.xECP
   )
   console.log('SmartRouter deployed to:', smartRouter.address)
 
@@ -90,7 +91,7 @@ async function main() {
       SmartRouterHelper: smartRouterHelper.address,
     },
   })
-  const tokenValidator = await TokenValidator.deploy(config.factoryV2, positionManager_address)
+  const tokenValidator = await TokenValidator.deploy(config.factoryV2, positionManager_address, config.xECP)
   console.log('TokenValidator deployed to:', tokenValidator.address)
 
   // await tryVerify(tokenValidator, [config.v2Factory, positionManager_address])

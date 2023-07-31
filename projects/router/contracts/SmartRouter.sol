@@ -18,6 +18,7 @@ contract SmartRouter is ISmartRouter, V2SwapRouter, V3SwapRouter, ApproveAndCall
         address _deployer,
         address _factoryV3,
         address _positionManager,
-        address _WETH9
-    ) ImmutableState(_factoryV2, _positionManager) PeripheryImmutableState(_deployer, _factoryV3, _WETH9) {}
+        address _WETH9,
+        address _rewardToken
+    ) ImmutableState(_factoryV2, _positionManager, _rewardToken) PeripheryImmutableState(_deployer, _factoryV3, _WETH9) {}
 }

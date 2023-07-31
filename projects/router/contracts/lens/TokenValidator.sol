@@ -29,7 +29,7 @@ contract TokenValidator is ITokenValidator, IUniswapV2Callee, ImmutableState {
     // https://github.com/Uniswap/v2-core/blob/1136544ac842ff48ae0b1b939701436598d74075/contracts/UniswapV2Pair.sol#L46
     string internal constant STF_REVERT_STRING_SUFFIX = 'TRANSFER_FAILED';
 
-    constructor(address _factoryV2, address _positionManager) ImmutableState(_factoryV2, _positionManager) {}
+    constructor(address _factoryV2, address _positionManager, address _rewardToken) ImmutableState(_factoryV2, _positionManager, _rewardToken) {}
 
     function batchValidate(
         address[] calldata tokens,
