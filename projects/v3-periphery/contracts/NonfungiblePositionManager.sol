@@ -73,7 +73,7 @@ contract NonfungiblePositionManager is
         address _factory,
         address _WETH9,
         address _tokenDescriptor_
-    ) ERC721Permit('Echodex.io V3 Positions', 'ECP-V3-POS', '1') PeripheryImmutableState(_deployer, _factory, _WETH9) {
+    ) ERC721Permit('EchoDEX.io V3 Positions', 'EchoDEX.io', '1') PeripheryImmutableState(_deployer, _factory, _WETH9) {
         _tokenDescriptor = _tokenDescriptor_;
     }
 
