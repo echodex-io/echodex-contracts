@@ -53,7 +53,10 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:testnet": "hardhat run --network testnet scripts/deploy.ts",
+    "deploy:mainnet": "hardhat run --network mainnet scripts/deploy.ts",
     "verify:testnet": "hardhat run --network testnet scripts/verify.ts",
-    "initCodeHash": "hardhat run --network testnet scripts/computeV3InitCodeHash.ts"
+    "verify:mainnet": "hardhat run --network mainnet scripts/verify.ts",
+    "initCodeHash:testnet": "hardhat run --network testnet scripts/computeV3InitCodeHash.ts",
+    "initCodeHash:mainnet": "hardhat run --network mainnet scripts/computeV3InitCodeHash.ts"
   }
 }

@@ -28,25 +28,32 @@ const testnet: NetworkUserConfig = {
   accounts: [process.env.KEY_TESTNET!],
 }
 
+const mainnet: NetworkUserConfig = {
+  url: 'https://rpc.linea.build',
+  chainId: 59144,
+  accounts: [process.env.KEY_MAINNET!],
+}
+
 export default {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
     },
     ...(process.env.KEY_TESTNET && { testnet }),
+    ...(process.env.KEY_MAINNET && { mainnet }),
     // mainnet: bscMainnet,
   },
   etherscan: {
     apiKey: {
-      testnet: process.env.ETHERSCAN_API_KEY
+      mainnet: process.env.ETHERSCAN_API_KEY
     },
     customChains: [
       {
-        network: "testnet",
-        chainId: testnet.chainId,
+        network: "mainnet",
+        chainId: mainnet.chainId,
         urls: {
-          apiURL: "https://api-goerli.lineascan.build/api",
-          browserURL: "https://goerli.lineascan.build"
+          apiURL: "https://api.lineascan.build/api",
+          browserURL: "https://lineascan.build"
         }
       }
     ]

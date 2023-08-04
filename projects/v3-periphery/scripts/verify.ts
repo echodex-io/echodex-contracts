@@ -1,6 +1,7 @@
 import { verifyContract } from '@echodex/common/verify'
 import { sleep } from '@echodex/common/sleep'
-import { configs } from '@echodex/common/config'
+import {network} from 'hardhat'
+import configs from '@echodex/common/config'
 
 async function main() {
   const networkName = network.name
@@ -17,7 +18,7 @@ async function main() {
   await verifyContract(deployedContracts_v3_periphery.SwapRouter, [
     deployedContracts_v3_core.EchodexV3PoolDeployer,
     deployedContracts_v3_core.EchodexV3Factory,
-    config.WNATIVE,
+    config.WETH,
   ])
   await sleep(10000)
 
@@ -31,7 +32,7 @@ async function main() {
   await verifyContract(deployedContracts_v3_periphery.NonfungiblePositionManager, [
     deployedContracts_v3_core.EchodexV3PoolDeployer,
     deployedContracts_v3_core.EchodexV3Factory,
-    config.WNATIVE,
+    config.WETH,
     deployedContracts_v3_periphery.NonfungibleTokenPositionDescriptor,
   ])
   await sleep(10000)
@@ -46,7 +47,7 @@ async function main() {
   await verifyContract(deployedContracts_v3_periphery.V3Migrator, [
     deployedContracts_v3_core.EchodexV3PoolDeployer,
     deployedContracts_v3_core.EchodexV3Factory,
-    config.WNATIVE,
+    config.WETH,
     deployedContracts_v3_periphery.NonfungiblePositionManager,
   ])
   await sleep(10000)
@@ -61,7 +62,7 @@ async function main() {
   await verifyContract(deployedContracts_v3_periphery.QuoterV2, [
     deployedContracts_v3_core.EchodexV3PoolDeployer,
     deployedContracts_v3_core.EchodexV3Factory,
-    config.WNATIVE,
+    config.WETH,
   ])
   await sleep(10000)
 }

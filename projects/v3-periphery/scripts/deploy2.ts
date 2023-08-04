@@ -4,8 +4,7 @@ import { ethers, upgrades, network } from 'hardhat'
 import { linkLibraries } from '../util/linkLibraries'
 import { tryVerify } from '@echodex/common/verify'
 import fs from 'fs'
-
-const WETH = "0x2C1b868d6596a18e32E61B901E4060C872647b6C" // LINEA TESTNET
+import configs from '@echodex/common/config'
 
 type ContractJson = { abi: any; bytecode: string }
 const artifacts: { [name: string]: ContractJson } = {
@@ -55,6 +54,8 @@ function asciiStringToBytes32(str: string): string {
 async function main() {
   const [owner] = await ethers.getSigners()
   const networkName = network.name
+  const config = configs[network.name as keyof typeof configs]
+  console.log('config', config);
   console.log('owner', owner.address)
 
   const deployedContracts = await import(`@echodex/v3-core/deployments/${networkName}.json`)
@@ -63,7 +64,7 @@ async function main() {
   const echodexV3Factory_address = deployedContracts.EchodexV3Factory
 
   const SwapRouter = new ContractFactory(artifacts.SwapRouter.abi, artifacts.SwapRouter.bytecode, owner)
-  const swapRouter = await SwapRouter.deploy(echodexV3PoolDeployer_address, echodexV3Factory_address, WETH)
+  const swapRouter = await SwapRouter.deploy(echodexV3PoolDeployer_address, echodexV3Factory_address, config.WETH)
 
   // await tryVerify(swapRouter, [echodexV3PoolDeployer_address, echodexV3Factory_address, config.WNATIVE])
   console.log('swapRouter', swapRouter.address)
@@ -138,7 +139,7 @@ async function main() {
   const nonfungiblePositionManager = await NonfungiblePositionManager.deploy(
     echodexV3PoolDeployer_address,
     echodexV3Factory_address,
-    WETH,
+    config.WETH,
     nonfungibleTokenPositionDescriptor.address
   )
 
@@ -184,7 +185,7 @@ async function main() {
   // await tryVerify(tickLens)
 
   const QuoterV2 = new ContractFactory(artifacts.QuoterV2.abi, artifacts.QuoterV2.bytecode, owner)
-  const quoterV2 = await QuoterV2.deploy(echodexV3PoolDeployer_address, echodexV3Factory_address, WETH)
+  const quoterV2 = await QuoterV2.deploy(echodexV3PoolDeployer_address, echodexV3Factory_address, config.WETH)
   console.log('QuoterV2', quoterV2.address)
 
   // await tryVerify(quoterV2, [echodexV3PoolDeployer_address, echodexV3Factory_address, config.WNATIVE])

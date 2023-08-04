@@ -11,11 +11,8 @@ library SmartRouterHelper {
 
     /************************************************** V2 **************************************************/
 
-    // bytes32 internal constant V2_INIT_CODE_HASH = 0xd0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66; // BSC TESTNET
-    // bytes32 internal constant V2_INIT_CODE_HASH = 0x00fb7f630766e6a796048ea87d01acd3068e8ff67d078148a3fa3f4a84f69bd5; // BSC
-    // bytes32 internal constant V2_INIT_CODE_HASH = 0x57224589c67f3f30a6b0d7a1b54cf3153ab84563bc609ef41dfb34f8b2974d2d; // ETH, GOERLI
     bytes32 internal constant V2_INIT_CODE_HASH =
-        0xb169c51a99b1096be94111187f6659cfac2a0981da4b42870c4fa4ed2aa71f88;
+        0x0b8162ee38463c04a0629406af3b667364e4487dca66c5c7485a4a5e997811ea;
 
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
     function sortTokens(

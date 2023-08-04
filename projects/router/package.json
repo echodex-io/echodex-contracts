@@ -19,6 +19,7 @@
     "compile": "npx hardhat compile",
     "deploy:testnet": "npx hardhat run --network testnet scripts/deploy2.ts",
     "deploy:mainnet": "npx hardhat run --network mainnet scripts/deploy2.ts",
+    "verify:mainnet": "npx hardhat run --network mainnet scripts/verify.ts",
     "test": "echo 'skip'",
     "test:coverage": "npx hardhat coverage",
     "test:size-contracts": "npx hardhat size-contracts"
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@commitlint/cli": "^12.1.4",
     "@commitlint/config-conventional": "^12.1.4",
+    "@echodex/common": "*",
     "@echodex/v3-core": "*",
     "@echodex/v3-periphery": "*",
     "@nomiclabs/hardhat-ethers": "^2.0.2",

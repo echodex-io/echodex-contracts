@@ -1,7 +1,7 @@
 import { ethers, network } from 'hardhat'
-import configs from '../config'
 import { tryVerify } from '@echodex/common/verify'
 import { writeFileSync } from 'fs'
+import configs from '@echodex/common/config'
 
 async function main() {
   // Remember to update the init code hash in SC for different chains before deploying

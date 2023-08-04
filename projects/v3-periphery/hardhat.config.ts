@@ -29,16 +29,35 @@ const testnet: NetworkUserConfig = {
   accounts: [process.env.KEY_TESTNET!],
 }
 
+const mainnet: NetworkUserConfig = {
+  url: 'https://rpc.linea.build',
+  chainId: 59144,
+  accounts: [process.env.KEY_MAINNET!],
+}
+
 export default {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
     },
     ...(process.env.KEY_TESTNET && { testnet }),
+    ...(process.env.KEY_MAINNET && { mainnet }),
     // mainnet: bscMainnet,
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || '',
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+    },
+    customChains: [
+      {
+        network: 'mainnet',
+        chainId: mainnet.chainId,
+        urls: {
+          apiURL: 'https://api.lineascan.build/api',
+          browserURL: 'https://lineascan.build',
+        },
+      },
+    ],
   },
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
