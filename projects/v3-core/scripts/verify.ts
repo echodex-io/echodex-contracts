@@ -15,6 +15,10 @@ async function main() {
   console.log('Verify echodexV3Factory')
   await verifyContract(deployedContracts.EchodexV3Factory, [deployedContracts.EchodexV3PoolDeployer])
   await sleep(10000)
+
+  // verify echodexV3Pool
+  // console.log('Verify echodexV3Pool')
+  // await verifyContract("0xEbc78d2b3C7982E9d4e4Bf6294E81B2cd9e0778b")
 }
 
 main()
