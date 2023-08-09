@@ -5,18 +5,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@chainlink/contracts/src/v0.8/KeeperCompatible.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../interfaces/IMasterChefV3.sol";
-import "../interfaces/IMasterChefV2.sol";
+import "../interfaces/IEchodexFarmingV3.sol";
 import "../interfaces/IReceiver.sol";
 
 /**
- * @dev MasterChefV3KeeperV2 was designed to use in Ethereum chain.
- * Receiver will receive cake token, then upkeep for MasterChefV3.
+ * @dev EchodexFarmingV3KeeperV2 was designed to use in Ethereum chain.
+ * Receiver will receive cake token, then upkeep for EchodexFarmingV3.
  */
-contract MasterChefV3KeeperV2 is KeeperCompatibleInterface, Ownable, Pausable {
-    IMasterChefV3 public immutable MasterChefV3;
+contract EchodexFarmingV3KeeperV2 is KeeperCompatibleInterface, Ownable, Pausable {
+    IEchodexFarmingV3 public immutable EchodexFarmingV3;
     IReceiver public immutable Receiver;
-    IERC20 public immutable Cake;
+    IERC20 public immutable XECP;
 
     address public register;
 
@@ -39,13 +38,13 @@ contract MasterChefV3KeeperV2 is KeeperCompatibleInterface, Ownable, Pausable {
     event NewPeriodDuration(uint256 periodDuration);
 
     /// @notice constructor.
-    /// @param _V3 MasterChefV3 address.
+    /// @param _V3 EchodexFarmingV3 address.
     /// @param _receiver Receiver address.
-    /// @param _cake Cake address.
-    constructor(IMasterChefV3 _V3, IReceiver _receiver, IERC20 _cake) {
-        MasterChefV3 = _V3;
+    /// @param _xecp XECP address.
+    constructor(IEchodexFarmingV3 _V3, IReceiver _receiver, IERC20 _xecp) {
+        EchodexFarmingV3 = _V3;
         Receiver = _receiver;
-        Cake = _cake;
+        XECP = _xecp;
     }
 
     modifier onlyRegister() {
@@ -56,14 +55,14 @@ contract MasterChefV3KeeperV2 is KeeperCompatibleInterface, Ownable, Pausable {
     //The logic is consistent with the following performUpkeep function, in order to make the code logic clearer.
     function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory) {
         if (!paused()) {
-            uint256 cakeBalanceInReceiver = Cake.balanceOf(address(Receiver));
-            uint256 latestPeriodEndTime = MasterChefV3.latestPeriodEndTime();
+            uint256 cakeBalanceInReceiver = XECP.balanceOf(address(Receiver));
+            uint256 latestPeriodEndTime = EchodexFarmingV3.latestPeriodEndTime();
             if (cakeBalanceInReceiver > 0 && latestPeriodEndTime < block.timestamp + bufferSecond) upkeepNeeded = true;
         }
     }
 
     function performUpkeep(bytes calldata) external override onlyRegister whenNotPaused {
-        uint256 latestPeriodStartTime = MasterChefV3.latestPeriodStartTime();
+        uint256 latestPeriodStartTime = EchodexFarmingV3.latestPeriodStartTime();
         if (latestPeriodStartTime + upkeepBufferSecond < block.timestamp) Receiver.upkeep(0, PERIOD_DURATION, true);
     }
 

@@ -1,8 +1,7 @@
 /* eslint-disable camelcase */
-import { ethers, run, network } from "hardhat";
-import { configs } from "@echodex/common/config";
-import { tryVerify } from "@echodex/common/verify";
 import { writeFileSync } from "fs";
+import { ethers, run, network } from "hardhat";
+import configs from "@echodex/common/config";
 
 async function main() {
   // Get network data from Hardhat config (see hardhat.config.ts).
@@ -22,18 +21,18 @@ async function main() {
   const v3PeripheryDeployedContracts = await import(`@echodex/v3-periphery/deployments/${networkName}.json`);
   const positionManager_address = v3PeripheryDeployedContracts.NonfungiblePositionManager;
 
-  const MasterChefV3 = await ethers.getContractFactory("MasterChefV3");
-  const masterChefV3 = await MasterChefV3.deploy(config.cake, positionManager_address, config.WNATIVE);
+  const EchodexFarmingV3 = await ethers.getContractFactory("EchodexFarmingV3");
+  const echodexFarmingV3 = await EchodexFarmingV3.deploy(config.xECP, positionManager_address, config.WETH);
 
-  console.log("masterChefV3 deployed to:", masterChefV3.address);
-  // await tryVerify(masterChefV3, [config.cake, positionManager_address]);
+  console.log("echodexFarmingV3 deployed to:", echodexFarmingV3.address);
+  // await tryVerify(echodexFarmingV3, [config.cake, positionManager_address]);
 
   // Write the address to a file.
   writeFileSync(
     `./deployments/${networkName}.json`,
     JSON.stringify(
       {
-        MasterChefV3: masterChefV3.address,
+        EchodexFarmingV3: echodexFarmingV3.address,
       },
       null,
       2

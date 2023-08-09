@@ -1,5 +1,5 @@
 {
-  "name": "@echodex/masterchef-v3",
+  "name": "@echodex/farming-v3",
   "version": "1.0.0",
   "description": "Echodex MasterChef V3",
   "publishConfig": {
@@ -21,7 +21,9 @@
     "format:check": "prettier --check './**/*.{js,ts,sol}'",
     "format:write": "prettier --write './**/*.{js,ts,sol}'",
     "test": "npx hardhat test",
-    "compile": "npx hardhat compile"
+    "compile": "npx hardhat compile",
+    "deploy:testnet": "npx hardhat run --network testnet scripts/deploy2.ts",
+    "setLMPoolDeployer:testnet": "npx hardhat run --network testnet scripts/setLMPoolDeployer.ts"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
@@ -30,6 +32,7 @@
     "@echodex/v3-core": "*",
     "@echodex/v3-lm-pool": "*",
     "@echodex/v3-periphery": "*",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
     "@nomiclabs/hardhat-ethers": "^2.2.2",
     "@nomiclabs/hardhat-etherscan": "^3.1.5",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",

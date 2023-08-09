@@ -1,4 +1,4 @@
-# MasterChefV3 API
+# EchodexFarmingV3 API
 
 
 ### PoolInfo
@@ -151,10 +151,10 @@ uint256 latestPeriodStartTime
 uint256 latestPeriodEndTime
 ```
 
-### latestPeriodCakePerSecond
+### latestPeriodXECPPerSecond
 
 ```solidity
-uint256 latestPeriodCakePerSecond
+uint256 latestPeriodXECPPerSecond
 ```
 
 ### operatorAddress
@@ -260,7 +260,7 @@ Returns the cake per second , period end time.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| cakePerSecond | uint256 | Cake reward per second. |
+| cakePerSecond | uint256 | XECP reward per second. |
 | endTime | uint256 | Period end time. |
 
 ### getLatestPeriodInfo
@@ -281,13 +281,13 @@ Returns the cake per second , period end time. This is for liquidity mining pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| cakePerSecond | uint256 | Cake reward per second. |
+| cakePerSecond | uint256 | XECP reward per second. |
 | endTime | uint256 | Period end time. |
 
-### pendingCake
+### pendingXECP
 
 ```solidity
-function pendingCake(uint256 _tokenId) external view returns (uint256 reward)
+function pendingXECP(uint256 _tokenId) external view returns (uint256 reward)
 ```
 
 View function for checking pending CAKE rewards.
@@ -387,7 +387,7 @@ harvest cake from pool.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 | Cake reward. |
+| reward | uint256 | XECP reward. |
 
 ### withdraw
 
@@ -408,7 +408,7 @@ Withdraw LP tokens from pool.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 | Cake reward. |
+| reward | uint256 | XECP reward. |
 
 ### updateLiquidity
 
@@ -857,7 +857,7 @@ event NewUpkeepPeriod(uint256 periodNumber, uint256 startTime, uint256 endTime, 
 ### UpdateUpkeepPeriod
 
 ```solidity
-event UpdateUpkeepPeriod(uint256 periodNumber, uint256 oldEndTime, uint256 newEndTime, uint256 remainingCake)
+event UpdateUpkeepPeriod(uint256 periodNumber, uint256 oldEndTime, uint256 newEndTime, uint256 remainingXECP)
 ```
 
 ### UpdateFarmBoostContract

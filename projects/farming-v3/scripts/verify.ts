@@ -9,12 +9,12 @@ async function main() {
   if (!config) {
     throw new Error(`No config found for network ${networkName}`);
   }
-  const deployedContracts_masterchef_v3 = await import(`@echodex/masterchef-v3/deployments/${networkName}.json`);
+  const deployedContracts_masterchef_v3 = await import(`@echodex/farming-v3/deployments/${networkName}.json`);
   const deployedContracts_v3_periphery = await import(`@echodex/v3-periphery/deployments/${networkName}.json`);
 
-  // Verify masterChefV3
-  console.log("Verify masterChefV3");
-  await verifyContract(deployedContracts_masterchef_v3.MasterChefV3, [
+  // Verify echodexFarmingV3
+  console.log("Verify echodexFarmingV3");
+  await verifyContract(deployedContracts_masterchef_v3.EchodexFarmingV3, [
     config.cake,
     deployedContracts_v3_periphery.NonfungiblePositionManager,
     config.WNATIVE,

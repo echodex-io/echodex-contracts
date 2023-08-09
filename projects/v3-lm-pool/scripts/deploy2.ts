@@ -1,5 +1,5 @@
 import { ethers, network } from 'hardhat'
-import { configs } from '@echodex/common/config'
+import configs from '@echodex/common/config'
 import { tryVerify } from '@echodex/common/verify'
 import fs from 'fs'
 import { abi } from '@echodex/v3-core/artifacts/contracts/EchodexV3Factory.sol/EchodexV3Factory.json'
@@ -17,12 +17,12 @@ async function main() {
   }
 
   const v3DeployedContracts = await import(`@echodex/v3-core/deployments/${networkName}.json`)
-  const mcV3DeployedContracts = await import(`@echodex/masterchef-v3/deployments/${networkName}.json`)
+  const mcV3DeployedContracts = await import(`@echodex/farming-v3/deployments/${networkName}.json`)
 
   const echodexV3Factory_address = v3DeployedContracts.EchodexV3Factory
 
   const EchodexV3LmPoolDeployer = await ethers.getContractFactory('EchodexV3LmPoolDeployer')
-  const echodexV3LmPoolDeployer = await EchodexV3LmPoolDeployer.deploy(mcV3DeployedContracts.MasterChefV3)
+  const echodexV3LmPoolDeployer = await EchodexV3LmPoolDeployer.deploy(mcV3DeployedContracts.EchodexFarmingV3)
 
   console.log('echodexV3LmPoolDeployer deployed to:', echodexV3LmPoolDeployer.address)
 

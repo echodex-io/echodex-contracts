@@ -430,7 +430,7 @@ const abi = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "remainingCake",
+        name: "remainingXECP",
         type: "uint256",
       },
     ],
@@ -879,7 +879,7 @@ const abi = [
   },
   {
     inputs: [],
-    name: "latestPeriodCakePerSecond",
+    name: "latestPeriodXECPPerSecond",
     outputs: [
       {
         internalType: "uint256",
@@ -1029,7 +1029,7 @@ const abi = [
         type: "uint256",
       },
     ],
-    name: "pendingCake",
+    name: "pendingXECP",
     outputs: [
       {
         internalType: "uint256",

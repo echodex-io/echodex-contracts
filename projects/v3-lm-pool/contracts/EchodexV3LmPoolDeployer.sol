@@ -26,6 +26,6 @@ contract EchodexV3LmPoolDeployer {
     /// @param pool The contract address of the EchodexSwap V3 pool
     function deploy(IEchodexV3Pool pool) external onlyMasterChef returns (IEchodexV3LmPool lmPool) {
         lmPool = new EchodexV3LmPool(address(pool), masterChef, uint32(block.timestamp));
-        IEchodexV3Factory(INonfungiblePositionManager(IMasterChefV3(masterChef).nonfungiblePositionManager()).factory()).setLmPool(address(pool), address(lmPool));
+        IEchodexV3Factory(INonfungiblePositionManager(IEchodexFarmingV3(masterChef).nonfungiblePositionManager()).factory()).setLmPool(address(pool), address(lmPool));
     }
 }

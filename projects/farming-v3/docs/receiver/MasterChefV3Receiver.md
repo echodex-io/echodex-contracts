@@ -1,11 +1,11 @@
 # Solidity API
 
-## MasterChefV3Receiver
+## EchodexFarmingV3Receiver
 
-### Cake
+### XECP
 
 ```solidity
-contract IERC20 Cake
+contract IERC20 XECP
 ```
 
 ### MasterChefV2
@@ -20,10 +20,10 @@ contract IMasterChefV2 MasterChefV2
 uint256 V2_Pid
 ```
 
-### MasterChefV3
+### EchodexFarmingV3
 
 ```solidity
-contract IMasterChefV3 MasterChefV3
+contract IEchodexFarmingV3 EchodexFarmingV3
 ```
 
 ### operatorAddress
@@ -83,7 +83,7 @@ modifier onlyOwnerOrOperator()
 ### constructor
 
 ```solidity
-constructor(contract IMasterChefV2 _v2, contract IMasterChefV3 _v3, contract IERC20 _cake, uint256 _v2Pid) public
+constructor(contract IMasterChefV2 _v2, contract IEchodexFarmingV3 _v3, contract IERC20 _xecp, uint256 _v2Pid) public
 ```
 
 Constructor.
@@ -93,8 +93,8 @@ Constructor.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _v2 | contract IMasterChefV2 | MasterChef V2 address. |
-| _v3 | contract IMasterChefV3 | MasterChef V3 address. |
-| _cake | contract IERC20 | Cake token address. |
+| _v3 | contract IEchodexFarmingV3 | MasterChef V3 address. |
+| _xecp | contract IERC20 | XECP token address. |
 | _v2Pid | uint256 | The pool id of the dummy pool on the MCV2. |
 
 ### depositForMasterChefV2Pool

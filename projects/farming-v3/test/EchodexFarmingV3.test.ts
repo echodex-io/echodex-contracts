@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ethers, upgrades } from "hardhat";
+import { ethers, network } from "hardhat";
 import { time, mineUpTo, reset } from "@nomicfoundation/hardhat-network-helpers";
 import { TickMath } from "@uniswap/v3-sdk";
 
@@ -11,21 +11,18 @@ import NftDescriptorOffchainArtifact from "@echodex/v3-periphery/artifacts/contr
 import NonfungiblePositionManagerArtifact from "@echodex/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import EchodexV3LmPoolDeployerArtifact from "@echodex/v3-lm-pool/artifacts/contracts/EchodexV3LmPoolDeployer.sol/EchodexV3LmPoolDeployer.json";
 import TestLiquidityAmountsArtifact from "@echodex/v3-periphery/artifacts/contracts/test/LiquidityAmountsTest.sol/LiquidityAmountsTest.json";
-
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ERC20MockArtifact from "./ERC20Mock.json";
-import CakeTokenArtifact from "./CakeToken.json";
-import SyrupBarArtifact from "./SyrupBar.json";
-import MasterChefArtifact from "./MasterChef.json";
-import MasterChefV2Artifact from "./MasterChefV2.json";
-import MockBoostArtifact from "./MockBoost.json";
+import XECPTokenArtifact from "./xECP.json";
 
 const WETH9Address = "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd";
 const nativeCurrencyLabel = "tBNB";
+const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-describe("MasterChefV3", function () {
-  let admin;
-  let user1;
-  let user2;
+describe("EchodexFarmingV3", function () {
+  let admin: SignerWithAddress;
+  let user1: SignerWithAddress;
+  let user2: SignerWithAddress;
 
   before(async function () {
     [admin, user1, user2] = await ethers.getSigners();
@@ -80,63 +77,36 @@ describe("MasterChefV3", function () {
     // await echodexV3Factory.setOwner(echodexV3FactoryOwner.address);
 
     // Prepare for master chef v3
-    const CakeToken = await ethers.getContractFactoryFromArtifact(CakeTokenArtifact);
-    const cakeToken = await CakeToken.deploy();
-
-    const SyrupBar = await ethers.getContractFactoryFromArtifact(SyrupBarArtifact);
-    const syrupBar = await SyrupBar.deploy(cakeToken.address);
+    const XECPToken = await ethers.getContractFactoryFromArtifact(XECPTokenArtifact);
+    const xecpToken = await XECPToken.deploy(NULL_ADDRESS);
 
     const lpTokenV1 = await ERC20Mock.deploy("LP Token V1", "LPV1");
     const dummyTokenV2 = await ERC20Mock.deploy("Dummy Token V2", "DTV2");
 
-    const MasterChef = await ethers.getContractFactoryFromArtifact(MasterChefArtifact);
-    const masterChef = await MasterChef.deploy(
-      cakeToken.address,
-      syrupBar.address,
-      admin.address,
-      ethers.utils.parseUnits("40"),
-      ethers.constants.Zero
-    );
-
-    await cakeToken.transferOwnership(masterChef.address);
-    await syrupBar.transferOwnership(masterChef.address);
-
-    await masterChef.add(0, lpTokenV1.address, true); // farm with pid 1 and 0 allocPoint
-    await masterChef.add(1, dummyTokenV2.address, true); // farm with pid 2 and 1 allocPoint
-
-    const MasterChefV2 = await ethers.getContractFactoryFromArtifact(MasterChefV2Artifact);
-    const masterChefV2 = await MasterChefV2.deploy(masterChef.address, cakeToken.address, 2, admin.address);
-
-    const MockBoost = await ethers.getContractFactoryFromArtifact(MockBoostArtifact);
-    const mockBoost = await MockBoost.deploy(masterChefV2.address);
-
     await dummyTokenV2.mint(admin.address, ethers.utils.parseUnits("1000"));
-    await dummyTokenV2.approve(masterChefV2.address, ethers.constants.MaxUint256);
-    await masterChefV2.init(dummyTokenV2.address);
 
     const lpTokenV2 = await ERC20Mock.deploy("LP Token V2", "LPV2");
     const dummyTokenV3 = await ERC20Mock.deploy("Dummy Token V3", "DTV3");
 
-    await masterChefV2.add(0, lpTokenV2.address, true, true); // regular farm with pid 0 and 0 allocPoint
-    await masterChefV2.add(1, dummyTokenV3.address, true, true); // regular farm with pid 1 and 1 allocPoint
-
     // Deploy master chef v3
-    const MasterChefV3 = await ethers.getContractFactory("MasterChefV3");
-    const masterChefV3 = await MasterChefV3.deploy(cakeToken.address, nonfungiblePositionManager.address, WETH9Address);
+    const EchodexFarmingV3 = await ethers.getContractFactory("EchodexFarmingV3");
+    const echodexFarmingV3 = await EchodexFarmingV3.deploy(
+      xecpToken.address,
+      nonfungiblePositionManager.address,
+      WETH9Address
+    );
 
     await dummyTokenV3.mint(admin.address, ethers.utils.parseUnits("1000"));
-    await dummyTokenV3.approve(masterChefV2.address, ethers.constants.MaxUint256);
-    await masterChefV2.deposit(1, await dummyTokenV3.balanceOf(admin.address));
     const firstFarmingBlock = await time.latestBlock();
 
     const EchodexV3LmPoolDeployer = await ethers.getContractFactoryFromArtifact(EchodexV3LmPoolDeployerArtifact);
     const echodexV3LmPoolDeployer = await EchodexV3LmPoolDeployer.deploy(
-      masterChefV3.address
+      echodexFarmingV3.address
       // echodexV3FactoryOwner.address
     );
     // await echodexV3FactoryOwner.setLmPoolDeployer(echodexV3LmPoolDeployer.address);
     await echodexV3Factory.setLmPoolDeployer(echodexV3LmPoolDeployer.address);
-    await masterChefV3.setLMPoolDeployer(echodexV3LmPoolDeployer.address);
+    await echodexFarmingV3.setLMPoolDeployer(echodexV3LmPoolDeployer.address);
 
     // Deploy mock ERC20 tokens
     const tokenA = await ERC20Mock.deploy("Token A", "A");
@@ -171,14 +141,14 @@ describe("MasterChefV3", function () {
     await tokenC.connect(user2).approve(nonfungiblePositionManager.address, ethers.constants.MaxUint256);
     await tokenD.connect(user2).approve(nonfungiblePositionManager.address, ethers.constants.MaxUint256);
 
-    await tokenA.connect(user1).approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await tokenB.connect(user1).approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await tokenC.connect(user1).approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await tokenD.connect(user1).approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await tokenA.connect(user2).approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await tokenB.connect(user2).approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await tokenC.connect(user2).approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await tokenD.connect(user2).approve(masterChefV3.address, ethers.constants.MaxUint256);
+    await tokenA.connect(user1).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await tokenB.connect(user1).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await tokenC.connect(user1).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await tokenD.connect(user1).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await tokenA.connect(user2).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await tokenB.connect(user2).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await tokenC.connect(user2).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await tokenD.connect(user2).approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
 
     // Create pools
     const pools = [
@@ -211,23 +181,24 @@ describe("MasterChefV3", function () {
     );
 
     // Farm 1 month in advance and then upkeep
-    await mineUpTo(firstFarmingBlock + 30 * 24 * 60 * 60);
-    await masterChefV2.connect(admin).deposit(1, 0);
-    // const cakeFarmed = await cakeToken.balanceOf(admin.address);
+    // await mineUpTo(firstFarmingBlock + 30 * 24 * 60 * 60);
+    // await xecpToken.mint(admin.address, ethers.utils.parseUnits(`${4 * 24 * 60 * 60}`));
+    // const cakeFarmed = await xecpToken.balanceOf(admin.address);
     // console.log(`${ethers.utils.formatUnits(cakeFarmed)} CAKE farmed`);
-    await cakeToken.approve(masterChefV3.address, ethers.constants.MaxUint256);
-    await masterChefV3.setReceiver(admin.address);
-    await masterChefV3.upkeep(ethers.utils.parseUnits(`${4 * 24 * 60 * 60}`), 24 * 60 * 60, true);
-    // console.log(`cakePerSecond: ${ethers.utils.formatUnits((await masterChefV3.latestPeriodCakePerSecond()).div(await masterChefV3.PRECISION()))}\n`);
+    
+    await xecpToken.mintReward(admin.address, ethers.utils.parseUnits(`${4 * 24 * 60 * 60}`));
+    await xecpToken.approve(echodexFarmingV3.address, ethers.constants.MaxUint256);
+    await echodexFarmingV3.setReceiver(admin.address);
+    await echodexFarmingV3.upkeep(ethers.utils.parseUnits(`${4 * 24 * 60 * 60}`), 24 * 60 * 60, true);
 
     const LiquidityAmounts = await ethers.getContractFactoryFromArtifact(TestLiquidityAmountsArtifact);
     const liquidityAmounts = await LiquidityAmounts.deploy();
 
     this.nonfungiblePositionManager = nonfungiblePositionManager;
-    this.masterChefV3 = masterChefV3;
+    this.echodexFarmingV3 = echodexFarmingV3;
     this.pools = pools;
     this.poolAddresses = poolAddresses;
-    this.cakeToken = cakeToken;
+    this.xecpToken = xecpToken;
     this.liquidityAmounts = liquidityAmounts;
     this.swapRouter = echodexV3SwapRouter;
 
@@ -245,19 +216,19 @@ describe("MasterChefV3", function () {
         await time.increase(1);
 
         // 2
-        await this.masterChefV3.add(1, this.poolAddresses[0], true);
+        await this.echodexFarmingV3.add(1, this.poolAddresses[0], true);
 
         await time.increase(1);
 
         // 3
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
-        await this.masterChefV3.add(3, this.poolAddresses[1], true);
+        await this.echodexFarmingV3.add(3, this.poolAddresses[1], true);
 
         await time.increase(1);
 
         // 4
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[0].token0,
@@ -274,12 +245,12 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 1);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 1);
 
         await time.increase(1);
 
         // 5
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[1].token0,
@@ -296,21 +267,21 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 2);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 2);
 
         await time.increase(1);
 
         let cakeUser1;
         let cakeUser2;
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
 
         console.log("@5 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
         console.log("");
 
         // 6
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user2).mint({
           token0: this.pools[0].token0,
@@ -327,27 +298,27 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user2)
-          ["safeTransferFrom(address,address,uint256)"](user2.address, this.masterChefV3.address, 3);
+          ["safeTransferFrom(address,address,uint256)"](user2.address, this.echodexFarmingV3.address, 3);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@6 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
         console.log("");
 
         // 7
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(3));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(3));
 
         console.log("@7 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -355,7 +326,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 8
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user2).mint({
           token0: this.pools[1].token0,
@@ -372,16 +343,16 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user2)
-          ["safeTransferFrom(address,address,uint256)"](user2.address, this.masterChefV3.address, 4);
+          ["safeTransferFrom(address,address,uint256)"](user2.address, this.echodexFarmingV3.address, 4);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@8 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -389,18 +360,18 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 9
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.set(1, 3, true);
+        await this.echodexFarmingV3.set(1, 3, true);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@9 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -408,16 +379,16 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 10
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@10 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -425,16 +396,16 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 11
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@11 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -442,16 +413,16 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 12
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@12 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -459,16 +430,16 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 13
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@13 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -476,9 +447,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 14
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user2).increaseLiquidity({
+        await this.echodexFarmingV3.connect(user2).increaseLiquidity({
           tokenId: 4,
           amount0Desired: ethers.utils.parseUnits("2"),
           amount1Desired: ethers.utils.parseUnits("2"),
@@ -489,12 +460,12 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@14 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -502,18 +473,18 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 15
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user1).withdraw(1, user1.address);
+        await this.echodexFarmingV3.connect(user1).withdraw(1, user1.address);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@15 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -521,18 +492,18 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 16
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.set(2, 0, true);
+        await this.echodexFarmingV3.set(2, 0, true);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@16 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -540,9 +511,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 17
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user2).decreaseLiquidity({
+        await this.echodexFarmingV3.connect(user2).decreaseLiquidity({
           tokenId: 4,
           liquidity: await this.liquidityAmounts.getLiquidityForAmounts(
             ethers.BigNumber.from(String(TickMath.getSqrtRatioAtTick(0))),
@@ -558,12 +529,12 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@17 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -571,7 +542,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 18
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[0].token0,
@@ -588,17 +559,17 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 5);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 5);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@18 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -606,19 +577,19 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 19
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.set(2, 2, true);
+        await this.echodexFarmingV3.set(2, 2, true);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@19 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -626,19 +597,19 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 20
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user1).withdraw(5, user1.address);
+        await this.echodexFarmingV3.connect(user1).withdraw(5, user1.address);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@20 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -646,19 +617,19 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 21
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user2).withdraw(3, user2.address);
+        await this.echodexFarmingV3.connect(user2).withdraw(3, user2.address);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@21 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -666,19 +637,19 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 22
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user1).withdraw(2, user1.address);
+        await this.echodexFarmingV3.connect(user1).withdraw(2, user1.address);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@22 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -686,19 +657,19 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 23
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user2).withdraw(4, user2.address);
+        await this.echodexFarmingV3.connect(user2).withdraw(4, user2.address);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4));
 
         console.log("@23 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -706,7 +677,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 24
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user2).mint({
           token0: this.pools[0].token0,
@@ -723,18 +694,18 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user2)
-          ["safeTransferFrom(address,address,uint256)"](user2.address, this.masterChefV3.address, 6);
+          ["safeTransferFrom(address,address,uint256)"](user2.address, this.echodexFarmingV3.address, 6);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6));
 
         console.log("@24 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -742,7 +713,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 25
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[0].token0,
@@ -759,19 +730,19 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 7);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 7);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6));
 
         console.log("@25 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -779,7 +750,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 26
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[1].token0,
@@ -796,20 +767,20 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 8);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 8);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6));
 
         console.log("@26 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -817,20 +788,20 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 27
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6));
 
         console.log("@27 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -838,7 +809,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 28
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user2).mint({
           token0: this.pools[1].token0,
@@ -855,21 +826,21 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user2)
-          ["safeTransferFrom(address,address,uint256)"](user2.address, this.masterChefV3.address, 9);
+          ["safeTransferFrom(address,address,uint256)"](user2.address, this.echodexFarmingV3.address, 9);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@28 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -877,23 +848,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 29
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.upkeep(0, 2 * 24 * 60 * 60, true);
+        await this.echodexFarmingV3.upkeep(0, 2 * 24 * 60 * 60, true);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@29 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -901,21 +872,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 30
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@30 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -923,21 +894,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 31
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@31 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -945,21 +916,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 32
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@32 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -967,9 +938,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 33
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user1).increaseLiquidity({
+        await this.echodexFarmingV3.connect(user1).increaseLiquidity({
           tokenId: 8,
           amount0Desired: ethers.utils.parseUnits("2"),
           amount1Desired: ethers.utils.parseUnits("2"),
@@ -980,17 +951,17 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@33 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -998,21 +969,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 34
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@34 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1020,9 +991,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 35
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user1).decreaseLiquidity({
+        await this.echodexFarmingV3.connect(user1).decreaseLiquidity({
           tokenId: 7,
           liquidity: await this.liquidityAmounts.getLiquidityForAmounts(
             ethers.BigNumber.from(String(TickMath.getSqrtRatioAtTick(0))),
@@ -1038,17 +1009,17 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@35 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1056,21 +1027,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 36
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@36 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1078,9 +1049,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 37
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user2).increaseLiquidity({
+        await this.echodexFarmingV3.connect(user2).increaseLiquidity({
           tokenId: 6,
           amount0Desired: ethers.utils.parseUnits("2"),
           amount1Desired: ethers.utils.parseUnits("2"),
@@ -1091,17 +1062,17 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@37 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1109,23 +1080,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 38
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.upkeep(ethers.utils.parseUnits(`${0}`), 24 * 60 * 60, true);
+        await this.echodexFarmingV3.upkeep(ethers.utils.parseUnits(`${0}`), 24 * 60 * 60, true);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@38 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1133,23 +1104,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 39
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user1).withdraw(8, user1.address);
+        await this.echodexFarmingV3.connect(user1).withdraw(8, user1.address);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@39 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1157,21 +1128,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 40
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@40 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1179,9 +1150,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 41
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user2).decreaseLiquidity({
+        await this.echodexFarmingV3.connect(user2).decreaseLiquidity({
           tokenId: 9,
           liquidity: await this.liquidityAmounts.getLiquidityForAmounts(
             ethers.BigNumber.from(String(TickMath.getSqrtRatioAtTick(0))),
@@ -1197,17 +1168,17 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@41 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1215,21 +1186,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 42
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@42 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1237,21 +1208,21 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 43
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@43 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1259,7 +1230,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 44
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[1].token0,
@@ -1276,22 +1247,22 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 10);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 10);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@44 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1299,24 +1270,24 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 45
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
-        await this.masterChefV3.connect(user1).withdraw(7, user1.address);
+        await this.echodexFarmingV3.connect(user1).withdraw(7, user1.address);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9));
 
         console.log("@45 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1324,7 +1295,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 46
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await this.nonfungiblePositionManager.connect(user2).mint({
           token0: this.pools[0].token0,
@@ -1341,23 +1312,23 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user2)
-          ["safeTransferFrom(address,address,uint256)"](user2.address, this.masterChefV3.address, 11);
+          ["safeTransferFrom(address,address,uint256)"](user2.address, this.echodexFarmingV3.address, 11);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@46 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1365,23 +1336,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 47
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@47 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1389,23 +1360,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 48
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@48 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1413,23 +1384,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 49
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@49 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1437,23 +1408,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 50
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@50 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1461,23 +1432,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 51
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@51 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1485,23 +1456,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 52
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@52 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1509,23 +1480,23 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 53
-        await this.masterChefV3.updatePools([1, 2]);
+        await this.echodexFarmingV3.updatePools([1, 2]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address))
-          .add(await this.masterChefV3.pendingCake(1))
-          .add(await this.masterChefV3.pendingCake(2))
-          .add(await this.masterChefV3.pendingCake(5))
-          .add(await this.masterChefV3.pendingCake(7))
-          .add(await this.masterChefV3.pendingCake(8))
-          .add(await this.masterChefV3.pendingCake(10));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address))
-          .add(await this.masterChefV3.pendingCake(3))
-          .add(await this.masterChefV3.pendingCake(4))
-          .add(await this.masterChefV3.pendingCake(6))
-          .add(await this.masterChefV3.pendingCake(9))
-          .add(await this.masterChefV3.pendingCake(11));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address))
+          .add(await this.echodexFarmingV3.pendingXECP(1))
+          .add(await this.echodexFarmingV3.pendingXECP(2))
+          .add(await this.echodexFarmingV3.pendingXECP(5))
+          .add(await this.echodexFarmingV3.pendingXECP(7))
+          .add(await this.echodexFarmingV3.pendingXECP(8))
+          .add(await this.echodexFarmingV3.pendingXECP(10));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address))
+          .add(await this.echodexFarmingV3.pendingXECP(3))
+          .add(await this.echodexFarmingV3.pendingXECP(4))
+          .add(await this.echodexFarmingV3.pendingXECP(6))
+          .add(await this.echodexFarmingV3.pendingXECP(9))
+          .add(await this.echodexFarmingV3.pendingXECP(11));
 
         console.log("@53 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1543,17 +1514,17 @@ describe("MasterChefV3", function () {
         await time.increase(1);
 
         // 2
-        await this.masterChefV3.add(1, this.poolAddresses[0], true);
+        await this.echodexFarmingV3.add(1, this.poolAddresses[0], true);
 
         await time.increase(1);
 
         // 3
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
         // 4
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[0].token0,
@@ -1570,26 +1541,26 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 1);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 1);
 
         await time.increase(1);
 
         // 5
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
         let cakeUser1;
         let cakeUser2;
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
 
         console.log("@5 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
         console.log("");
 
         // 6
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await this.nonfungiblePositionManager.connect(user2).mint({
           token0: this.pools[0].token0,
@@ -1606,23 +1577,23 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user2)
-          ["safeTransferFrom(address,address,uint256)"](user2.address, this.masterChefV3.address, 2);
+          ["safeTransferFrom(address,address,uint256)"](user2.address, this.echodexFarmingV3.address, 2);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
 
         console.log("@6 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
         console.log("");
 
         // 7
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@7 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1630,12 +1601,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 8
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@8 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1643,12 +1614,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 9
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@9 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1656,12 +1627,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 10
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@10 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1669,12 +1640,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 11
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@11 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1682,12 +1653,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 12
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@12 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1695,12 +1666,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 13
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@13 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1708,12 +1679,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 14
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@14 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1721,12 +1692,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 15
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@15 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1734,12 +1705,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 16
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@16 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1747,12 +1718,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 17
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@17 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1760,12 +1731,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 18
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@18 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1773,12 +1744,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 19
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@19 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1786,12 +1757,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 20
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@20 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1799,12 +1770,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 21
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@21 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1812,12 +1783,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 22
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@22 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1825,12 +1796,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 23
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@23 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1838,12 +1809,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 24
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@24 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1851,12 +1822,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 25
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@25 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1864,12 +1835,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 26
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@26 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1877,12 +1848,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 27
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@27 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1890,12 +1861,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 28
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@28 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1903,12 +1874,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 29
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@29 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1916,12 +1887,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 30
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@30 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1929,12 +1900,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 31
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@31 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1942,12 +1913,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 32
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@32 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1955,12 +1926,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 33
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@33 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1968,12 +1939,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 34
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@34 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1981,12 +1952,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 35
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@35 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -1994,12 +1965,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 36
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@36 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2007,12 +1978,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 37
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@37 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2020,12 +1991,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 38
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@38 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2033,12 +2004,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 39
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@39 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2046,12 +2017,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 40
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@40 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2059,12 +2030,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 41
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@41 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2072,12 +2043,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 42
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@42 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2085,12 +2056,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 43
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@43 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2098,12 +2069,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 44
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@44 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2111,12 +2082,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 45
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@45 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2124,12 +2095,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 46
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@46 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2137,12 +2108,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 47
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@47 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2150,12 +2121,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 48
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@48 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2163,12 +2134,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 49
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@49 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2176,12 +2147,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 50
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@50 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2189,12 +2160,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 51
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@51 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2202,12 +2173,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 52
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@52 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2215,12 +2186,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 53
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@53 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2238,17 +2209,17 @@ describe("MasterChefV3", function () {
         await time.increase(1);
 
         // 2
-        await this.masterChefV3.add(1, this.poolAddresses[0], true);
+        await this.echodexFarmingV3.add(1, this.poolAddresses[0], true);
 
         await time.increase(1);
 
         // 3
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
         // 4
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await this.nonfungiblePositionManager.connect(user1).mint({
           token0: this.pools[0].token0,
@@ -2265,26 +2236,26 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user1)
-          ["safeTransferFrom(address,address,uint256)"](user1.address, this.masterChefV3.address, 1);
+          ["safeTransferFrom(address,address,uint256)"](user1.address, this.echodexFarmingV3.address, 1);
 
         await time.increase(1);
 
         // 5
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
         let cakeUser1;
         let cakeUser2;
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
 
         console.log("@5 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
         console.log("");
 
         // 6
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await this.nonfungiblePositionManager.connect(user2).mint({
           token0: this.pools[0].token0,
@@ -2301,18 +2272,18 @@ describe("MasterChefV3", function () {
         });
         await this.nonfungiblePositionManager
           .connect(user2)
-          ["safeTransferFrom(address,address,uint256)"](user2.address, this.masterChefV3.address, 2);
+          ["safeTransferFrom(address,address,uint256)"](user2.address, this.echodexFarmingV3.address, 2);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
 
         console.log("@6 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
         console.log("");
 
         // 7
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await this.swapRouter.exactInputSingle({
           tokenIn: this.pools[0].token0,
@@ -2327,8 +2298,8 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@7 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2336,9 +2307,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 8
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
-        await this.masterChefV3.connect(user1).increaseLiquidity({
+        await this.echodexFarmingV3.connect(user1).increaseLiquidity({
           tokenId: 1,
           amount0Desired: ethers.utils.parseUnits("1"),
           amount1Desired: ethers.utils.parseUnits("0.805563891162833934"),
@@ -2349,8 +2320,8 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@8 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2358,7 +2329,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 9
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await this.swapRouter.exactInputSingle({
           tokenIn: this.pools[0].token0,
@@ -2373,8 +2344,8 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@9 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2382,12 +2353,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 10
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@10 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2395,12 +2366,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 11
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@11 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2408,12 +2379,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 12
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@12 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2421,12 +2392,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 13
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@13 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2434,12 +2405,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 14
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@14 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2447,12 +2418,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 15
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@15 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2460,12 +2431,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 16
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@16 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2473,12 +2444,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 17
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@17 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2486,12 +2457,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 18
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@18 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2499,12 +2470,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 19
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@19 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2512,7 +2483,7 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 20
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await this.swapRouter.exactInputSingle({
           tokenIn: this.pools[0].token1,
@@ -2527,8 +2498,8 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@20 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2536,9 +2507,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 21
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
-        await this.masterChefV3.connect(user2).increaseLiquidity({
+        await this.echodexFarmingV3.connect(user2).increaseLiquidity({
           tokenId: 2,
           amount0Desired: ethers.utils.parseUnits("0.999999999999999999"),
           amount1Desired: ethers.utils.parseUnits("0.545748338215849399"),
@@ -2549,8 +2520,8 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@21 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2558,12 +2529,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 22
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@22 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2571,12 +2542,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 23
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@23 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2584,12 +2555,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 24
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@24 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2597,12 +2568,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 25
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@25 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2610,12 +2581,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 26
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@26 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2623,12 +2594,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 27
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@27 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2636,12 +2607,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 28
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@28 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2649,12 +2620,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 29
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@29 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2662,9 +2633,9 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 30
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
-        await this.masterChefV3.connect(user1).increaseLiquidity({
+        await this.echodexFarmingV3.connect(user1).increaseLiquidity({
           tokenId: 1,
           amount0Desired: ethers.utils.parseUnits("1"),
           amount1Desired: ethers.utils.parseUnits("0.929584593669192594"),
@@ -2675,8 +2646,8 @@ describe("MasterChefV3", function () {
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@30 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2684,12 +2655,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 31
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@31 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2697,12 +2668,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 32
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@32 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2710,12 +2681,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 33
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@33 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2723,12 +2694,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 34
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@34 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2736,12 +2707,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 35
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@35 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2749,12 +2720,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 36
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@36 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2762,12 +2733,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 37
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@37 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2775,12 +2746,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 38
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@38 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2788,12 +2759,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 39
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@39 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2801,12 +2772,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 40
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@40 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2814,12 +2785,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 41
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@41 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2827,12 +2798,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 42
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@42 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2840,12 +2811,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 43
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@43 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2853,12 +2824,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 44
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@44 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2866,12 +2837,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 45
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@45 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2879,12 +2850,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 46
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@46 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2892,12 +2863,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 47
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@47 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2905,12 +2876,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 48
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@48 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2918,12 +2889,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 49
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@49 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2931,12 +2902,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 50
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@50 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2944,12 +2915,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 51
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@51 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2957,12 +2928,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 52
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@52 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);
@@ -2970,12 +2941,12 @@ describe("MasterChefV3", function () {
         console.log("");
 
         // 53
-        await this.masterChefV3.updatePools([1]);
+        await this.echodexFarmingV3.updatePools([1]);
 
         await time.increase(1);
 
-        cakeUser1 = (await this.cakeToken.balanceOf(user1.address)).add(await this.masterChefV3.pendingCake(1));
-        cakeUser2 = (await this.cakeToken.balanceOf(user2.address)).add(await this.masterChefV3.pendingCake(2));
+        cakeUser1 = (await this.xecpToken.balanceOf(user1.address)).add(await this.echodexFarmingV3.pendingXECP(1));
+        cakeUser2 = (await this.xecpToken.balanceOf(user2.address)).add(await this.echodexFarmingV3.pendingXECP(2));
 
         console.log("@53 ----------------------------------------");
         console.log(`user1: ${ethers.utils.formatUnits(cakeUser1)}`);

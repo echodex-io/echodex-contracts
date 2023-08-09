@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-interface IMasterChefV3 {
+interface IEchodexFarmingV3 {
     function latestPeriodEndTime() external view returns (uint256);
 
     function latestPeriodStartTime() external view returns (uint256);

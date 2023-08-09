@@ -1,6 +1,6 @@
 # Solidity API
 
-## IMasterChefV3
+## IEchodexFarmingV3
 
 ### latestPeriodEndTime
 

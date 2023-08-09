@@ -4,13 +4,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../interfaces/IMasterChefV3.sol";
+import "../interfaces/IEchodexFarmingV3.sol";
 
-contract MasterChefV3ReceiverV2 is Ownable {
+contract EchodexFarmingV3Receiver is Ownable {
     using SafeERC20 for IERC20;
 
-    IERC20 public immutable Cake;
-    IMasterChefV3 public immutable MasterChefV3;
+    IERC20 public immutable XECP;
+    IEchodexFarmingV3 public immutable EchodexFarmingV3;
 
     address public operatorAddress;
 
@@ -18,6 +18,7 @@ contract MasterChefV3ReceiverV2 is Ownable {
     error ZeroAddress();
     error NoBalance();
 
+    event Deposit(address indexed from, address indexed to, uint256 amount, uint256 pid);
     event NewOperator(address indexed operatorAddress);
     event Upkeep(address indexed to, uint256 amount, bool withUpdate);
     event Withdraw(address indexed token, address indexed to, uint256 amount);
@@ -29,12 +30,12 @@ contract MasterChefV3ReceiverV2 is Ownable {
 
     /// @notice Constructor.
     /// @param _v3 MasterChef V3 address.
-    /// @param _cake Cake token address.
-    constructor(IMasterChefV3 _v3, IERC20 _cake) {
-        MasterChefV3 = _v3;
-        Cake = _cake;
+    /// @param _xecp XECP token address.
+    constructor(IEchodexFarmingV3 _v3, IERC20 _xecp) {
+        EchodexFarmingV3 = _v3;
+        XECP = _xecp;
 
-        Cake.safeApprove(address(_v3), type(uint256).max);
+        XECP.safeApprove(address(_v3), type(uint256).max);
     }
 
     /// @notice upkeep.
@@ -44,12 +45,12 @@ contract MasterChefV3ReceiverV2 is Ownable {
     /// @param _withUpdate Whether call "massUpdatePools" operation.
     function upkeep(uint256 _amount, uint256 _duration, bool _withUpdate) external onlyOwnerOrOperator {
         uint256 amount = _amount;
-        uint256 balance = Cake.balanceOf(address(this));
+        uint256 balance = XECP.balanceOf(address(this));
         if (_amount == 0 || _amount > balance) {
             amount = balance;
         }
-        MasterChefV3.upkeep(amount, _duration, _withUpdate);
-        emit Upkeep(address(MasterChefV3), amount, _withUpdate);
+        EchodexFarmingV3.upkeep(amount, _duration, _withUpdate);
+        emit Upkeep(address(EchodexFarmingV3), amount, _withUpdate);
     }
 
     /// @notice Set operator address.

@@ -21,7 +21,7 @@ await $`yarn workspace @echodex/v3-periphery run hardhat run scripts/verify.ts -
 
 await $`yarn workspace @echodex/smart-router run hardhat run scripts/verify.ts --network ${network}`
 
-await $`yarn workspace @echodex/masterchef-v3 run hardhat run scripts/verify.ts --network ${network}`
+await $`yarn workspace @echodex/farming-v3 run hardhat run scripts/verify.ts --network ${network}`
 
 await $`yarn workspace @echodex/v3-lm-pool run hardhat run scripts/verify.ts --network ${network}`
 

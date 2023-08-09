@@ -1,6 +1,6 @@
 # Solidity API
 
-## MasterChefV3
+## EchodexFarmingV3
 
 ### PoolInfo
 
@@ -41,7 +41,7 @@ uint256 poolLength
 ### poolInfo
 
 ```solidity
-mapping(uint256 => struct MasterChefV3.PoolInfo) poolInfo
+mapping(uint256 => struct EchodexFarmingV3.PoolInfo) poolInfo
 ```
 
 Info of each MCV3 pool.
@@ -49,7 +49,7 @@ Info of each MCV3 pool.
 ### userPositionInfos
 
 ```solidity
-mapping(uint256 => struct MasterChefV3.UserPositionInfo) userPositionInfos
+mapping(uint256 => struct EchodexFarmingV3.UserPositionInfo) userPositionInfos
 ```
 
 userPositionInfos[tokenId] => UserPositionInfo
@@ -152,10 +152,10 @@ uint256 latestPeriodStartTime
 uint256 latestPeriodEndTime
 ```
 
-### latestPeriodCakePerSecond
+### latestPeriodXECPPerSecond
 
 ```solidity
-uint256 latestPeriodCakePerSecond
+uint256 latestPeriodXECPPerSecond
 ```
 
 ### operatorAddress
@@ -226,7 +226,7 @@ uint256 MAX_U256
 uint256 cakeAmountBelongToMC
 ```
 
-Record the cake amount belong to MasterChefV3.
+Record the cake amount belong to EchodexFarmingV3.
 
 ### ZeroAddress
 
@@ -393,7 +393,7 @@ event NewUpkeepPeriod(uint256 periodNumber, uint256 startTime, uint256 endTime, 
 ### UpdateUpkeepPeriod
 
 ```solidity
-event UpdateUpkeepPeriod(uint256 periodNumber, uint256 oldEndTime, uint256 newEndTime, uint256 remainingCake)
+event UpdateUpkeepPeriod(uint256 periodNumber, uint256 oldEndTime, uint256 newEndTime, uint256 remainingXECP)
 ```
 
 ### UpdateFarmBoostContract
@@ -476,10 +476,10 @@ Returns the cake per second , period end time. This is for liquidity mining pool
 | ---- | ---- | ----------- |
 | _v3Pool | address | Address of the V3 pool. |
 
-### pendingCake
+### pendingXECP
 
 ```solidity
-function pendingCake(uint256 _tokenId) external view returns (uint256 reward)
+function pendingXECP(uint256 _tokenId) external view returns (uint256 reward)
 ```
 
 View function for checking pending CAKE rewards.
@@ -584,7 +584,7 @@ harvest cake from pool.
 ### harvestOperation
 
 ```solidity
-function harvestOperation(struct MasterChefV3.UserPositionInfo positionInfo, uint256 _tokenId, address _to) internal returns (uint256 reward)
+function harvestOperation(struct EchodexFarmingV3.UserPositionInfo positionInfo, uint256 _tokenId, address _to) internal returns (uint256 reward)
 ```
 
 ### withdraw
@@ -634,7 +634,7 @@ Update farm boost multiplier for the NFT position.
 ### updateLiquidityOperation
 
 ```solidity
-function updateLiquidityOperation(struct MasterChefV3.UserPositionInfo positionInfo, uint256 _tokenId, uint256 _newMultiplier) internal
+function updateLiquidityOperation(struct EchodexFarmingV3.UserPositionInfo positionInfo, uint256 _tokenId, uint256 _newMultiplier) internal
 ```
 
 ### increaseLiquidity

@@ -21,13 +21,13 @@ await $`yarn workspace @echodex/v3-periphery run hardhat run scripts/deploy2.ts 
 
 await $`yarn workspace @echodex/smart-router run hardhat run scripts/deploy2.ts --network ${network}`
 
-await $`yarn workspace @echodex/masterchef-v3 run hardhat run scripts/deploy2.ts --network ${network}`
+await $`yarn workspace @echodex/farming-v3 run hardhat run scripts/deploy2.ts --network ${network}`
 
 await $`yarn workspace @echodex/v3-lm-pool run hardhat run scripts/deploy2.ts --network ${network}`
 
 console.log(chalk.blue('Done!'))
 
-const m = await fs.readJson(`./projects/masterchef-v3/deployments/${network}.json`)
+const m = await fs.readJson(`./projects/farming-v3/deployments/${network}.json`)
 const r = await fs.readJson(`./projects/router/deployments/${network}.json`)
 const c = await fs.readJson(`./projects/v3-core/deployments/${network}.json`)
 const p = await fs.readJson(`./projects/v3-periphery/deployments/${network}.json`)
