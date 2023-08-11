@@ -23,7 +23,13 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "deploy:testnet": "npx hardhat run --network testnet scripts/deploy2.ts",
-    "setLMPoolDeployer:testnet": "npx hardhat run --network testnet scripts/setLMPoolDeployer.ts"
+    "setup:testnet": "npx hardhat run --network testnet scripts/setup.ts",
+    "deposit:testnet": "npx hardhat run --network testnet scripts/deposit.ts",
+    "add:testnet": "npx hardhat run --network testnet scripts/add.ts",
+    "deploy:mainnet": "npx hardhat run --network mainnet scripts/deploy2.ts",
+    "verify:mainnet": "npx hardhat run --network mainnet scripts/verify.ts",
+    "deposit:mainnet": "npx hardhat run --network mainnet scripts/deposit.ts",
+    "add:mainnet": "npx hardhat run --network mainnet scripts/add.ts"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",

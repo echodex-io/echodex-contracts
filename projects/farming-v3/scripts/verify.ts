@@ -1,6 +1,8 @@
+/* eslint-disable camelcase */
 import { verifyContract } from "@echodex/common/verify";
 import { sleep } from "@echodex/common/sleep";
-import { configs } from "@echodex/common/config";
+import configs from "@echodex/common/config";
+import { network } from "hardhat";
 
 async function main() {
   const networkName = network.name;
@@ -15,9 +17,9 @@ async function main() {
   // Verify echodexFarmingV3
   console.log("Verify echodexFarmingV3");
   await verifyContract(deployedContracts_masterchef_v3.EchodexFarmingV3, [
-    config.cake,
+    config.xECP,
     deployedContracts_v3_periphery.NonfungiblePositionManager,
-    config.WNATIVE,
+    config.WETH,
   ]);
   await sleep(10000);
 }

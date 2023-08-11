@@ -11,4 +11,6 @@ interface IEchodexV3Pool {
     function fee() external view returns (uint24);
 
     function lmPool() external view returns (address);
+
+    function setLmPool(address _lmPool) external;
 }

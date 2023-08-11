@@ -28,7 +28,19 @@ const config: HardhatUserConfig = {
     ...(process.env.KEY_MAINNET && { mainnet }),
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY as string,
+    },
+    customChains: [
+      {
+        network: 'mainnet',
+        chainId: mainnet.chainId as number,
+        urls: {
+          apiURL: 'https://api.lineascan.build/api',
+          browserURL: 'https://lineascan.build',
+        },
+      },
+    ],
   },
   paths: {
     sources: "./contracts/",

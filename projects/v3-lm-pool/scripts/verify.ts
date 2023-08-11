@@ -1,6 +1,7 @@
 import { verifyContract } from '@echodex/common/verify'
 import { sleep } from '@echodex/common/sleep'
-import { configs } from '@echodex/common/config'
+import configs from '@echodex/common/config'
+import { network } from 'hardhat'
 
 async function main() {
   const networkName = network.name

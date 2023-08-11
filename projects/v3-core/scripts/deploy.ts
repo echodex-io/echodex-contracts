@@ -53,8 +53,7 @@ async function main() {
   }
 
   // Set FactoryAddress for echodexV3PoolDeployer.
-  await echodexV3PoolDeployer.setFactoryAddress(echodexV3Factory_address);
-
+  await echodexV3PoolDeployer.setFactoryAddress(echodexV3Factory_address)
 
   const contracts = {
     EchodexV3Factory: echodexV3Factory_address,

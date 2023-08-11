@@ -6,7 +6,9 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "echo 'skip'",
-    "deploy:testnet": "hardhat run --network testnet scripts/deploy2.ts"
+    "deploy:testnet": "hardhat run --network testnet scripts/deploy2.ts",
+    "deploy:mainnet": "hardhat run --network mainnet scripts/deploy2.ts",
+    "verify:mainnet": "hardhat run --network mainnet scripts/verify.ts"
   },
   "devDependencies": {
     "@echodex/v3-core": "*",
